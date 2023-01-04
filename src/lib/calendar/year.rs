@@ -1,4 +1,6 @@
-use crate::calendar::month::{Expense, Income, Month, MonthKey};
+use crate::calendar::month::{Month, MonthKey};
+use crate::lib::money::expense::Expense;
+use crate::lib::money::income::Income;
 
 pub struct Year<'a> {
     pub id: u16,

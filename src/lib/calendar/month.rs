@@ -1,3 +1,6 @@
+use crate::lib::money::expense::Expense;
+use crate::lib::money::income::Income;
+
 pub struct Month<'a> {
     pub id: u16,
     pub key: MonthKey,
@@ -61,39 +64,6 @@ impl<'a> Month<'_> {
             MonthKey::Dec => "12",
         }
     }
-}
-
-pub struct Income<'a> {
-    pub active: bool,
-    pub amount: usize,
-    pub name: &'a str,
-    pub recurring: bool,
-    /*
-      start_month
-      end_month
-      tags - add tags to be able to run different scenarios
-    */
-}
-
-pub struct Amount {
-    // use to over/under estimate
-    pub low: usize,
-    pub high: usize,
-    pub average: usize,
-}
-
-impl Amount {
-    pub fn randomize() -> usize {
-        // random number between low and high
-        0
-    }
-}
-
-pub struct Expense<'a> {
-    pub active: bool,
-    pub amount: usize,
-    pub name: &'a str,
-    pub recurring: bool,
 }
 
 pub enum MonthKey {

@@ -156,13 +156,15 @@ pub fn incomes<'a>() -> Vec<Income<'a>> {
         active: true,
         amount: 600_000,
         name: "koho",
-        recurring: true,
+        recurrence_id: None,
+        tags: None,
     });
     incomes.push(Income {
         active: true,
         amount: 180_000,
         name: "north_clackamas",
-        recurring: true,
+        recurrence_id: None,
+        tags: None,
     });
     incomes
 }
@@ -174,13 +176,15 @@ pub fn expenses<'a>() -> Vec<Expense<'a>> {
         active: true,
         amount: 300_000,
         name: "mortgage",
-        recurring: true,
+        recurrence_id: None,
+        tags: None,
     });
     expenses.push(Expense {
         active: true,
         amount: 100_000,
         name: "bills",
-        recurring: true,
+        recurrence_id: None,
+        tags: None,
     });
 
     expenses

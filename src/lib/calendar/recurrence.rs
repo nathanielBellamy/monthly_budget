@@ -1,8 +1,11 @@
 pub struct Recurrence {
-    pub id: u16,
+    pub id: usize,
+    pub start_date_id: usize,
+    pub end_date_id: usize,
+    pub cycle_length: CycleLength,
 }
 
-pub enum CycleEvery {
+pub enum CycleLength {
     Day(u8),
     Week(u8),
     Month(u8),

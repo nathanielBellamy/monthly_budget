@@ -153,6 +153,7 @@ pub fn incomes<'a>() -> Vec<Income<'a>> {
     let mut incomes: Vec<Income> = Vec::new();
 
     incomes.push(Income {
+        id: 1,
         active: true,
         amount: 600_000,
         name: "koho",
@@ -160,6 +161,7 @@ pub fn incomes<'a>() -> Vec<Income<'a>> {
         tags: None,
     });
     incomes.push(Income {
+        id: 2,
         active: true,
         amount: 180_000,
         name: "north_clackamas",
@@ -173,6 +175,7 @@ pub fn expenses<'a>() -> Vec<Expense<'a>> {
     let mut expenses: Vec<Expense> = Vec::new();
 
     expenses.push(Expense {
+        id: 1,
         active: true,
         amount: 300_000,
         name: "mortgage",
@@ -180,6 +183,7 @@ pub fn expenses<'a>() -> Vec<Expense<'a>> {
         tags: None,
     });
     expenses.push(Expense {
+        id: 2,
         active: true,
         amount: 100_000,
         name: "bills",

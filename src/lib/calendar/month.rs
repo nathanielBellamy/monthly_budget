@@ -89,73 +89,6 @@ pub enum MonthKey {
 mod tests {
     use super::*;
 
-    struct SeedData<'a> {
-        incomes: Vec<Income<'a>>,
-        expenses: Vec<Expense<'a>>,
-    }
-
-    fn seed_data() -> SeedData<'static> {
-        let mut incomes: Vec<Income> = Vec::new();
-        incomes.push(Income {
-            active: true,
-            amount: 1_000,
-            name: "Income 1",
-            recurrence_id: None,
-            tags: None,
-        });
-        incomes.push(Income {
-            active: false,
-            amount: 2_000,
-            name: "Income 2",
-            recurrence_id: None,
-            tags: None,
-        });
-        incomes.push(Income {
-            active: true,
-            amount: 3_000,
-            name: "Income 3",
-            recurrence_id: None,
-            tags: None,
-        });
-
-        let mut expenses: Vec<Expense> = Vec::new();
-        expenses.push(Expense {
-            active: true,
-            amount: 1_000,
-            name: "Expense 1",
-            recurrence_id: None,
-            tags: None,
-        });
-        expenses.push(Expense {
-            active: false,
-            amount: 1_000,
-            name: "Expense 2",
-            recurrence_id: None,
-            tags: None,
-        });
-        expenses.push(Expense {
-            active: true,
-            amount: 3_000,
-            name: "Expense 2",
-            recurrence_id: None,
-            tags: None,
-        });
-        SeedData { incomes, expenses }
-    }
-
-    fn month<'a>() -> Month<'a> {
-        let data: SeedData = seed_data();
-
-        Month {
-            incomes: data.incomes,
-            expenses: data.expenses,
-            id: 1,
-            key: MonthKey::Jan,
-            budget: 5_000,
-            savings_at_start: 10_000,
-        }
-    }
-
     #[test]
     fn gross_income_sums_active_income_amounts() {
         let month = month();
@@ -175,5 +108,78 @@ mod tests {
         let month = month();
 
         assert_eq!(month.net_income(), 0)
+    }
+
+    fn month<'a>() -> Month<'a> {
+        let data: SeedData = seed_data();
+
+        Month {
+            incomes: data.incomes,
+            expenses: data.expenses,
+            id: 1,
+            key: MonthKey::Jan,
+            budget: 5_000,
+            savings_at_start: 10_000,
+        }
+    }
+
+    struct SeedData<'a> {
+        incomes: Vec<Income<'a>>,
+        expenses: Vec<Expense<'a>>,
+    }
+
+    fn seed_data() -> SeedData<'static> {
+        let mut incomes: Vec<Income> = Vec::new();
+        incomes.push(Income {
+            id: 1,
+            active: true,
+            amount: 1_000,
+            name: "Income 1",
+            recurrence_id: None,
+            tags: None,
+        });
+        incomes.push(Income {
+            id: 2,
+            active: false,
+            amount: 2_000,
+            name: "Income 2",
+            recurrence_id: None,
+            tags: None,
+        });
+        incomes.push(Income {
+            id: 3,
+            active: true,
+            amount: 3_000,
+            name: "Income 3",
+            recurrence_id: None,
+            tags: None,
+        });
+
+        let mut expenses: Vec<Expense> = Vec::new();
+        expenses.push(Expense {
+            id: 1,
+            active: true,
+            amount: 1_000,
+            name: "Expense 1",
+            recurrence_id: None,
+            tags: None,
+        });
+        expenses.push(Expense {
+            id: 2,
+            active: false,
+            amount: 2_000,
+            name: "Expense 2",
+            recurrence_id: None,
+            tags: None,
+        });
+        expenses.push(Expense {
+            id: 3,
+            active: true,
+            amount: 3_000,
+            name: "Expense 2",
+            recurrence_id: None,
+            tags: None,
+        });
+        SeedData { incomes, expenses }
     }
 }

@@ -9,17 +9,18 @@ pub struct Amount {
 
 impl Amount {
     pub fn randomize(&self) -> usize {
-        let mut _low: usize = 0;
-        let mut _high: usize = 1;
+        let mut low: usize = 0;
+        let high: usize;
         match self.low {
-            Some(low) => _low = low,
+            Some(num) => low = num,
             _ => (),
         }
         match self.high {
-            Some(high) => _high = high,
-            _ => (),
+            Some(num) => high = num,
+            _ => high = self.standard * 3, // TODO: 3 is a magic number here
+                                           //   tune logic for useful randomization
         }
-        let res = rand::thread_rng().gen_range(_low.._high);
+        let res = rand::thread_rng().gen_range(low..high);
         res
     }
 }

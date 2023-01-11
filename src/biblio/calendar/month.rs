@@ -1,16 +1,21 @@
-use crate::lib::money::expense::Expense;
-use crate::lib::money::income::Income;
+use crate::biblio::money::expense::Expense;
+use crate::biblio::money::income::Income;
+use serde::{Deserialize, Serialize};
 
-pub struct Month<'a> {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Month {
     pub id: u16,
     pub key: MonthKey,
     pub budget: usize,
-    pub incomes: Vec<Income<'a>>,
-    pub expenses: Vec<Expense<'a>>,
+
+    #[serde(bound(deserialize = "Income: Deserialize<'de>"))]
+    pub incomes: Vec<Income>,
+    #[serde(bound(deserialize = "Expense: Deserialize<'de>"))]
+    pub expenses: Vec<Expense>,
     pub savings_at_start: usize,
 }
 
-impl<'a> Month<'_> {
+impl Month {
     pub fn gross_income(&self) -> usize {
         let mut res: usize = 0;
         for income in self.incomes.iter() {
@@ -70,6 +75,7 @@ impl<'a> Month<'_> {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub enum MonthKey {
     Jan,
     Feb,
@@ -110,7 +116,7 @@ mod tests {
         assert_eq!(month.net_income(), 0)
     }
 
-    fn month<'a>() -> Month<'a> {
+    fn month() -> Month {
         let data: SeedData = seed_data();
 
         Month {
@@ -123,12 +129,12 @@ mod tests {
         }
     }
 
-    struct SeedData<'a> {
-        incomes: Vec<Income<'a>>,
-        expenses: Vec<Expense<'a>>,
+    struct SeedData {
+        incomes: Vec<Income>,
+        expenses: Vec<Expense>,
     }
 
-    fn seed_data() -> SeedData<'static> {
+    fn seed_data() -> SeedData {
         let mut incomes: Vec<Income> = Vec::new();
         incomes.push(Income {
             id: 1,

@@ -1,15 +1,17 @@
-use crate::lib::money::tag::Tag;
+use crate::biblio::money::tag::Tag;
+use serde::{Deserialize, Serialize};
 
-pub struct Expense<'a> {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Expense {
     pub id: usize,
     pub active: bool,
     pub amount: usize,
-    pub name: &'a str,
+    pub name: &'static str,
     pub recurrence_id: Option<usize>,
-    pub tags: Option<Vec<Tag<'a>>>,
+    pub tags: Option<Vec<Tag>>,
 }
 
-impl<'a> Expense<'_> {
+impl<'a> Expense {
     pub fn is_recurring(&self) -> bool {
         !self.recurrence_id.is_none()
     }
@@ -30,7 +32,7 @@ mod tests {
         }
     }
 
-    fn test_expenses<'a>() -> [Expense<'a>; 2] {
+    fn test_expenses() -> [Expense; 2] {
         [
             Expense {
                 id: 1,

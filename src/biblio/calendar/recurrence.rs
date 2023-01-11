@@ -1,7 +1,11 @@
+use crate::time::Date;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Recurrence {
     pub id: usize,
-    pub start_date_id: usize,
-    pub end_date_id: usize,
+    pub start_date: Date,
+    pub end_date: Date,
     pub cycle_length: CycleLength,
 }
 

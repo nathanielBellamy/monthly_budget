@@ -1,5 +1,7 @@
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Amount {
     // use to over/under estimate
     pub low: Option<usize>,
@@ -11,9 +13,8 @@ impl Amount {
     pub fn randomize(&self) -> usize {
         let mut low: usize = 0;
         let high: usize;
-        match self.low {
-            Some(num) => low = num,
-            _ => (),
+        if let Some(num) = self.low {
+            low = num
         }
         match self.high {
             Some(num) => high = num,

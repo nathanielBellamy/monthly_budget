@@ -3,11 +3,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Account {
     pub id: usize,
-    pub name: &'static str,
+    pub name: String,
 }
 
 impl Account {
-    pub fn release_funds(&self, from_acc: &Account) -> usize {
+    pub fn release_funds(&self, _from_acc: &Account) -> usize {
         //
         0
     }

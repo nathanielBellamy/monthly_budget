@@ -155,16 +155,14 @@ pub fn incomes() -> Vec<Income> {
     incomes.push(Income {
         id: 1,
         active: true,
-        amount: 600_000,
-        name: "koho",
+        name: "koho".to_string(),
         recurrence_id: None,
         tags: None,
     });
     incomes.push(Income {
         id: 2,
         active: true,
-        amount: 180_000,
-        name: "north_clackamas",
+        name: "north_clackamas".to_string(),
         recurrence_id: None,
         tags: None,
     });
@@ -177,16 +175,14 @@ pub fn expenses() -> Vec<Expense> {
     expenses.push(Expense {
         id: 1,
         active: true,
-        amount: 300_000,
-        name: "mortgage",
+        name: "mortgage".to_string(),
         recurrence_id: None,
         tags: None,
     });
     expenses.push(Expense {
         id: 2,
         active: true,
-        amount: 100_000,
-        name: "bills",
+        name: "bills".to_string(),
         recurrence_id: None,
         tags: None,
     });

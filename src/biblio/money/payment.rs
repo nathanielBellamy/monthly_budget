@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Payment {
     pub id: usize,
     pub date: DateTime<Utc>,
+    pub amount_id: usize,
     pub expense_id: usize,
 }
 

@@ -20,7 +20,7 @@ impl Month {
         let mut res: usize = 0;
         for income in self.incomes.iter() {
             if income.active {
-                res += income.amount;
+                res += income.amount();
             }
         }
         res
@@ -30,7 +30,7 @@ impl Month {
         let mut res: usize = 0;
         for expense in self.expenses.iter() {
             if expense.active {
-                res += expense.amount;
+                res += expense.amount();
             }
         }
         res
@@ -139,24 +139,21 @@ mod tests {
         incomes.push(Income {
             id: 1,
             active: true,
-            amount: 1_000,
-            name: "Income 1",
+            name: "Income 1".to_string(),
             recurrence_id: None,
             tags: None,
         });
         incomes.push(Income {
             id: 2,
             active: false,
-            amount: 2_000,
-            name: "Income 2",
+            name: "Income 2".to_string(),
             recurrence_id: None,
             tags: None,
         });
         incomes.push(Income {
             id: 3,
             active: true,
-            amount: 3_000,
-            name: "Income 3",
+            name: "Income 3".to_string(),
             recurrence_id: None,
             tags: None,
         });
@@ -165,24 +162,21 @@ mod tests {
         expenses.push(Expense {
             id: 1,
             active: true,
-            amount: 1_000,
-            name: "Expense 1",
+            name: "Expense 1".to_string(),
             recurrence_id: None,
             tags: None,
         });
         expenses.push(Expense {
             id: 2,
             active: false,
-            amount: 2_000,
-            name: "Expense 2",
+            name: "Expense 2".to_string(),
             recurrence_id: None,
             tags: None,
         });
         expenses.push(Expense {
             id: 3,
             active: true,
-            amount: 3_000,
-            name: "Expense 2",
+            name: "Expense 2".to_string(),
             recurrence_id: None,
             tags: None,
         });

@@ -1,4 +1,4 @@
-pub mod csv {
+pub mod _csv {
     use std::error::Error;
     use std::fs::File;
 

@@ -7,6 +7,7 @@ pub struct Payment {
     pub id: usize,
     pub date: DateTime<Utc>,
     pub income_id: usize,
+    pub amount_id: usize,
 }
 
 impl Payment {

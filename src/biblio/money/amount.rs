@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Amount {
+    id: usize,
     // use to over/under estimate
     pub low: Option<usize>,
     pub high: Option<usize>,

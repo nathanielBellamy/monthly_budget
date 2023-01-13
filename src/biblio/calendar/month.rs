@@ -1,16 +1,11 @@
 use crate::biblio::money::expense::Expense;
 use crate::biblio::money::income::Income;
-use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
 pub struct Month {
     pub id: u16,
     pub key: MonthKey,
     pub budget: usize,
-
-    #[serde(bound(deserialize = "Income: Deserialize<'de>"))]
     pub incomes: Vec<Income>,
-    #[serde(bound(deserialize = "Expense: Deserialize<'de>"))]
     pub expenses: Vec<Expense>,
     pub savings_at_start: usize,
 }
@@ -141,21 +136,18 @@ mod tests {
             active: true,
             name: "Income 1".to_string(),
             recurrence_id: None,
-            tags: None,
         });
         incomes.push(Income {
             id: 2,
             active: false,
             name: "Income 2".to_string(),
             recurrence_id: None,
-            tags: None,
         });
         incomes.push(Income {
             id: 3,
             active: true,
             name: "Income 3".to_string(),
             recurrence_id: None,
-            tags: None,
         });
 
         let mut expenses: Vec<Expense> = Vec::new();
@@ -164,21 +156,18 @@ mod tests {
             active: true,
             name: "Expense 1".to_string(),
             recurrence_id: None,
-            tags: None,
         });
         expenses.push(Expense {
             id: 2,
             active: false,
             name: "Expense 2".to_string(),
             recurrence_id: None,
-            tags: None,
         });
         expenses.push(Expense {
             id: 3,
             active: true,
             name: "Expense 2".to_string(),
             recurrence_id: None,
-            tags: None,
         });
         SeedData { incomes, expenses }
     }

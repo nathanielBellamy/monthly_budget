@@ -1,3 +1,4 @@
+use crate::traits::csv_store::CsvStore;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -8,3 +9,5 @@ pub struct AccountBalance {
     pub date: DateTime<Utc>,
     pub amount: usize,
 }
+
+impl CsvStore for AccountBalance {}

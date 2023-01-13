@@ -8,8 +8,8 @@ mod traits;
 
 fn main() {
     let mut income_store: Vec<Income> = vec![];
-    Income::init_store_vec(&mut income_store, "data/incomes.csv".to_string());
+    Income::init_store_vec(&mut income_store, "data/incomes.csv");
 
     let mut expense_store: Vec<Expense> = vec![];
-    Expense::init_store_vec(&mut expense_store, "data/expenses.csv".to_string());
+    Expense::init_store_vec(&mut expense_store, "data/expenses.csv");
 }

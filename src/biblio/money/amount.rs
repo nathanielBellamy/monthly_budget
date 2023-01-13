@@ -1,3 +1,4 @@
+use crate::traits::csv_store::CsvStore;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -26,6 +27,8 @@ impl Amount {
         res
     }
 }
+
+impl CsvStore for Amount {}
 
 #[cfg(test)]
 mod tests {

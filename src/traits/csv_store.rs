@@ -1,11 +1,11 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use csv::Reader;
 use std::error::Error;
 use std::fs::File;
 
 pub trait CsvStore {
   //TODO: init_store_hash, init_store_my_data_structure
-  fn init_store_vec<T: for<'a> Deserialize<'a> + std::fmt::Debug>(store: &mut Vec<T>, csv_path: String) -> Result<(), Box<dyn Error>>
+  fn init_store_vec<T: for<'a> Deserialize<'a> + std::fmt::Debug>(store: &mut Vec<T>, csv_path: &str) -> Result<(), Box<dyn Error>>
   {
     let file = File::open(csv_path)?;
     let mut reader = Reader::from_reader(file);
@@ -20,6 +20,11 @@ pub trait CsvStore {
         }
     }
     println!("Store: {:?}", store);
+    Ok(())
+  }
+
+  // TODO
+  fn write_csv_store_vec<T: Serialize + std::fmt::Debug>(store: &mut Vec<T>, csv_path: &str) -> Result<(), Box<dyn Error>>{
     Ok(())
   }
 }

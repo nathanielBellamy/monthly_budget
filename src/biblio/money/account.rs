@@ -1,3 +1,4 @@
+use crate::traits::csv_store::CsvStore;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -13,9 +14,11 @@ impl Account {
     }
 }
 
+impl CsvStore for Account {}
+
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
 
     #[test]
     fn release_funds_subtracts_ammount_from_acc() {}

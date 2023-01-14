@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 pub struct AccountBalance {
     pub id: usize,
     pub account_id: usize,
-    pub date: DateTime<Utc>,
-    pub amount: usize,
+    pub reported_at: DateTime<Utc>,
+    pub amount: f64,
 }
 
 impl CsvStore for AccountBalance {}

@@ -1,12 +1,12 @@
-use crate::traits::csv_store::CsvStore;
 use crate::biblio::money::account::Account;
+use crate::traits::csv_store::CsvStore;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PaymentReceived {
     pub id: usize,
-    pub date: DateTime<Utc>,
+    pub completed_at: DateTime<Utc>,
     pub income_id: usize,
     pub amount_id: usize,
 }

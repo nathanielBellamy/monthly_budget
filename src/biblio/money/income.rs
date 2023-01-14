@@ -6,7 +6,6 @@ pub struct Income {
     pub id: usize,
     pub active: bool,
     pub name: String,
-    pub recurrence_id: Option<usize>,
 }
 
 impl Income {

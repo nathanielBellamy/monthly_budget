@@ -1,3 +1,4 @@
-id,active,name,recurrence_id \n
-1,true,mortgage,1 \n
-2,true,food,2 \n
+id,active,name, \n
+1,true,mortgage, \n
+2,true,food, \n
+3,true,dog, \n

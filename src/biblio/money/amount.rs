@@ -4,27 +4,26 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Amount {
-    id: usize,
+    pub id: usize,
+    pub standard: f64,
     // use to over/under estimate
-    pub low: Option<usize>,
-    pub high: Option<usize>,
-    pub standard: usize,
+    pub low: Option<f64>,
+    pub high: Option<f64>,
 }
 
 impl Amount {
-    pub fn randomize(&self) -> usize {
-        let mut low: usize = 0;
-        let high: usize;
+    pub fn randomize(&self) -> f64 {
+        let mut low: f64 = 0.0;
+        let high: f64;
         if let Some(num) = self.low {
             low = num
         }
         match self.high {
             Some(num) => high = num,
-            _ => high = self.standard * 3, // TODO: 3 is a magic number here
-                                           //   tune logic for useful randomization
+            _ => high = self.standard * 3.0, // TODO: 3 is a magic number here
+                                             //   tune logic for useful randomization
         }
-        let res = rand::thread_rng().gen_range(low..high);
-        res
+        rand::thread_rng().gen_range(low..high)
     }
 }
 
@@ -44,9 +43,10 @@ mod tests {
 
     fn test_amount() -> Amount {
         Amount {
-            low: Some(10),
-            high: Some(100),
-            standard: 50,
+            id: 1,
+            standard: 50.0,
+            low: Some(10.0),
+            high: Some(100.0),
         }
     }
 }

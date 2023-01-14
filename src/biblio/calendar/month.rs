@@ -70,7 +70,6 @@ impl Month {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
 pub enum MonthKey {
     Jan,
     Feb,
@@ -135,19 +134,16 @@ mod tests {
             id: 1,
             active: true,
             name: "Income 1".to_string(),
-            recurrence_id: None,
         });
         incomes.push(Income {
             id: 2,
             active: false,
             name: "Income 2".to_string(),
-            recurrence_id: None,
         });
         incomes.push(Income {
             id: 3,
             active: true,
             name: "Income 3".to_string(),
-            recurrence_id: None,
         });
 
         let mut expenses: Vec<Expense> = Vec::new();
@@ -155,19 +151,16 @@ mod tests {
             id: 1,
             active: true,
             name: "Expense 1".to_string(),
-            recurrence_id: None,
         });
         expenses.push(Expense {
             id: 2,
             active: false,
             name: "Expense 2".to_string(),
-            recurrence_id: None,
         });
         expenses.push(Expense {
             id: 3,
             active: true,
             name: "Expense 2".to_string(),
-            recurrence_id: None,
         });
         SeedData { incomes, expenses }
     }

@@ -5,9 +5,10 @@ use crate::biblio::money::expense::Expense;
 use crate::biblio::money::income::Income;
 use crate::biblio::money::payment::Payment;
 use crate::biblio::money::payment_received::PaymentReceived;
-use crate::traits::csv_store::CsvStore;
+use crate::traits::csv_store::{CsvReadResult, CsvStore};
 use std::error::Error;
 
+#[derive(Debug)]
 pub struct Store {
     pub accounts: Vec<Account>,
     pub account_balances: Vec<AccountBalance>,
@@ -31,34 +32,25 @@ impl Store {
         }
     }
 
-    pub fn init(&mut self) -> Result<(), Box<dyn Error>> {
-        let account_res = Account::init_store_vec(&mut self.accounts, "data/accounts.csv");
-        let account_balance_res =
-            AccountBalance::init_store_vec(&mut self.account_balances, "data/account_balances.csv");
-        let amount_res = Amount::init_store_vec(&mut self.amounts, "data/amounts.csv");
-        let expense_res = Expense::init_store_vec(&mut self.expenses, "data/expenses.csv");
-        let income_res = Income::init_store_vec(&mut self.incomes, "data/incomes.csv");
-        let payment_res = Payment::init_store_vec(&mut self.payments, "data/payments.csv");
-        let payments_received_res = PaymentReceived::init_store_vec(
-            &mut self.payments_received,
-            "data/payments_received.csv",
-        );
-
-        let import_res = vec![
-            account_res,
-            account_balance_res,
-            amount_res,
-            expense_res,
-            income_res,
-            payment_res,
-            payments_received_res,
+    pub fn init(&mut self) -> Result<&mut Store, Box<dyn Error>> {
+        let import_res: [CsvReadResult; 7] = [
+            Account::init_store_vec(&mut self.accounts, "data/accounts.csv"),
+            AccountBalance::init_store_vec(&mut self.account_balances, "data/account_balances.csv"),
+            Amount::init_store_vec(&mut self.amounts, "data/amounts.csv"),
+            Expense::init_store_vec(&mut self.expenses, "data/expenses.csv"),
+            Income::init_store_vec(&mut self.incomes, "data/incomes.csv"),
+            Payment::init_store_vec(&mut self.payments, "data/payments.csv"),
+            PaymentReceived::init_store_vec(
+                &mut self.payments_received,
+                "data/payments_received.csv",
+            ),
         ];
 
         for res in import_res.iter() {
             if let Err(err) = res {
-                println!("{:?}", err);
+                return Err(From::from(format!("Init Store Error: {:?}", err)));
             }
         }
-        Ok(())
+        Ok(self)
     }
 }

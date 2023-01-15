@@ -1,5 +1,4 @@
 use crate::schema::money::payment::Payment;
-use crate::spec::initializer::Initializer;
 use crate::store::store::Store;
 use crate::traits::csv_store::CsvStore;
 use chrono::DateTime;
@@ -11,6 +10,8 @@ pub struct Expense {
     pub active: bool,
     pub name: String,
 }
+
+impl CsvStore for Expense {}
 
 impl<'a, 'b: 'a> Expense {
     pub fn payments(&'a self, store: &'b Store) -> Vec<&Payment> {
@@ -33,16 +34,16 @@ impl<'a, 'b: 'a> Expense {
     }
 }
 
-impl CsvStore for Expense {}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::spec::spec::Spec;
 
     #[test]
+    #[allow(non_snake_case)]
     fn payments__retrieves_records_from_store() {
         let mut store = Store::new();
-        Initializer::init(&mut store);
+        Spec::init(&mut store);
 
         let expense = &store.expenses[0];
         let payments = expense.payments(&store);
@@ -66,9 +67,10 @@ mod tests {
     }
 
     #[test]
+    #[allow(non_snake_case)]
     fn last_payment__returns_most_recent_payment() {
         let mut store = Store::new();
-        Initializer::init(&mut store);
+        Spec::init(&mut store);
 
         let expense = &store.expenses[0];
         let payments = expense.payments(&store);

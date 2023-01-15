@@ -1,8 +1,10 @@
+use crate::spec::spec::Spec;
+use crate::store::store::Store;
 use crate::traits::csv_store::CsvStore;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct Amount {
     pub id: usize,
     pub standard: f64,
@@ -10,6 +12,8 @@ pub struct Amount {
     pub low: Option<f64>,
     pub high: Option<f64>,
 }
+
+impl CsvStore for Amount {}
 
 impl Amount {
     pub fn randomize(&self) -> f64 {
@@ -27,26 +31,19 @@ impl Amount {
     }
 }
 
-impl CsvStore for Amount {}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn randomize_returns_random_number_between_low_and_high() {
-        let amount = test_amount();
+    #[allow(non_snake_case)]
+    fn randomize__returns_random_number_between_low_and_high() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let amount = &store.amounts[2]; // first amount in spec data with high, low
         let randomized = amount.randomize();
         assert!(randomized < amount.high.unwrap());
         assert!(randomized > amount.low.unwrap());
-    }
-
-    fn test_amount() -> Amount {
-        Amount {
-            id: 1,
-            standard: 50.0,
-            low: Some(10.0),
-            high: Some(100.0),
-        }
     }
 }

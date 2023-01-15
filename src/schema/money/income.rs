@@ -1,5 +1,4 @@
 use crate::schema::money::payment_received::PaymentReceived;
-use crate::spec::initializer::Initializer;
 use crate::store::store::Store;
 use crate::traits::csv_store::CsvStore;
 use chrono::DateTime;
@@ -38,11 +37,13 @@ impl<'a, 'b: 'a> Income {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::spec::spec::Spec;
 
     #[test]
+    #[allow(non_snake_case)]
     fn payments_received__retrieves_records_from_store() {
         let mut store = Store::new();
-        Initializer::init(&mut store);
+        Spec::init(&mut store);
 
         let income = &store.incomes[0];
         let payments_received = income.payments_received(&store);
@@ -66,9 +67,10 @@ mod tests {
     }
 
     #[test]
+    #[allow(non_snake_case)]
     fn last_payment__returns_most_recent_payment() {
         let mut store = Store::new();
-        Initializer::init(&mut store);
+        Spec::init(&mut store);
 
         let income = &store.incomes[0];
         let payments_received = income.payments_received(&store);

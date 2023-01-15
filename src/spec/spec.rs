@@ -1,7 +1,7 @@
 use crate::store::store::Store;
-pub struct Initializer;
+pub struct Spec;
 
-impl<'a> Initializer {
+impl<'a> Spec {
     pub fn init(store: &mut Store) -> &mut Store {
         store.init(Some("src/spec/data/")).unwrap()
     }

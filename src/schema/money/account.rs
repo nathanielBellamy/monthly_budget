@@ -1,3 +1,5 @@
+use crate::schema::money::account_balance::AccountBalance;
+use crate::store::store::Store;
 use crate::traits::csv_store::CsvStore;
 use serde::{Deserialize, Serialize};
 
@@ -7,14 +9,24 @@ pub struct Account {
     pub name: String,
 }
 
+impl CsvStore for Account {}
+
 impl Account {
-    pub fn release_funds(&self, _from_acc: &Account) -> usize {
-        //
-        0
+    pub fn current_balance(&self, store: &Store) -> Option<f64> {
+        let mut balance: Option<&AccountBalance> = None;
+        for bal in store.account_balances.iter().rev() {
+            // most recently pushed balance
+            if bal.account_id == self.id {
+                balance = Some(bal);
+                break;
+            }
+        }
+        match balance {
+            None => None,
+            Some(bal) => Some(bal.amount),
+        }
     }
 }
-
-impl CsvStore for Account {}
 
 #[cfg(test)]
 mod tests {

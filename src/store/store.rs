@@ -1,10 +1,10 @@
-use crate::biblio::money::account::Account;
-use crate::biblio::money::account_balance::AccountBalance;
-use crate::biblio::money::amount::Amount;
-use crate::biblio::money::expense::Expense;
-use crate::biblio::money::income::Income;
-use crate::biblio::money::payment::Payment;
-use crate::biblio::money::payment_received::PaymentReceived;
+use crate::schema::money::account::Account;
+use crate::schema::money::account_balance::AccountBalance;
+use crate::schema::money::amount::Amount;
+use crate::schema::money::expense::Expense;
+use crate::schema::money::income::Income;
+use crate::schema::money::payment::Payment;
+use crate::schema::money::payment_received::PaymentReceived;
 use crate::traits::csv_store::{CsvReadResult, CsvStore};
 use std::error::Error;
 
@@ -19,6 +19,8 @@ pub struct Store {
     pub payments_received: Vec<PaymentReceived>,
 }
 
+pub type StoreInitResult<'a> = Result<&'a mut Store, Box<dyn Error>>;
+
 impl Store {
     pub fn new() -> Store {
         Store {
@@ -32,17 +34,40 @@ impl Store {
         }
     }
 
-    pub fn init(&mut self) -> Result<&mut Store, Box<dyn Error>> {
+    pub fn init(&mut self, data_root: Option<&'static str>) -> StoreInitResult {
+        let path: &str;
+        match data_root {
+            None => path = "data/",
+            Some(root) => path = root,
+        }
         let import_res: [CsvReadResult; 7] = [
-            Account::init_store_vec(&mut self.accounts, "data/accounts.csv"),
-            AccountBalance::init_store_vec(&mut self.account_balances, "data/account_balances.csv"),
-            Amount::init_store_vec(&mut self.amounts, "data/amounts.csv"),
-            Expense::init_store_vec(&mut self.expenses, "data/expenses.csv"),
-            Income::init_store_vec(&mut self.incomes, "data/incomes.csv"),
-            Payment::init_store_vec(&mut self.payments, "data/payments.csv"),
+            Account::init_store_vec(
+                &mut self.accounts,
+                format!("{}{}", path, "accounts.csv").as_str(),
+            ),
+            AccountBalance::init_store_vec(
+                &mut self.account_balances,
+                format!("{}{}", path, "account_balances.csv").as_str(),
+            ),
+            Amount::init_store_vec(
+                &mut self.amounts,
+                format!("{}{}", path, "amounts.csv").as_str(),
+            ),
+            Expense::init_store_vec(
+                &mut self.expenses,
+                format!("{}{}", path, "expenses.csv").as_str(),
+            ),
+            Income::init_store_vec(
+                &mut self.incomes,
+                format!("{}{}", path, "incomes.csv").as_str(),
+            ),
+            Payment::init_store_vec(
+                &mut self.payments,
+                format!("{}{}", path, "payments.csv").as_str(),
+            ),
             PaymentReceived::init_store_vec(
                 &mut self.payments_received,
-                "data/payments_received.csv",
+                format!("{}{}", path, "payments_received.csv").as_str(),
             ),
         ];
 

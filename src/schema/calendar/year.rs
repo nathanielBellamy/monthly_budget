@@ -1,6 +1,6 @@
-use crate::biblio::money::expense::Expense;
-use crate::biblio::money::income::Income;
 use crate::calendar::month::{Month, MonthKey};
+use crate::schema::money::expense::Expense;
+use crate::schema::money::income::Income;
 
 pub struct Year {
     pub id: u16,
@@ -24,26 +24,6 @@ impl Year {
             &self.jan, &self.feb, &self.mar, &self.apr, &self.may, &self.jun, &self.jul, &self.aug,
             &self.sep, &self.oct, &self.nov, &self.dec,
         ]
-    }
-
-    pub fn gross_income(&self) -> usize {
-        let mut res: usize = 0;
-        for month in self.month_array().iter() {
-            res += month.gross_income()
-        }
-        res
-    }
-
-    pub fn gross_expense(&self) -> usize {
-        let mut res: usize = 0;
-        for month in self.month_array().iter() {
-            res += month.gross_expense();
-        }
-        res
-    }
-
-    pub fn net_income(&self) -> usize {
-        self.gross_income() - self.gross_expense()
     }
 }
 

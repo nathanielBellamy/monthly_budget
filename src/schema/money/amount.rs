@@ -32,7 +32,7 @@ impl Amount {
 }
 
 #[cfg(test)]
-mod tests {
+mod amount_spec {
     use super::*;
 
     #[test]

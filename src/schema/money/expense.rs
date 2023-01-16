@@ -35,7 +35,7 @@ impl<'a, 'b: 'a> Expense {
 }
 
 #[cfg(test)]
-mod tests {
+mod expense_spec {
     use super::*;
     use crate::spec::spec::Spec;
 

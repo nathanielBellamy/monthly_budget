@@ -27,7 +27,7 @@ pub trait CsvStore {
     }
 
     // TODO
-    fn write_csv_store_vec<T: Serialize + std::fmt::Debug>(
+    fn _write_csv_store_vec<T: Serialize + std::fmt::Debug>(
         _store: &mut Vec<T>,
         _csv_path: &str,
     ) -> Result<(), Box<dyn Error>> {

@@ -29,7 +29,7 @@ impl Account {
 }
 
 #[cfg(test)]
-mod tests {
+mod account_spec {
     // use super::*;
 
     #[test]

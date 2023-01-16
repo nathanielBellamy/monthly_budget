@@ -19,17 +19,6 @@ pub struct Payment {
 impl CsvStore for Payment {}
 
 impl<'a, 'b: 'a> Payment {
-    pub fn from_account(&'a self, store: &'b Store) -> Option<&Account> {
-        let mut account: Option<&Account> = None;
-        for acc in store.accounts.iter() {
-            if acc.id == self.account_id {
-                account = Some(acc);
-                break;
-            }
-        }
-        account
-    }
-
     pub fn amount(&'a self, store: &'b Store) -> Option<&Amount> {
         let mut amount: Option<&Amount> = None;
         for amt in store.amounts.iter() {
@@ -39,6 +28,17 @@ impl<'a, 'b: 'a> Payment {
             }
         }
         amount
+    }
+
+    pub fn from_account(&'a self, store: &'b Store) -> Option<&Account> {
+        let mut account: Option<&Account> = None;
+        for acc in store.accounts.iter() {
+            if acc.id == self.account_id {
+                account = Some(acc);
+                break;
+            }
+        }
+        account
     }
 
     pub fn release_funds(&self, store: &mut Store) -> Result<(), Box<dyn Error>> {
@@ -68,7 +68,7 @@ impl<'a, 'b: 'a> Payment {
 }
 
 #[cfg(test)]
-mod tests {
+mod payment_spec {
     use super::*;
     use crate::spec::spec::Spec;
 
@@ -108,14 +108,25 @@ mod tests {
 
     #[test]
     #[allow(non_snake_case)]
-    fn release_funds__creates_account_balance_record() {
+    fn release_funds__creates_account_balance_record_with_correct_amount() {
         let mut store = Store::new();
         Spec::init(&mut store);
 
         let payment = store.payments[0].clone();
+        let old_account_balance: f64 = payment
+            .from_account(&store)
+            .unwrap()
+            .current_balance(&store)
+            .unwrap();
         let acc_bal_count_curr = store.account_balances.len();
         payment.release_funds(&mut store).unwrap();
         assert_eq!(acc_bal_count_curr + 1, store.account_balances.len());
+
+        let new_account_balance = &store.account_balances[acc_bal_count_curr];
+        assert_eq!(
+            new_account_balance.amount,
+            old_account_balance - payment.standard_amount(&store).unwrap()
+        );
     }
 
     #[test]

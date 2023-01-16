@@ -35,7 +35,7 @@ impl<'a, 'b: 'a> Income {
 }
 
 #[cfg(test)]
-mod tests {
+mod income_spec {
     use super::*;
     use crate::spec::spec::Spec;
 

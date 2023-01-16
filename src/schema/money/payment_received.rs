@@ -1,3 +1,6 @@
+use crate::schema::money::account::Account;
+use crate::schema::money::account_balance::AccountBalance;
+use crate::schema::money::amount::Amount;
 use crate::store::store::Store;
 use crate::traits::csv_store::CsvStore;
 use chrono::{DateTime, Utc};
@@ -13,20 +16,126 @@ pub struct PaymentReceived {
     pub amount_id: usize,
 }
 
-impl PaymentReceived {
-    pub fn _deposit_funds(&self, _store: &Store) -> Result<(), Box<dyn Error>> {
-        // create payment_received record
+impl CsvStore for PaymentReceived {}
+
+impl<'a, 'b: 'a> PaymentReceived {
+    pub fn amount(&'a self, store: &'b Store) -> Option<&Amount> {
+        let mut amount: Option<&Amount> = None;
+        for amt in store.amounts.iter() {
+            if amt.id == self.amount_id {
+                amount = Some(amt);
+                break;
+            }
+        }
+        amount
+    }
+
+    pub fn to_account(&'a self, store: &'b Store) -> Option<&Account> {
+        let mut account: Option<&Account> = None;
+        for acc in store.accounts.iter() {
+            if acc.id == self.account_id {
+                account = Some(acc);
+                break;
+            }
+        }
+        account
+    }
+
+    pub fn deposit_funds(&self, store: &mut Store) -> Result<(), Box<dyn Error>> {
+        store.payments_received.push(*self);
+
         // create account_balance record
+        if let Some(acc) = self.to_account(store) {
+            let new_balance = AccountBalance {
+                id: store.accounts.len(),
+                account_id: self.account_id,
+                reported_at: self.completed_at,
+                amount: acc.current_balance(store).unwrap() + self.standard_amount(store).unwrap(),
+            };
+            store.account_balances.push(new_balance)
+        }
+
         Ok(())
+    }
+
+    pub fn standard_amount(&self, store: &Store) -> Option<f64> {
+        match self.amount(store) {
+            None => None,
+            Some(amt) => Some(amt.standard),
+        }
     }
 }
 
-impl CsvStore for PaymentReceived {}
-
 #[cfg(test)]
-mod tests {
-    // use super::*;
+mod payment_received_spec {
+    use super::*;
+    use crate::spec::spec::Spec;
 
     #[test]
-    fn release_funds_subtracts_ammount_from_acc() {}
+    #[allow(non_snake_case)]
+    fn to_account__returns_account_by_id() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let payment_rec = &store.payments_received[0];
+        let to_acc = payment_rec.to_account(&store).unwrap();
+        assert_eq!(payment_rec.account_id, to_acc.id)
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn amount__returns_amount_by_id() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let payment_rec = &store.payments_received[0];
+        let amount = payment_rec.amount(&store).unwrap();
+        assert_eq!(payment_rec.amount_id, amount.id)
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn deposit_funds__creates_new_payment_received_record() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let payment_rec = store.payments_received[0].clone();
+        let payment_rec_count_curr = store.payments_received.len();
+        payment_rec.deposit_funds(&mut store).unwrap();
+        assert_eq!(payment_rec_count_curr + 1, store.payments_received.len());
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn release_funds__creates_account_balance_record_with_correct_amount() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let payment_rec = store.payments_received[0].clone();
+        let old_account_balance: f64 = payment_rec
+            .to_account(&store)
+            .unwrap()
+            .current_balance(&store)
+            .unwrap();
+        let acc_bal_count_curr = store.account_balances.len();
+        payment_rec.deposit_funds(&mut store).unwrap();
+        assert_eq!(acc_bal_count_curr + 1, store.account_balances.len());
+
+        let new_account_balance = &store.account_balances[acc_bal_count_curr];
+        assert_eq!(
+            new_account_balance.amount,
+            old_account_balance + payment_rec.standard_amount(&store).unwrap()
+        );
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn standard_amount__returns_standard_field_of_associated_amount() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let payment = &store.payments[0];
+        let amount = payment.amount(&store).unwrap();
+        assert_eq!(payment.standard_amount(&store).unwrap(), amount.standard);
+    }
 }

@@ -1,16 +1,16 @@
-use crate::schema::money::expense::Expense;
-use crate::schema::money::income::Income;
+use crate::calendar::day::Day;
+use chrono::{DateTime, Local};
 
 pub struct Month {
-    pub id: u16,
     pub key: MonthKey,
-    pub budget: usize,
-    pub incomes: Vec<Income>,
-    pub expenses: Vec<Expense>,
-    pub savings_at_start: usize,
+    pub days: Vec<Day>,
 }
 
 impl Month {
+    pub fn add_day(&mut self, day: Day) -> () {
+        self.days.push(day);
+    }
+
     pub fn display_name(&self) -> &str {
         match self.key {
             MonthKey::Jan => "January",
@@ -63,5 +63,25 @@ pub enum MonthKey {
 
 #[cfg(test)]
 mod tests {
-    // use super::*;
+    use super::*;
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn add_day__adds_day_to_self_days() {
+        let mut month = Month {
+            key: MonthKey::Jan,
+            days: vec![],
+        };
+        let day = Day {
+            payments: vec![],
+            payments_received: vec![],
+            date: Local::now(),
+        };
+
+        assert_eq!(0, month.days.len());
+
+        month.add_day(day);
+
+        assert_eq!(1, month.days.len());
+    }
 }

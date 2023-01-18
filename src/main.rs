@@ -1,7 +1,7 @@
 use crate::error_handler::error_handler::ErrorHandler;
-use crate::schema::calendar;
 use crate::store::store::Store;
 
+mod calendar;
 mod error_handler;
 mod schema;
 mod spec;

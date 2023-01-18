@@ -1,10 +1,12 @@
-use crate::schema::money::account::Account;
-use crate::schema::money::account_balance::AccountBalance;
-use crate::schema::money::amount::Amount;
+use crate::schema::account::{Account, AccountStore};
+use crate::schema::account_balance::AccountBalance;
+use crate::schema::amount::{Amount, AmountStore};
 use crate::store::store::Store;
+use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::error::Error;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
@@ -16,25 +18,36 @@ pub struct Payment {
     pub expense_id: usize,
 }
 
+impl CsvRecord<Payment> for Payment {
+    fn id(&self) -> usize {
+        self.id
+    }
+
+    fn clone_record(&self) -> Payment {
+        self.clone()
+    }
+}
 impl CsvStore for Payment {}
 
+pub type PaymentStore = HashMap<usize, Payment>;
+
 impl<'a, 'b: 'a> Payment {
-    pub fn amount(&'a self, store: &'b Store) -> Option<&Amount> {
-        let mut amount: Option<&Amount> = None;
-        for amt in store.amounts.iter() {
+    pub fn amount(&'a self, store: &'b AmountStore) -> Option<Amount> {
+        let mut amount: Option<Amount> = None;
+        for (_id, amt) in store.iter() {
             if amt.id == self.amount_id {
-                amount = Some(amt);
+                amount = Some(*amt);
                 break;
             }
         }
         amount
     }
 
-    pub fn from_account(&'a self, store: &'b Store) -> Option<&Account> {
-        let mut account: Option<&Account> = None;
-        for acc in store.accounts.iter() {
-            if acc.id == self.account_id {
-                account = Some(acc);
+    pub fn from_account(&'a self, store: &'b AccountStore) -> Option<Account> {
+        let mut account: Option<Account> = None;
+        for (id, acc) in store.iter() {
+            if *id == self.account_id {
+                account = Some(*acc);
                 break;
             }
         }
@@ -43,23 +56,27 @@ impl<'a, 'b: 'a> Payment {
 
     pub fn release_funds(&self, store: &mut Store) -> Result<(), Box<dyn Error>> {
         // create payment record
-        store.payments.push(*self);
+        store.payments.entry(self.id).or_insert(*self);
 
         // create account_balance record
-        if let Some(acc) = self.from_account(store) {
+        if let Some(acc) = self.from_account(&mut store.accounts) {
             let new_balance = AccountBalance {
-                id: store.accounts.len(),
+                id: AccountBalance::new_id(&store.account_balances),
                 account_id: self.account_id,
                 reported_at: self.completed_at,
-                amount: acc.current_balance(store).unwrap() - self.standard_amount(store).unwrap(),
+                amount: acc.current_balance(store).unwrap()
+                    - self.standard_amount(&store.amounts).unwrap(),
             };
-            store.account_balances.push(new_balance)
+            store
+                .account_balances
+                .entry(new_balance.id)
+                .or_insert(new_balance);
         }
 
         Ok(())
     }
 
-    pub fn standard_amount(&self, store: &Store) -> Option<f64> {
+    pub fn standard_amount(&self, store: &AmountStore) -> Option<f64> {
         match self.amount(store) {
             None => None,
             Some(amt) => Some(amt.standard),
@@ -78,9 +95,9 @@ mod payment_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment = &store.payments[0];
+        let payment = &store.payments[&0];
         let from_acc = payment.from_account(&store).unwrap();
-        assert_eq!(payment.account_id, from_acc.id)
+        assert_eq!(payment.account_id, from_acc.id);
     }
 
     #[test]
@@ -89,7 +106,7 @@ mod payment_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment = &store.payments[0];
+        let payment = &store.payments[&0];
         let amount = payment.amount(&store).unwrap();
         assert_eq!(payment.amount_id, amount.id)
     }
@@ -100,7 +117,7 @@ mod payment_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment = store.payments[0].clone();
+        let payment = store.payments[&0].clone();
         let payment_count_curr = store.payments.len();
         payment.release_funds(&mut store).unwrap();
         assert_eq!(payment_count_curr + 1, store.payments.len());
@@ -112,7 +129,7 @@ mod payment_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment = store.payments[0].clone();
+        let payment = store.payments[&0].clone();
         let old_account_balance: f64 = payment
             .from_account(&store)
             .unwrap()
@@ -122,7 +139,7 @@ mod payment_spec {
         payment.release_funds(&mut store).unwrap();
         assert_eq!(acc_bal_count_curr + 1, store.account_balances.len());
 
-        let new_account_balance = &store.account_balances[acc_bal_count_curr];
+        let new_account_balance = &store.account_balances[&acc_bal_count_curr];
         assert_eq!(
             new_account_balance.amount,
             old_account_balance - payment.standard_amount(&store).unwrap()
@@ -135,7 +152,7 @@ mod payment_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment = &store.payments[0];
+        let payment = &store.payments[&0];
         let amount = payment.amount(&store).unwrap();
         assert_eq!(payment.standard_amount(&store).unwrap(), amount.standard);
     }

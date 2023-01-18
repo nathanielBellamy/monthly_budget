@@ -34,8 +34,8 @@ pub type PaymentStore = HashMap<usize, Payment>;
 impl<'a, 'b: 'a> Payment {
     pub fn amount(&'a self, store: &'b AmountStore) -> Option<Amount> {
         let mut amount: Option<Amount> = None;
-        for (_id, amt) in store.iter() {
-            if amt.id == self.amount_id {
+        for (id, amt) in store.iter() {
+            if *id == self.amount_id {
                 amount = Some(*amt);
                 break;
             }
@@ -47,7 +47,7 @@ impl<'a, 'b: 'a> Payment {
         let mut account: Option<Account> = None;
         for (id, acc) in store.iter() {
             if *id == self.account_id {
-                account = Some(*acc);
+                account = Some(acc.clone_record());
                 break;
             }
         }
@@ -64,7 +64,7 @@ impl<'a, 'b: 'a> Payment {
                 id: AccountBalance::new_id(&store.account_balances),
                 account_id: self.account_id,
                 reported_at: self.completed_at,
-                amount: acc.current_balance(store).unwrap()
+                amount: acc.current_balance(&store.account_balances).unwrap()
                     - self.standard_amount(&store.amounts).unwrap(),
             };
             store
@@ -95,8 +95,8 @@ mod payment_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment = &store.payments[&0];
-        let from_acc = payment.from_account(&store).unwrap();
+        let payment = Payment::by_id(1, &mut store.payments).unwrap();
+        let from_acc = payment.from_account(&store.accounts).unwrap();
         assert_eq!(payment.account_id, from_acc.id);
     }
 
@@ -106,8 +106,8 @@ mod payment_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment = &store.payments[&0];
-        let amount = payment.amount(&store).unwrap();
+        let payment = Payment::by_id(1, &mut store.payments).unwrap();
+        let amount = payment.amount(&store.amounts).unwrap();
         assert_eq!(payment.amount_id, amount.id)
     }
 
@@ -117,7 +117,13 @@ mod payment_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment = store.payments[&0].clone();
+        let payment = Payment {
+            id: Payment::new_id(&mut store.payments),
+            completed_at: Utc::now(),
+            account_id: 1,
+            amount_id: 2,
+            expense_id: 1,
+        };
         let payment_count_curr = store.payments.len();
         payment.release_funds(&mut store).unwrap();
         assert_eq!(payment_count_curr + 1, store.payments.len());
@@ -129,20 +135,21 @@ mod payment_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment = store.payments[&0].clone();
+        let payment = Payment::by_id(1, &mut store.payments).unwrap();
         let old_account_balance: f64 = payment
-            .from_account(&store)
+            .from_account(&store.accounts)
             .unwrap()
-            .current_balance(&store)
+            .current_balance(&store.account_balances)
             .unwrap();
         let acc_bal_count_curr = store.account_balances.len();
         payment.release_funds(&mut store).unwrap();
         assert_eq!(acc_bal_count_curr + 1, store.account_balances.len());
 
-        let new_account_balance = &store.account_balances[&acc_bal_count_curr];
+        let new_account_balance =
+            AccountBalance::by_id(acc_bal_count_curr + 1, &mut store.account_balances).unwrap();
         assert_eq!(
             new_account_balance.amount,
-            old_account_balance - payment.standard_amount(&store).unwrap()
+            old_account_balance - payment.standard_amount(&store.amounts).unwrap()
         );
     }
 
@@ -152,8 +159,11 @@ mod payment_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment = &store.payments[&0];
-        let amount = payment.amount(&store).unwrap();
-        assert_eq!(payment.standard_amount(&store).unwrap(), amount.standard);
+        let payment = Payment::by_id(1, &mut store.payments).unwrap();
+        let amount = payment.amount(&store.amounts).unwrap();
+        assert_eq!(
+            payment.standard_amount(&store.amounts).unwrap(),
+            amount.standard
+        );
     }
 }

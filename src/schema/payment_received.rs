@@ -1,6 +1,6 @@
 use crate::schema::account::Account;
 use crate::schema::account_balance::AccountBalance;
-use crate::schema::amount::Amount;
+use crate::schema::amount::{Amount, AmountStore};
 use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
@@ -32,11 +32,11 @@ impl CsvStore for PaymentReceived {}
 pub type PaymentReceivedStore = HashMap<usize, PaymentReceived>;
 
 impl<'a, 'b: 'a> PaymentReceived {
-    pub fn amount(&'a self, store: &'b Store) -> Option<&Amount> {
-        let mut amount: Option<&Amount> = None;
-        for (_id, amt) in store.amounts.iter() {
-            if amt.id == self.amount_id {
-                amount = Some(amt);
+    pub fn amount(&'a self, store: &'b AmountStore) -> Option<Amount> {
+        let mut amount: Option<Amount> = None;
+        for (id, amt) in store.iter() {
+            if *id == self.amount_id {
+                amount = Some(*amt);
                 break;
             }
         }
@@ -63,7 +63,8 @@ impl<'a, 'b: 'a> PaymentReceived {
                 id: AccountBalance::new_id(&store.account_balances),
                 account_id: self.account_id,
                 reported_at: self.completed_at,
-                amount: acc.current_balance(store).unwrap() + self.standard_amount(store).unwrap(),
+                amount: acc.current_balance(&store.account_balances).unwrap()
+                    + self.standard_amount(&store.amounts).unwrap(),
             };
             store
                 .account_balances
@@ -74,7 +75,7 @@ impl<'a, 'b: 'a> PaymentReceived {
         Ok(())
     }
 
-    pub fn standard_amount(&self, store: &Store) -> Option<f64> {
+    pub fn standard_amount(&self, store: &AmountStore) -> Option<f64> {
         match self.amount(store) {
             None => None,
             Some(amt) => Some(amt.standard),
@@ -93,7 +94,7 @@ mod payment_received_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment_rec = &store.payments_received[&0];
+        let payment_rec = PaymentReceived::by_id(1, &mut store.payments_received).unwrap();
         let to_acc = payment_rec.to_account(&store).unwrap();
         assert_eq!(payment_rec.account_id, to_acc.id)
     }
@@ -104,18 +105,25 @@ mod payment_received_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment_rec = &store.payments_received[&0];
-        let amount = payment_rec.amount(&store).unwrap();
+        let payment_rec = PaymentReceived::by_id(1, &mut store.payments_received).unwrap();
+        let amount = payment_rec.amount(&store.amounts).unwrap();
         assert_eq!(payment_rec.amount_id, amount.id)
     }
 
     #[test]
     #[allow(non_snake_case)]
+    //TODO: deposit_funds__does notre create _new_payment_received_record if pr already exists
     fn deposit_funds__creates_new_payment_received_record() {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment_rec = store.payments_received[&0].clone();
+        let payment_rec = PaymentReceived {
+            id: PaymentReceived::new_id(&mut store.payments_received),
+            completed_at: Utc::now(),
+            account_id: 1,
+            income_id: 2,
+            amount_id: 1,
+        };
         let payment_rec_count_curr = store.payments_received.len();
         payment_rec.deposit_funds(&mut store).unwrap();
         assert_eq!(payment_rec_count_curr + 1, store.payments_received.len());
@@ -127,20 +135,27 @@ mod payment_received_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment_rec = store.payments_received[&0].clone();
+        let payment_rec = PaymentReceived {
+            id: PaymentReceived::new_id(&mut store.payments_received),
+            completed_at: Utc::now(),
+            account_id: 1,
+            income_id: 2,
+            amount_id: 1,
+        };
         let old_account_balance: f64 = payment_rec
             .to_account(&store)
             .unwrap()
-            .current_balance(&store)
+            .current_balance(&store.account_balances)
             .unwrap();
         let acc_bal_count_curr = store.account_balances.len();
         payment_rec.deposit_funds(&mut store).unwrap();
         assert_eq!(acc_bal_count_curr + 1, store.account_balances.len());
 
-        let new_account_balance = &store.account_balances[&acc_bal_count_curr];
+        let new_account_balance =
+            AccountBalance::by_id(acc_bal_count_curr + 1, &mut store.account_balances).unwrap();
         assert_eq!(
             new_account_balance.amount,
-            old_account_balance + payment_rec.standard_amount(&store).unwrap()
+            old_account_balance + payment_rec.standard_amount(&store.amounts).unwrap()
         );
     }
 
@@ -150,8 +165,11 @@ mod payment_received_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let payment = &store.payments[&0];
-        let amount = payment.amount(&store).unwrap();
-        assert_eq!(payment.standard_amount(&store).unwrap(), amount.standard);
+        let payment_received = PaymentReceived::by_id(1, &mut store.payments_received).unwrap();
+        let amount = payment_received.amount(&store.amounts).unwrap();
+        assert_eq!(
+            payment_received.standard_amount(&store.amounts).unwrap(),
+            amount.standard
+        );
     }
 }

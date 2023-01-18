@@ -1,4 +1,4 @@
-use crate::schema::account_balance::AccountBalance;
+use crate::schema::account_balance::{AccountBalance, AccountBalanceStore};
 use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
@@ -40,12 +40,12 @@ impl Account {
         account
     }
 
-    pub fn current_balance(&self, store: &Store) -> Option<f64> {
-        let mut balance: Option<&AccountBalance> = None;
-        for (bal_id, bal) in store.account_balances.iter() {
+    pub fn current_balance(&self, store: &AccountBalanceStore) -> Option<f64> {
+        let mut balance: Option<AccountBalance> = None;
+        for (id, bal) in store.iter() {
             // most recently pushed balance
-            if *bal_id == self.id {
-                balance = Some(bal);
+            if *id == self.id {
+                balance = Some(*bal);
                 break;
             }
         }

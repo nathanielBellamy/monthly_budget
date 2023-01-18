@@ -1,4 +1,4 @@
-use crate::schema::payment_received::PaymentReceived;
+use crate::schema::payment_received::{PaymentReceived, PaymentReceivedStore};
 use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
@@ -30,35 +30,30 @@ impl CsvStore for Income {}
 pub type IncomeStore = HashMap<usize, Income>;
 
 impl<'a, 'b: 'a> Income {
-    // pub fn payments_received(&'a self, store: &'b Store) -> Vec<&PaymentReceived> {
-    //     let mut payments_received: Vec<&PaymentReceived> = vec![];
-    //     for (_id, payment_received) in store.payments_received.iter() {
-    //         if payment_received.income_id == self.id {
-    //             payments_received.push(payment_received)
-    //         }
-    //     }
-    //     payments_received
-    // }
-
-    pub fn payments_received(&'a self, store: &'b Store) -> Vec<PaymentReceived> {
-        let mut payments_received: Vec<PaymentReceived> = vec![];
-        for (_id, payment_received) in store.payments_received.iter() {
+    pub fn payments_received(&'a self, store: &'b PaymentReceivedStore) -> PaymentReceivedStore {
+        let mut payments_received: PaymentReceivedStore = HashMap::new();
+        for (id, payment_received) in store.iter() {
             if payment_received.income_id == self.id {
-                payments_received.push(payment_received.clone_record())
+                payments_received
+                    .entry(*id)
+                    .or_insert(payment_received.clone_record());
             }
         }
-        payments_received.sort_by(|b, a| b.id.cmp(&a.id));
+        println!("HERHEHEREHRERH: {:?}", payments_received);
         payments_received
     }
 
-    pub fn last_payment_received(&'a self, store: &'b Store) -> Option<&PaymentReceived> {
-        let mut payment_received: Option<&PaymentReceived> = None;
-        for pymnt_rcvd in self.payments_received(store).iter() {
+    pub fn last_payment_received(
+        &'a self,
+        store: &'b PaymentReceivedStore,
+    ) -> Option<PaymentReceived> {
+        let mut payment_received: Option<PaymentReceived> = None;
+        for (_id, pymnt_rcvd) in self.payments_received(store).iter() {
             match payment_received {
-                None => payment_received = Some(pymnt_rcvd),
+                None => payment_received = Some(*pymnt_rcvd), // set first
                 Some(pr) => {
                     if pymnt_rcvd.completed_at > pr.completed_at {
-                        payment_received = Some(pr)
+                        payment_received = Some(pymnt_rcvd.clone_record()) //TODO: refactor to avoid unecessayr clone
                     }
                 }
             }
@@ -78,9 +73,9 @@ mod income_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let income = &store.incomes[&0];
-        let payments_received = income.payments_received(&store);
-        let first_payment_received: &PaymentReceived = payments_received[0];
+        let income = Income::by_id(1, &mut store.incomes).unwrap();
+        let payments_received = income.payments_received(&store.payments_received);
+        let first_payment_received: PaymentReceived = payments_received[&1];
         assert_eq!(first_payment_received.id, 1);
         assert_eq!(
             first_payment_received.completed_at,
@@ -89,7 +84,7 @@ mod income_spec {
         assert_eq!(first_payment_received.income_id, income.id);
         assert_eq!(first_payment_received.amount_id, 2);
 
-        let second_payment_received: &PaymentReceived = payments_received[1];
+        let second_payment_received: PaymentReceived = payments_received[&3];
         assert_eq!(second_payment_received.id, 3);
         assert_eq!(second_payment_received.income_id, income.id);
         assert_eq!(
@@ -101,19 +96,21 @@ mod income_spec {
 
     #[test]
     #[allow(non_snake_case)]
-    fn last_payment__returns_most_recent_payment() {
+    fn last_payment_received__returns_most_recent_payment() {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let income = &store.incomes[&0];
-        let payments_received = income.payments_received(&store);
-        let most_recent_payment_received: &PaymentReceived = payments_received[1];
+        let income = Income::by_id(1, &mut store.incomes).unwrap();
+        let payments_received = income.payments_received(&store.payments_received);
+        let most_recent_payment_received: PaymentReceived = payments_received[&3]; // by construction
         assert_eq!(
-            payments_received[1].completed_at > payments_received[0].completed_at,
+            payments_received[&3].completed_at > payments_received[&1].completed_at,
             true
         );
 
-        let res: &PaymentReceived = income.last_payment_received(&store).unwrap();
+        let res: PaymentReceived = income
+            .last_payment_received(&store.payments_received)
+            .unwrap();
         assert_eq!(res.id, most_recent_payment_received.id);
         assert_eq!(res.completed_at, most_recent_payment_received.completed_at);
         assert_eq!(res.income_id, income.id);

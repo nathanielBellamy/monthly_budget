@@ -5,4 +5,4 @@
 
 ##### first ground-up Rust repo
 
-##### cheers
+##### Nathan S

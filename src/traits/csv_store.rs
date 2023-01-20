@@ -50,6 +50,7 @@ pub trait CsvStore<T: for<'a> Deserialize<'a> + std::fmt::Debug + CsvRecord<T> +
     }
 
     fn save_to_store(mut record: T, csv_store: &mut HashMap<usize, T>) -> usize {
+        #[allow(unused_assignments)]
         let mut new_id: usize = 0;
         match record.id() {
           None => {

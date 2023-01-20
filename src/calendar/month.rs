@@ -1,5 +1,5 @@
 use crate::calendar::day::Day;
-use chrono::{DateTime, Local};
+use chrono::Local;
 
 pub struct Month {
     pub key: MonthKey,

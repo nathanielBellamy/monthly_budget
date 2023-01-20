@@ -16,13 +16,6 @@ impl Day {
         self.payments.push(payment)
     }
 
-    // pub fn total_spent(&self) -> f64 {
-    //     let mut total: f64 = 0.0;
-    //     for payment in self.payments.iter() {
-    //         total += payment.amount()
-    //     }
-    // }
-
     pub fn add_payment_received(&mut self, payment_received: PaymentReceived) -> () {
         self.payments_received.push(payment_received)
     }

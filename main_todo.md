@@ -9,13 +9,10 @@
     - I found myself beginning to implement a pattern in which those `CsvRecord` methods,
       which applied only when `self.id = Some(usize)` would call a prelude method
       `self.require_be_in_store()` that would simply check for the presence of an `id`.
-    - But that seemed like a bad pattern for many reasons.
+    - But that seemed like a bad pattern.
     - For now, we'll accept a fair amount of matching on `id` and some leaning on `.unwrap()`
     - However, this does underline the positives of the
-      `HashMap<id: usize, record: T>` datastructure:
-
-      iterating through the elements, we don't need to unwrap the already guarenteed to
-          exist `id`:
+      `HashMap<id: usize, record: T>` datastructure when iterating through the elements
 
           for (id, record) in store.csv_records.iter() {
             if *id == my_matching_id {
@@ -25,4 +22,14 @@
             }
           }
 
+    - further I go, the less I know which way is best. we'll find out
+
+- wrap `main_store` in `RefCell`
+  - so far not necessary but it would be fun to have an excuse to use `RefCell`
+  - long term: multi-thread complex computations wrapping `main_store` in a `Mutex` (and likely casting other data structures as their thread-safe equivalents)
+
+- add SQL
+  - likely postgres
+  - pick a rust engine and/or debug sqlx install
+  - provide db-init from csv directory
 

@@ -9,7 +9,6 @@ use crate::traits::csv_store::{CsvReadResult, CsvStore};
 use std::collections::HashMap;
 use std::error::Error;
 
-//TODO: HashMap's instead of Vec
 #[derive(Debug)]
 pub struct Store {
     pub accounts: HashMap<usize, Account>,

@@ -34,6 +34,7 @@ fn main() {
   };
 
   println!("PaymentComposit: {:?}", payment_composite_test_1);
+
   payment_composite_test_1.create_payment(&mut main_store);
 
   println!("main_store: \n {:?}", main_store);

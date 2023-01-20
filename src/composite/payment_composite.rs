@@ -81,7 +81,7 @@ impl PaymentComposite {
         }
 
         // create Payment record
-        self.payment_id = Some(Payment::new_id(&mut store.payments)); // None case handled above
+        self.payment_id = Some(Payment::new_id(&mut store.payments));
         Payment::save_to_store(
             Payment {
                 id: None,

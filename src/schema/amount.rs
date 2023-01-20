@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct Amount {
-    pub id: usize,
+    pub id: Option<usize>,
     pub standard: f64,
     // use to over/under estimate
     pub low: Option<f64>,
@@ -15,30 +15,24 @@ pub struct Amount {
 }
 
 impl CsvRecord<Amount> for Amount {
-    fn id(&self) -> usize {
+    fn id(&self) -> Option<usize> {
         self.id
+    }
+
+    fn set_id(&mut self, new_id: usize) -> Option<usize> {
+      self.id = Some(new_id);
+      self.id
     }
 
     fn clone_record(&self) -> Amount {
         self.clone()
     }
 }
-impl CsvStore for Amount {}
+impl CsvStore<Amount> for Amount {}
 
 pub type AmountStore = HashMap<usize, Amount>;
 
 impl Amount {
-    pub fn by_id(id: usize, store: &Store) -> Option<&Amount> {
-        let mut amount: Option<&Amount> = None;
-        for (amt_id, amt) in store.amounts.iter() {
-            if *amt_id == id {
-                amount = Some(amt);
-                break;
-            }
-        }
-        amount
-    }
-
     pub fn randomize(&self) -> f64 {
         let mut low: f64 = 0.0;
         let high: f64;
@@ -65,7 +59,7 @@ mod amount_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let amount = Amount::by_id(1, &mut store).unwrap();
+        let amount = Amount::by_id(1, &mut store.amounts).unwrap();
         assert_eq!(3100.00, amount.standard);
     }
 
@@ -75,7 +69,7 @@ mod amount_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let amount = Amount::by_id(3, &mut store).unwrap(); // first amount in spec data with high, low
+        let amount = Amount::by_id(3, &mut store.amounts).unwrap(); // first amount in spec data with high, low
         let randomized = amount.randomize();
         assert!(randomized < amount.high.unwrap());
         assert!(randomized > amount.low.unwrap());

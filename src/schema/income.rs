@@ -1,3 +1,4 @@
+use crate::error_handler::error_handler::ErrorHandler;
 use crate::schema::payment_received::{PaymentReceived, PaymentReceivedStore};
 use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
@@ -8,14 +9,19 @@ use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Income {
-    pub id: usize,
+    pub id: Option<usize>,
     pub active: bool,
     pub name: String,
 }
 
 impl CsvRecord<Income> for Income {
-    fn id(&self) -> usize {
+    fn id(&self) -> Option<usize> {
         self.id
+    }
+
+    fn set_id(&mut self, new_id: usize) -> Option<usize> {
+      self.id = Some(new_id);
+      self.id
     }
 
     fn clone_record(&self) -> Income {
@@ -25,15 +31,19 @@ impl CsvRecord<Income> for Income {
         }
     }
 }
-impl CsvStore for Income {}
+impl CsvStore<Income> for Income {}
 
 pub type IncomeStore = HashMap<usize, Income>;
 
 impl<'a, 'b: 'a> Income {
     pub fn payments_received(&'a self, store: &'b PaymentReceivedStore) -> PaymentReceivedStore {
+        if let None = self.id {
+          ErrorHandler::log(From::from(format!("Income {:?} does not exist in main_store.", self.name)))
+        }
+
         let mut payments_received: PaymentReceivedStore = HashMap::new();
         for (id, payment_received) in store.iter() {
-            if payment_received.income_id == self.id {
+            if payment_received.income_id == self.id.unwrap() { // TODO: handle error
                 payments_received
                     .entry(*id)
                     .or_insert(payment_received.clone_record());
@@ -76,17 +86,17 @@ mod income_spec {
         let income = Income::by_id(1, &mut store.incomes).unwrap();
         let payments_received = income.payments_received(&store.payments_received);
         let first_payment_received: PaymentReceived = payments_received[&1];
-        assert_eq!(first_payment_received.id, 1);
+        assert_eq!(first_payment_received.id.unwrap(), 1);
         assert_eq!(
             first_payment_received.completed_at,
             DateTime::parse_from_str("2023-01-01 11:11:11-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
         );
-        assert_eq!(first_payment_received.income_id, income.id);
+        assert_eq!(first_payment_received.income_id, income.id.unwrap());
         assert_eq!(first_payment_received.amount_id, 2);
 
         let second_payment_received: PaymentReceived = payments_received[&3];
-        assert_eq!(second_payment_received.id, 3);
-        assert_eq!(second_payment_received.income_id, income.id);
+        assert_eq!(second_payment_received.id.unwrap(), 3);
+        assert_eq!(second_payment_received.income_id, income.id.unwrap());
         assert_eq!(
             second_payment_received.completed_at,
             DateTime::parse_from_str("2023-01-03 13:13:13-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
@@ -113,7 +123,7 @@ mod income_spec {
             .unwrap();
         assert_eq!(res.id, most_recent_payment_received.id);
         assert_eq!(res.completed_at, most_recent_payment_received.completed_at);
-        assert_eq!(res.income_id, income.id);
+        assert_eq!(res.income_id, income.id.unwrap());
         assert_eq!(res.amount_id, most_recent_payment_received.amount_id);
     }
 }

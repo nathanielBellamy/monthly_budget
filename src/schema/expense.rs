@@ -9,14 +9,19 @@ use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Expense {
-    pub id: usize,
+    pub id: Option<usize>,
     pub active: bool,
     pub name: String,
 }
 
 impl CsvRecord<Expense> for Expense {
-    fn id(&self) -> usize {
+    fn id(&self) -> Option<usize> {
         self.id
+    }
+
+    fn set_id(&mut self, new_id: usize) -> Option<usize> {
+      self.id = Some(new_id);
+      self.id
     }
 
     fn clone_record(&self) -> Expense {
@@ -26,15 +31,26 @@ impl CsvRecord<Expense> for Expense {
         }
     }
 }
-impl CsvStore for Expense {}
+impl CsvStore<Expense> for Expense {}
 
 pub type ExpenseStore = HashMap<usize, Expense>;
 
 impl<'a, 'b: 'a> Expense {
+    pub fn by_name(name: &'a str, store: &'b ExpenseStore) -> Option<Expense> {
+        let mut expense: Option<Expense> = None;
+        for (id, exp) in store.iter() {
+            if exp.name.to_owned() == name {
+                expense = Some(exp.clone_record());
+                break;
+            }
+        }
+        expense
+    }
+
     pub fn payments(&'a self, store: &'b mut PaymentStore) -> PaymentStore {
         let mut payments: PaymentStore = HashMap::new();
         for (id, payment) in store.iter() {
-            if payment.expense_id == self.id {
+            if payment.expense_id == self.id.unwrap() {
                 payments.entry(*id).or_insert(payment.clone_record());
             }
         }
@@ -72,16 +88,16 @@ mod expense_spec {
         let payments = expense.payments(&mut store.payments);
         let first_payment: Payment = payments[&1].clone_record();
         let second_payment: Payment = payments[&4].clone_record();
-        assert_eq!(first_payment.id, 1);
+        assert_eq!(first_payment.id.unwrap(), 1);
         assert_eq!(
             first_payment.completed_at,
             DateTime::parse_from_str("2023-01-01 11:11:11-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
         );
-        assert_eq!(first_payment.expense_id, expense.id);
+        assert_eq!(first_payment.expense_id, expense.id.unwrap());
         assert_eq!(first_payment.amount_id, 1);
 
-        assert_eq!(second_payment.id, 4);
-        assert_eq!(second_payment.expense_id, expense.id);
+        assert_eq!(second_payment.id.unwrap(), 4);
+        assert_eq!(second_payment.expense_id, expense.id.unwrap());
         assert_eq!(
             second_payment.completed_at,
             DateTime::parse_from_str("2023-01-04 14:14:14-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
@@ -89,19 +105,19 @@ mod expense_spec {
         assert_eq!(second_payment.amount_id, 1);
     }
 
-    // #[test]
-    // #[allow(non_snake_case)]
-    // fn last_payment__returns_most_recent_payment() {
-    //     let mut store = Store::new();
-    //     Spec::init(&mut store);
+    #[test]
+    #[allow(non_snake_case)]
+    fn last_payment__returns_most_recent_payment() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
 
-    //     let expense = Expense::by_id(1, &mut store.expenses).unwrap();
-    //     let res: Payment = expense.last_payment(&mut store.payments).unwrap();
+        let expense = Expense::by_id(1, &mut store.expenses).unwrap();
+        let res: Payment = expense.last_payment(&mut store.payments).unwrap();
 
-    //     assert_eq!(res.id, 4);
-    //     assert_eq!(
-    //         res.completed_at,
-    //         DateTime::parse_from_str("2023-01-04 14:14:14-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
-    //     );
-    // }
+        assert_eq!(res.id.unwrap(), 4);
+        assert_eq!(
+            res.completed_at,
+            DateTime::parse_from_str("2023-01-04 14:14:14-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
+        );
+    }
 }

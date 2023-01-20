@@ -7,13 +7,18 @@ use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Account {
-    pub id: usize,
+    pub id: Option<usize>,
     pub name: String,
 }
 
 impl CsvRecord<Account> for Account {
-    fn id(&self) -> usize {
+    fn id(&self) -> Option<usize> {
         self.id
+    }
+
+    fn set_id(&mut self, new_id: usize) -> Option<usize> {
+      self.id = Some(new_id);
+      self.id
     }
 
     fn clone_record(&self) -> Account {
@@ -24,14 +29,15 @@ impl CsvRecord<Account> for Account {
     }
 }
 
-impl CsvStore for Account {}
+impl CsvStore<Account> for Account {}
 
 pub type AccountStore = HashMap<usize, Account>;
 
 impl Account {
+    // TODO: maybe avoid clone, return id
     pub fn by_name<'a, 'b: 'a>(name: &'a str, store: &'b AccountStore) -> Option<Account> {
         let mut account: Option<Account> = None;
-        for (acc_id, acc) in store.iter() {
+        for (_id, acc) in store.iter() {
             if acc.name.to_owned() == name {
                 account = Some(acc.clone_record());
                 break;
@@ -44,7 +50,7 @@ impl Account {
         let mut balance: Option<AccountBalance> = None;
         for (id, bal) in store.iter() {
             // most recently pushed balance
-            if *id == self.id {
+            if *id == self.id.unwrap() {
                 balance = Some(*bal);
                 break;
             }
@@ -89,6 +95,6 @@ mod account_spec {
         Spec::init(&mut store);
 
         let account = Account::by_name("piggybank", &mut store.accounts).unwrap();
-        assert_eq!(1, account.id)
+        assert_eq!(1, account.id.unwrap())
     }
 }

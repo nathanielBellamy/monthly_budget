@@ -5,15 +5,20 @@ use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Tag {
-    id: usize,
+    id: Option<usize>,
     pub content: String,
 }
 
 pub type TagStore = HashMap<usize, Tag>;
 
 impl CsvRecord<Tag> for Tag {
-    fn id(&self) -> usize {
+    fn id(&self) -> Option<usize> {
         self.id
+    }
+
+    fn set_id(&mut self, new_id: usize) -> Option<usize> {
+      self.id = Some(new_id);
+      self.id
     }
 
     fn clone_record(&self) -> Tag {
@@ -23,4 +28,4 @@ impl CsvRecord<Tag> for Tag {
         }
     }
 }
-impl CsvStore for Tag {}
+impl CsvStore<Tag> for Tag {}

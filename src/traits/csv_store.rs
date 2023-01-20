@@ -1,6 +1,6 @@
 use crate::traits::csv_record::CsvRecord;
 use csv::Reader;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::error::Error;
@@ -9,8 +9,9 @@ use crate::error_handler::error_handler::ErrorHandler;
 
 
 pub type CsvReadResult = Result<(), Box<dyn Error>>;
+pub type CsvWriteResult = Result<(), Box<dyn Error>>;
 
-pub trait CsvStore<T: for<'a> Deserialize<'a> + std::fmt::Debug + CsvRecord<T> + CsvStore<T>> {
+pub trait CsvStore<T: for<'a> Deserialize<'a> + for<'a> Serialize + std::fmt::Debug + CsvRecord<T> + CsvStore<T>> {
     fn init_store(
         store: &mut HashMap<usize, T>,
         csv_path: &str,
@@ -32,10 +33,17 @@ pub trait CsvStore<T: for<'a> Deserialize<'a> + std::fmt::Debug + CsvRecord<T> +
     }
 
     // TODO
-    fn _write_csv_store(
-        _store: &mut Vec<T>,
-        _csv_path: &str,
+    fn write_to_csv(
+        store: & HashMap<usize, T>,
+        path: &str,
     ) -> Result<(), Box<dyn Error>> {
+        let mut wtr = csv::Writer::from_path(path)?;
+
+        for (_id, record) in store.iter() {
+          wtr.serialize(record.clone_record())?;
+        }
+
+        wtr.flush()?;
         Ok(())
     }
 

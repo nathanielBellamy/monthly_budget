@@ -5,7 +5,7 @@ use crate::schema::expense::{Expense, ExpenseStore};
 use crate::schema::income::{Income, IncomeStore};
 use crate::schema::payment::{Payment, PaymentStore};
 use crate::schema::payment_received::{PaymentReceived, PaymentReceivedStore};
-use crate::traits::csv_store::{CsvReadResult, CsvStore};
+use crate::traits::csv_store::{CsvReadResult, CsvStore, CsvWriteResult};
 use std::collections::HashMap;
 use std::error::Error;
 
@@ -21,8 +21,8 @@ pub struct Store {
 }
 
 pub type StoreInitResult<'a> = Result<&'a mut Store, Box<dyn Error>>;
+pub type StoreWriteResult = Result<(), Box<dyn Error>>;
 
-// TODO: wrap store in RefCell
 impl Store {
     pub fn new() -> Store {
         Store {
@@ -36,9 +36,9 @@ impl Store {
         }
     }
 
-    pub fn init(&mut self, data_root: Option<&'static str>) -> StoreInitResult {
+    pub fn init(&mut self, dir: Option<&'static str>) -> StoreInitResult {
         let path: &str;
-        match data_root {
+        match dir {
             None => path = "data/",
             Some(root) => path = root,
         }
@@ -79,5 +79,47 @@ impl Store {
             }
         }
         Ok(self)
+    }
+
+    pub fn write_to_csv(&self, dir: Option<&'static str>) -> StoreWriteResult {
+      let path = format!("output/{}", dir.unwrap_or("default/"));
+      let write_res: [CsvWriteResult; 7] = [
+          Account::write_to_csv(
+              &self.accounts,
+              format!("{}{}", path, "accounts.csv").as_str(),
+          ),
+          AccountBalance::write_to_csv(
+              &self.account_balances,
+              format!("{}{}", path, "account_balances.csv").as_str(),
+          ),
+          Amount::write_to_csv(
+              &self.amounts,
+              format!("{}{}", path, "amounts.csv").as_str(),
+          ),
+          Expense::write_to_csv(
+              &self.expenses,
+              format!("{}{}", path, "expenses.csv").as_str(),
+          ),
+          Income::write_to_csv(
+              &self.incomes,
+              format!("{}{}", path, "incomes.csv").as_str(),
+          ),
+          Payment::write_to_csv(
+              &self.payments,
+              format!("{}{}", path, "payments.csv").as_str(),
+          ),
+          PaymentReceived::write_to_csv(
+              &self.payments_received,
+              format!("{}{}", path, "payments_received.csv").as_str(),
+          ),
+      ];
+
+      for res in write_res.iter() {
+          if let Err(err) = res {
+              return Err(From::from(format!("Csv Store Write Error: {:?}", err)));
+          }
+      }
+
+      Ok(())
     }
 }

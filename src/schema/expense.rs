@@ -2,7 +2,7 @@ use crate::schema::payment::{Payment, PaymentStore};
 use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use chrono::DateTime;
+use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
 // use std::collections::hash_map::Entry;
 use std::collections::HashMap;
@@ -91,7 +91,7 @@ mod expense_spec {
         assert_eq!(first_payment.id.unwrap(), 1);
         assert_eq!(
             first_payment.completed_at,
-            DateTime::parse_from_str("2023-01-01 11:11:11-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
+            NaiveDateTime::parse_from_str("2023-01-01 11:11:11-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
         );
         assert_eq!(first_payment.expense_id, expense.id.unwrap());
         assert_eq!(first_payment.amount_id, 1);
@@ -100,7 +100,7 @@ mod expense_spec {
         assert_eq!(second_payment.expense_id, expense.id.unwrap());
         assert_eq!(
             second_payment.completed_at,
-            DateTime::parse_from_str("2023-01-04 14:14:14-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
+            NaiveDateTime::parse_from_str("2023-01-04 14:14:14-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
         );
         assert_eq!(second_payment.amount_id, 1);
     }
@@ -117,7 +117,7 @@ mod expense_spec {
         assert_eq!(res.id.unwrap(), 4);
         assert_eq!(
             res.completed_at,
-            DateTime::parse_from_str("2023-01-04 14:14:14-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
+            NaiveDateTime::parse_from_str("2023-01-04 14:14:14-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
         );
     }
 }

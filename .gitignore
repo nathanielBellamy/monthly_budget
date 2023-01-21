@@ -1,4 +1,3 @@
-/data
 /target
-private_programs
+programs_priv
 *_log

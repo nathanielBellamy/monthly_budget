@@ -3,14 +3,14 @@ use crate::schema::amount::{Amount, AmountStore};
 use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use chrono::{DateTime, Utc};
+use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct PaymentReceived {
     pub id: Option<usize>,
-    pub completed_at: DateTime<Utc>,
+    pub completed_at: NaiveDateTime,
     pub account_id: usize,
     pub income_id: usize,
     pub amount_id: usize,

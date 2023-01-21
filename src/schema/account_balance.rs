@@ -1,6 +1,6 @@
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use chrono::{DateTime, Utc};
+use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -8,7 +8,7 @@ use std::collections::HashMap;
 pub struct AccountBalance {
     pub id: Option<usize>,
     pub account_id: usize,
-    pub reported_at: DateTime<Utc>,
+    pub reported_at: NaiveDateTime,
     pub amount: f64,
 }
 

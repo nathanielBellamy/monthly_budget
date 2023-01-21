@@ -1,33 +1,33 @@
 use crate::schema::account_balance::AccountBalance;
+use crate::schema::payment_received::PaymentReceived;
+use crate::schema::income::Income;
 use std::error::Error;
 use crate::error_handler::error_handler::ErrorHandler;
 use crate::schema::account::Account;
 use crate::schema::amount::Amount;
-use crate::schema::expense::Expense;
-use crate::schema::payment::Payment;
 use crate::store::store::Store;
 use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct PaymentComposite {
+pub struct PaymentReceivedComposite {
     pub account_id: Option<usize>,
     pub account_name: String,
     pub amount_id: Option<usize>,
     pub amount_standard: f64,
-    pub payment_id: Option<usize>,
-    pub payment_completed_at: NaiveDateTime,
-    pub expense_id: Option<usize>,
-    pub expense_name: String,
+    pub payment_received_id: Option<usize>,
+    pub payment_received_completed_at: NaiveDateTime,
+    pub income_id: Option<usize>,
+    pub income_name: String,
 }
 
-type CreatePaymentResult = Result<(), Box<dyn Error>>;
+type CreatePaymentReceivedResult = Result<(), Box<dyn Error>>;
 
-impl PaymentComposite {
-    pub fn create_payment(&mut self, store: &mut Store) -> CreatePaymentResult {
-        if let Some(id) = self.payment_id {
-          ErrorHandler::log(From::from(format!("Payment {:?} already exists.", id)))
+impl PaymentReceivedComposite {
+    pub fn create_payment_received(&mut self, store: &mut Store) -> CreatePaymentReceivedResult {
+        if let Some(id) = self.payment_received_id {
+          ErrorHandler::log(From::from(format!("PaymentReceived {:?} already exists.", id)))
         }
 
         if let None = self.account_id {
@@ -63,39 +63,39 @@ impl PaymentComposite {
           ));
         }
 
-        if let None = self.expense_id {
+        if let None = self.income_id {
             // try name lookup
-            match Expense::by_name(&self.expense_name, &store.expenses) {
+            match Income::by_name(&self.income_name, &store.incomes) {
                 None => {
-                    // create Expense record
-                    let new_id = Expense::save_to_store(
-                      Expense{
+                    // create Income record
+                    let new_id = Income::save_to_store(
+                      Income{
                         id: None,
                         active: true,
-                        name: self.expense_name.clone(),
+                        name: self.income_name.clone(),
                       },
-                      &mut store.expenses
+                      &mut store.incomes
                     );
-                    self.expense_id = Some(new_id);
+                    self.income_id = Some(new_id);
                 },
-                Some(exp) => self.expense_id = exp.id,
+                Some(inc) => self.income_id = inc.id,
             }
         }
 
-        // create Payment record
-        self.payment_id = Some(Payment::new_id(&mut store.payments));
-        Payment::save_to_store(
-            Payment {
+        // create PaymentReceived record
+        self.payment_received_id = Some(PaymentReceived::new_id(&mut store.payments_received));
+        PaymentReceived::save_to_store(
+            PaymentReceived {
                 id: None,
                 completed_at: Utc::now().naive_local(),
                 account_id: self.account_id.unwrap(),
                 amount_id: self.amount_id.unwrap(),
-                expense_id: self.expense_id.unwrap(),
+                income_id: self.income_id.unwrap(),
             },
-            &mut store.payments,
+            &mut store.payments_received,
         );
 
-        // create new AccountBalance record
+        // create new account balance record
         let old_balance = Account::by_id(self.account_id.unwrap(), &mut store.accounts)
                                    .unwrap()
                                    .current_balance(&mut store.account_balances);
@@ -103,7 +103,7 @@ impl PaymentComposite {
           AccountBalance {
             id: None,
             account_id: self.account_id.unwrap(),
-            amount: old_balance - self.amount_standard,
+            amount: old_balance + self.amount_standard,
             reported_at: Utc::now().naive_local(),
           },
           &mut store.account_balances

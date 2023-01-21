@@ -82,7 +82,7 @@ impl Store {
     }
 
     pub fn write_to_csv(&self, dir: Option<&'static str>) -> StoreWriteResult {
-      let path = format!("output/{}", dir.unwrap_or("default/"));
+      let path = dir.unwrap_or("data/");
       let write_res: [CsvWriteResult; 7] = [
           Account::write_to_csv(
               &self.accounts,

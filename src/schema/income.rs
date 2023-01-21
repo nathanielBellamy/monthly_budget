@@ -3,7 +3,7 @@ use crate::schema::payment_received::{PaymentReceived, PaymentReceivedStore};
 use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use chrono::DateTime;
+use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -36,6 +36,17 @@ impl CsvStore<Income> for Income {}
 pub type IncomeStore = HashMap<usize, Income>;
 
 impl<'a, 'b: 'a> Income {
+    pub fn by_name(name: &'a str, store: &'b IncomeStore) -> Option<Income> {
+        let mut income: Option<Income> = None;
+        for (id, inc) in store.iter() {
+            if inc.name.to_owned() == name {
+                income = Some(inc.clone_record());
+                break;
+            }
+        }
+        income
+    }
+
     pub fn payments_received(&'a self, store: &'b PaymentReceivedStore) -> PaymentReceivedStore {
         if let None = self.id {
           ErrorHandler::log(From::from(format!("Income {:?} does not exist in main_store.", self.name)))
@@ -89,7 +100,7 @@ mod income_spec {
         assert_eq!(first_payment_received.id.unwrap(), 1);
         assert_eq!(
             first_payment_received.completed_at,
-            DateTime::parse_from_str("2023-01-01 11:11:11-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
+            NaiveDateTime::parse_from_str("2023-01-01 11:11:11-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
         );
         assert_eq!(first_payment_received.income_id, income.id.unwrap());
         assert_eq!(first_payment_received.amount_id, 2);
@@ -99,7 +110,7 @@ mod income_spec {
         assert_eq!(second_payment_received.income_id, income.id.unwrap());
         assert_eq!(
             second_payment_received.completed_at,
-            DateTime::parse_from_str("2023-01-03 13:13:13-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
+            NaiveDateTime::parse_from_str("2023-01-03 13:13:13-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
         );
         assert_eq!(second_payment_received.amount_id, 2);
     }

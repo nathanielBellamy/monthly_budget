@@ -1,14 +1,45 @@
-use crate::calendar::day::Day;
-use chrono::Local;
+use crate::calendar::day::{Day, DayStore};
+use crate::store::store::Store;
 
+#[derive(Debug)]
 pub struct Month {
     pub key: MonthKey,
-    pub days: Vec<Day>,
+    pub days: DayStore,
 }
 
 impl Month {
-    pub fn add_day(&mut self, day: Day) -> () {
-        self.days.push(day);
+    pub fn id(month: MonthKey) -> u32 { // u32 expected by NaiveDate
+      match month {
+        MonthKey::Jan => 1,
+        MonthKey::Feb => 2,
+        MonthKey::Mar => 3,
+        MonthKey::Apr => 4,
+        MonthKey::May => 5,
+        MonthKey::Jun => 6,
+        MonthKey::Jul => 7,
+        MonthKey::Aug => 8,
+        MonthKey::Sep => 9,
+        MonthKey::Oct => 10,
+        MonthKey::Nov => 11,
+        MonthKey::Dec => 12,
+      }
+    }
+
+    pub fn length(month: MonthKey) -> u32 { // u32 expected by NaiveDate
+      match month {
+        MonthKey::Jan => 31,
+        MonthKey::Feb => 28,
+        MonthKey::Mar => 31,
+        MonthKey::Apr => 30,
+        MonthKey::May => 31,
+        MonthKey::Jun => 30,
+        MonthKey::Jul => 31,
+        MonthKey::Aug => 31,
+        MonthKey::Sep => 30,
+        MonthKey::Oct => 31,
+        MonthKey::Nov => 30,
+        MonthKey::Dec => 31,
+      }
     }
 
     pub fn display_name(&self) -> &str {
@@ -46,6 +77,7 @@ impl Month {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub enum MonthKey {
     Jan,
     Feb,
@@ -64,24 +96,14 @@ pub enum MonthKey {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::spec::spec::Spec;
 
     #[test]
     #[allow(non_snake_case)]
-    fn add_day__adds_day_to_self_days() {
-        let mut month = Month {
-            key: MonthKey::Jan,
-            days: vec![],
-        };
-        let day = Day {
-            payments: vec![],
-            payments_received: vec![],
-            date: Local::now(),
-        };
+    fn test_1() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
 
-        assert_eq!(0, month.days.len());
-
-        month.add_day(day);
-
-        assert_eq!(1, month.days.len());
+        assert_eq!(2,2);
     }
 }

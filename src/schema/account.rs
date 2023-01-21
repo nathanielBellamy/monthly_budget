@@ -46,18 +46,23 @@ impl Account {
         account
     }
 
-    pub fn current_balance(&self, store: &AccountBalanceStore) -> Option<f64> {
-        let mut balance: Option<AccountBalance> = None;
-        for (id, bal) in store.iter() {
-            // most recently pushed balance
-            if *id == self.id.unwrap() {
-                balance = Some(*bal);
-                break;
+    // last_saved_balance
+    pub fn current_balance(&self, store: &mut AccountBalanceStore) -> f64 {
+        let mut curr_balance: Option<AccountBalance> = None;
+        for (_id, acc_bal) in store.iter() {
+            match curr_balance {
+              None => curr_balance = Some(*acc_bal), // set first
+              Some(last_acc_bal_so_far) => {
+                if acc_bal.reported_at > last_acc_bal_so_far.reported_at {
+                  curr_balance = Some(*acc_bal)
+                }
+              }
             }
         }
-        match balance {
-            None => None,
-            Some(bal) => Some(bal.amount),
+
+        match curr_balance {
+          None => 0.0,
+          Some(bal) => bal.amount
         }
     }
 

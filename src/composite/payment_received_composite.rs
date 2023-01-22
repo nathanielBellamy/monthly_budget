@@ -1,3 +1,5 @@
+use crate::traits::csv_record::CsvRecord;
+use std::collections::HashMap;
 use crate::schema::account_balance::AccountBalance;
 use crate::schema::payment_received::PaymentReceived;
 use crate::schema::income::Income;
@@ -10,8 +12,9 @@ use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PaymentReceivedComposite {
+    pub id: Option<usize>,
     pub account_id: Option<usize>,
     pub account_name: String,
     pub amount_id: Option<usize>,
@@ -21,6 +24,25 @@ pub struct PaymentReceivedComposite {
     pub income_id: Option<usize>,
     pub income_name: String,
 }
+
+impl CsvRecord<PaymentReceivedComposite> for PaymentReceivedComposite {
+    fn id(&self) -> Option<usize> {
+        self.id
+    }
+
+    fn set_id(&mut self, new_id: usize) -> Option<usize> {
+      self.id = Some(new_id);
+      self.id
+    }
+
+    fn clone_record(&self) -> PaymentReceivedComposite {
+        self.clone()
+    }
+}
+
+impl CsvStore<PaymentReceivedComposite> for PaymentReceivedComposite {}
+
+pub type PaymentReceivedCompositeStore = HashMap<usize, PaymentReceivedComposite>;
 
 type CreatePaymentReceivedResult = Result<(), Box<dyn Error>>;
 

@@ -3,6 +3,9 @@ use chrono::{NaiveDate, NaiveDateTime, Utc};
 use std::error::Error;
 use crate::calendar::month::{MonthKey, Month};
 use crate::calendar::day::{Day, DayStore};
+use crate::composite::payment_composite::{PaymentComposite, PaymentCompositeStore};
+use crate::composite::payment_received_composite::{PaymentReceivedComposite, PaymentReceivedCompositeStore};
+use crate::traits::csv_store::CsvStore;
 
 pub struct MonthModel {
   key: MonthKey,
@@ -16,10 +19,39 @@ impl MonthModel {
   }
 
   pub fn run(&self) -> Result<(), Box<dyn Error>> {
-    let month = Month {
+    let mut month = Month {
       key: self.key,
       days: MonthModel::construct_days(self.key),
     };
+
+    for (id, day) in &mut month.days {
+      let id_f = *id as f64;
+      day.add_payment(PaymentComposite {
+        id: None,
+        account_id: None,
+        account_name: String::from("piggybank"),
+        amount_id: None,
+        amount_standard: id_f * 100.00,
+        payment_id: None,
+        payment_completed_at: Utc::now().naive_local(),
+        expense_id: None,
+        expense_name: format!("Payment {:?}", id),
+      });
+      day.add_payment_received(PaymentReceivedComposite {
+        id: None,
+        account_id: None,
+        account_name: String::from("swearjar"),
+        amount_id: None,
+        amount_standard: 1000000000.34,
+        payment_received_id: None,
+        payment_received_completed_at: Utc::now().naive_local(),
+        income_id: None,
+        income_name: String::from("lottery"),
+      });
+
+      PaymentComposite::write_to_csv(&day.payments, "data/test/payment_composites.csv");
+      PaymentReceivedComposite::write_to_csv(&day.payments_received, "data/test/payment_received_composites.csv");
+    }
 
     println!("{:?}", month);
 
@@ -36,8 +68,8 @@ impl MonthModel {
       days.entry(id).or_insert(
         Day {
           id: Some(id),
-          payments: vec![],
-          payments_received: vec![],
+          payments: PaymentCompositeStore::new(),
+          payments_received: PaymentReceivedCompositeStore::new(),
           date: NaiveDate::from_ymd_opt(2023, month_id, date).unwrap(),
         }
       );
@@ -47,18 +79,6 @@ impl MonthModel {
   }
 
 }
-
-
-  //   let mut payment_composite_test_1 = PaymentComposite {
-  //   account_id: None,
-  //   account_name: String::from("piggybank"),
-  //   amount_id: None,
-  //   amount_standard: 1234.56,
-  //   payment_id: None,
-  //   payment_completed_at: Utc::now().naive_local(),
-  //   expense_id: None,
-  //   expense_name: String::from("The Good Stuff"),
-  // };
 
   // payment_composite_test_1.create_payment(&mut main_store);
 
@@ -113,16 +133,5 @@ impl MonthModel {
   // };
 
   // payment_received_composite_test_1.create_payment_received(&mut main_store);
-
-  // let mut payment_received_composite_test_3 = PaymentReceivedComposite {
-  //     account_id: None,
-  //     account_name: String::from("another_credit_union"),
-  //     amount_id: None,
-  //     amount_standard: 1000000000.34,
-  //     payment_received_id: None,
-  //     payment_received_completed_at: Utc::now().naive_local(),
-  //     income_id: None,
-  //     income_name: String::from("lottery"),
-  // };
 
   // payment_received_composite_test_3.create_payment_received(&mut main_store);

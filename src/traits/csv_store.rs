@@ -32,7 +32,6 @@ pub trait CsvStore<T: for<'a> Deserialize<'a> + for<'a> Serialize + std::fmt::De
         Ok(())
     }
 
-    // TODO
     fn write_to_csv(
         store: & HashMap<usize, T>,
         path: &str,

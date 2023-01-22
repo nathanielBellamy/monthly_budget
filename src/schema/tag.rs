@@ -1,7 +1,7 @@
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Tag {
@@ -9,7 +9,7 @@ pub struct Tag {
     pub content: String,
 }
 
-pub type TagStore = HashMap<usize, Tag>;
+pub type TagStore = BTreeMap<usize, Tag>;
 
 impl CsvRecord<Tag> for Tag {
     fn id(&self) -> Option<usize> {

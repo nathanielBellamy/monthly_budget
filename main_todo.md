@@ -24,6 +24,10 @@
 
     - further I go, the less I know which way is best. we'll find out
 
+    - Answer: BTreeMap
+      - .key() is automatically sorted
+      - maintains identical .entry() api
+
 - wrap `main_store` in `RefCell`
   - so far not necessary but it would be fun to have an excuse to use `RefCell`
   - long term: multi-thread complex computations wrapping `main_store` in a `Mutex` (and likely casting other data structures as their thread-safe equivalents)

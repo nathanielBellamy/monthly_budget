@@ -1,11 +1,13 @@
-use std::collections::HashMap;
-use chrono::{NaiveDate, NaiveDateTime, Utc};
+use std::collections::BTreeMap;
+use std::collections::btree_map::Entry;
+use chrono::{NaiveDate};
 use std::error::Error;
 use crate::calendar::month::{MonthKey, Month};
 use crate::calendar::day::{Day, DayStore};
 use crate::composite::payment_composite::{PaymentComposite, PaymentCompositeStore};
 use crate::composite::payment_received_composite::{PaymentReceivedComposite, PaymentReceivedCompositeStore};
-use crate::traits::csv_store::CsvStore;
+use crate::store::store::Store;
+
 
 pub struct MonthModel {
   key: MonthKey,
@@ -19,6 +21,10 @@ impl MonthModel {
   }
 
   pub fn run(&self) -> Result<(), Box<dyn Error>> {
+    let mut store = Store::new();
+    store.init(None)?;
+
+
     let mut month = Month {
       key: self.key,
       days: MonthModel::construct_days(self.key),
@@ -26,34 +32,50 @@ impl MonthModel {
 
     for (id, day) in &mut month.days {
       let id_f = *id as f64;
+      let id_32 = *id as u32;
       day.add_payment(PaymentComposite {
         id: None,
         account_id: None,
         account_name: String::from("piggybank"),
         amount_id: None,
-        amount_standard: id_f * 100.00,
+        amount_standard: id_f * 1000.00,
         payment_id: None,
-        payment_completed_at: Utc::now().naive_local(),
+        payment_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), id_32).unwrap()
+                                        .and_hms_opt(1, 1, 1).unwrap(),
         expense_id: None,
         expense_name: format!("Payment {:?}", id),
+      });
+      day.add_payment(PaymentComposite {
+        id: None,
+        account_id: None,
+        account_name: String::from("piggybank"),
+        amount_id: None,
+        amount_standard: id_f * 2000.00,
+        payment_id: None,
+        payment_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), id_32).unwrap()
+                                        .and_hms_opt(3, 3, 3).unwrap(),
+        expense_id: None,
+        expense_name: format!("Payment 2 - {:?}", id),
       });
       day.add_payment_received(PaymentReceivedComposite {
         id: None,
         account_id: None,
         account_name: String::from("swearjar"),
         amount_id: None,
-        amount_standard: 1000000000.34,
+        amount_standard: 10000.34,
         payment_received_id: None,
-        payment_received_completed_at: Utc::now().naive_local(),
+        payment_received_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), id_32).unwrap()
+                                                  .and_hms_opt(2, 2, 2).unwrap(),
         income_id: None,
         income_name: String::from("lottery"),
       });
-
-      PaymentComposite::write_to_csv(&day.payments, "data/test/payment_composites.csv");
-      PaymentReceivedComposite::write_to_csv(&day.payments_received, "data/test/payment_received_composites.csv");
     }
 
-    println!("{:?}", month);
+    for (_id, day) in month.days.iter_mut() { // iter sorted by key thx to btree_map
+        day.execute_payments_in_order(&mut store)?;
+    }
+
+    store.write_to_csv(None)?;
 
     Ok(())
   }
@@ -61,7 +83,7 @@ impl MonthModel {
   pub fn construct_days(month: MonthKey) -> DayStore {
     let length: u32 = Month::length(month);
     let month_id: u32 = Month::id(month);
-    let mut days: DayStore = HashMap::new();
+    let mut days: DayStore = BTreeMap::new();
 
     for date in 1..length+1 {
       let id = usize::try_from(date).unwrap();

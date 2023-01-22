@@ -5,7 +5,7 @@ use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct PaymentReceived {
@@ -32,7 +32,7 @@ impl CsvRecord<PaymentReceived> for PaymentReceived {
 }
 impl CsvStore<PaymentReceived> for PaymentReceived {}
 
-pub type PaymentReceivedStore = HashMap<usize, PaymentReceived>;
+pub type PaymentReceivedStore = BTreeMap<usize, PaymentReceived>;
 
 impl<'a, 'b: 'a> PaymentReceived {
     pub fn amount(&'a self, store: &'b AmountStore) -> Option<Amount> {

@@ -1,5 +1,5 @@
 use crate::traits::csv_record::CsvRecord;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use crate::schema::account_balance::AccountBalance;
 use crate::schema::payment_received::PaymentReceived;
 use crate::schema::income::Income;
@@ -42,12 +42,12 @@ impl CsvRecord<PaymentReceivedComposite> for PaymentReceivedComposite {
 
 impl CsvStore<PaymentReceivedComposite> for PaymentReceivedComposite {}
 
-pub type PaymentReceivedCompositeStore = HashMap<usize, PaymentReceivedComposite>;
+pub type PaymentReceivedCompositeStore = BTreeMap<usize, PaymentReceivedComposite>;
 
 type CreatePaymentReceivedResult = Result<(), Box<dyn Error>>;
 
 impl PaymentReceivedComposite {
-    pub fn create_payment_received(&mut self, store: &mut Store) -> CreatePaymentReceivedResult {
+    pub fn create_payment_received(&mut self, store: &mut Store, complete_at: Option<NaiveDateTime>) -> CreatePaymentReceivedResult {
         if let Some(id) = self.payment_received_id {
           ErrorHandler::log(From::from(format!("PaymentReceived {:?} already exists.", id)))
         }
@@ -104,12 +104,17 @@ impl PaymentReceivedComposite {
             }
         }
 
+        let completed_at = match complete_at {
+          None => Utc::now().naive_local(),
+          Some(ndt) => ndt
+        };
+
         // create PaymentReceived record
         self.payment_received_id = Some(PaymentReceived::new_id(&mut store.payments_received));
         PaymentReceived::save_to_store(
             PaymentReceived {
                 id: None,
-                completed_at: Utc::now().naive_local(),
+                completed_at: completed_at,
                 account_id: self.account_id.unwrap(),
                 amount_id: self.amount_id.unwrap(),
                 income_id: self.income_id.unwrap(),
@@ -126,7 +131,7 @@ impl PaymentReceivedComposite {
             id: None,
             account_id: self.account_id.unwrap(),
             amount: old_balance + self.amount_standard,
-            reported_at: Utc::now().naive_local(),
+            reported_at: completed_at,
           },
           &mut store.account_balances
         );

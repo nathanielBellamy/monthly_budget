@@ -6,18 +6,17 @@ use crate::schema::income::{Income, IncomeStore};
 use crate::schema::payment::{Payment, PaymentStore};
 use crate::schema::payment_received::{PaymentReceived, PaymentReceivedStore};
 use crate::traits::csv_store::{CsvReadResult, CsvStore, CsvWriteResult};
-use std::collections::HashMap;
 use std::error::Error;
 
 #[derive(Debug)]
 pub struct Store {
-    pub accounts: HashMap<usize, Account>,
-    pub account_balances: HashMap<usize, AccountBalance>,
-    pub amounts: HashMap<usize, Amount>,
-    pub expenses: HashMap<usize, Expense>,
-    pub incomes: HashMap<usize, Income>,
-    pub payments: HashMap<usize, Payment>,
-    pub payments_received: HashMap<usize, PaymentReceived>,
+    pub accounts: AccountStore,
+    pub account_balances: AccountBalanceStore,
+    pub amounts: AmountStore,
+    pub expenses: ExpenseStore,
+    pub incomes: IncomeStore,
+    pub payments: PaymentStore,
+    pub payments_received: PaymentReceivedStore,
 }
 
 pub type StoreInitResult<'a> = Result<&'a mut Store, Box<dyn Error>>;

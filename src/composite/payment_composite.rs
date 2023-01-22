@@ -1,5 +1,5 @@
 use crate::traits::csv_record::CsvRecord;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use crate::schema::account_balance::AccountBalance;
 use std::error::Error;
 use crate::error_handler::error_handler::ErrorHandler;
@@ -12,7 +12,7 @@ use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct PaymentComposite {
     pub id: Option<usize>,
     pub account_id: Option<usize>,
@@ -42,12 +42,12 @@ impl CsvRecord<PaymentComposite> for PaymentComposite {
 
 impl CsvStore<PaymentComposite> for PaymentComposite {}
 
-pub type PaymentCompositeStore = HashMap<usize, PaymentComposite>;
+pub type PaymentCompositeStore = BTreeMap<usize, PaymentComposite>;
 
 type CreatePaymentResult = Result<(), Box<dyn Error>>;
 
 impl PaymentComposite {
-    pub fn create_payment(&mut self, store: &mut Store) -> CreatePaymentResult {
+    pub fn create_payment(&mut self, store: &mut Store, complete_at: Option<NaiveDateTime>) -> CreatePaymentResult {
         if let Some(id) = self.payment_id {
           ErrorHandler::log(From::from(format!("Payment {:?} already exists.", id)))
         }
@@ -104,12 +104,16 @@ impl PaymentComposite {
             }
         }
 
+        let completed_at = match complete_at {
+          None => Utc::now().naive_local(),
+          Some(ndt) => ndt
+        };
         // create Payment record
         self.payment_id = Some(Payment::new_id(&mut store.payments));
         Payment::save_to_store(
             Payment {
                 id: None,
-                completed_at: Utc::now().naive_local(),
+                completed_at: completed_at,
                 account_id: self.account_id.unwrap(),
                 amount_id: self.amount_id.unwrap(),
                 expense_id: self.expense_id.unwrap(),
@@ -126,7 +130,7 @@ impl PaymentComposite {
             id: None,
             account_id: self.account_id.unwrap(),
             amount: old_balance - self.amount_standard,
-            reported_at: Utc::now().naive_local(),
+            reported_at: completed_at,
           },
           &mut store.account_balances
         );

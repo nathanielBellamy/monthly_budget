@@ -2,7 +2,7 @@ use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct AccountBalance {
@@ -12,7 +12,7 @@ pub struct AccountBalance {
     pub amount: f64,
 }
 
-pub type AccountBalanceStore = HashMap<usize, AccountBalance>;
+pub type AccountBalanceStore = BTreeMap<usize, AccountBalance>;
 
 impl CsvRecord<AccountBalance> for AccountBalance {
     fn id(&self) -> Option<usize> {

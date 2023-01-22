@@ -3,7 +3,7 @@ use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Account {
@@ -31,7 +31,7 @@ impl CsvRecord<Account> for Account {
 
 impl CsvStore<Account> for Account {}
 
-pub type AccountStore = HashMap<usize, Account>;
+pub type AccountStore = BTreeMap<usize, Account>;
 
 impl Account {
     // TODO: maybe avoid clone, return id

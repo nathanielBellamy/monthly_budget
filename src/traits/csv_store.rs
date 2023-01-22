@@ -1,8 +1,8 @@
 use crate::traits::csv_record::CsvRecord;
 use csv::Reader;
 use serde::{Deserialize, Serialize};
-use std::collections::hash_map::Entry;
-use std::collections::HashMap;
+use std::collections::btree_map::Entry;
+use std::collections::BTreeMap;
 use std::error::Error;
 use std::fs::File;
 use crate::error_handler::error_handler::ErrorHandler;
@@ -13,7 +13,7 @@ pub type CsvWriteResult = Result<(), Box<dyn Error>>;
 
 pub trait CsvStore<T: for<'a> Deserialize<'a> + for<'a> Serialize + std::fmt::Debug + CsvRecord<T> + CsvStore<T>> {
     fn init_store(
-        store: &mut HashMap<usize, T>,
+        store: &mut BTreeMap<usize, T>,
         csv_path: &str,
     ) -> CsvReadResult {
         let file = File::open(csv_path)?;
@@ -33,7 +33,7 @@ pub trait CsvStore<T: for<'a> Deserialize<'a> + for<'a> Serialize + std::fmt::De
     }
 
     fn write_to_csv(
-        store: & HashMap<usize, T>,
+        store: & BTreeMap<usize, T>,
         path: &str,
     ) -> Result<(), Box<dyn Error>> {
         let mut wtr = csv::Writer::from_path(path)?;
@@ -46,7 +46,7 @@ pub trait CsvStore<T: for<'a> Deserialize<'a> + for<'a> Serialize + std::fmt::De
         Ok(())
     }
 
-    fn new_id(csv_store: &HashMap<usize, T>) -> usize {
+    fn new_id(csv_store: &BTreeMap<usize, T>) -> usize {
         let mut max_id: usize = 0;
         for (id, _record) in csv_store {
             if *id > max_id {
@@ -56,7 +56,7 @@ pub trait CsvStore<T: for<'a> Deserialize<'a> + for<'a> Serialize + std::fmt::De
         max_id + 1
     }
 
-    fn save_to_store(mut record: T, csv_store: &mut HashMap<usize, T>) -> usize {
+    fn save_to_store(mut record: T, csv_store: &mut BTreeMap<usize, T>) -> usize {
         #[allow(unused_assignments)]
         let mut new_id: usize = 0;
         match record.id() {
@@ -79,7 +79,7 @@ pub trait CsvStore<T: for<'a> Deserialize<'a> + for<'a> Serialize + std::fmt::De
         new_id
     }
 
-    fn by_id(id: usize, csv_store: &mut HashMap<usize, T>) -> Option<T> {
+    fn by_id(id: usize, csv_store: &mut BTreeMap<usize, T>) -> Option<T> {
         match csv_store.entry(id) {
             Entry::Vacant(_) => None,
             Entry::Occupied(record) => {

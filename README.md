@@ -1,7 +1,7 @@
 # MonthlyBudget
 
 ## intake budgetary CSVs -> manipulate data in memory -> export report CSVs
-#### serde -> HashMap -> serde
+#### serde -> BTreeMap -> serde
 
 ##### first ground-up Rust repo
 

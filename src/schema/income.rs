@@ -5,7 +5,7 @@ use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Income {
@@ -33,7 +33,7 @@ impl CsvRecord<Income> for Income {
 }
 impl CsvStore<Income> for Income {}
 
-pub type IncomeStore = HashMap<usize, Income>;
+pub type IncomeStore = BTreeMap<usize, Income>;
 
 impl<'a, 'b: 'a> Income {
     pub fn by_name(name: &'a str, store: &'b IncomeStore) -> Option<Income> {
@@ -52,7 +52,7 @@ impl<'a, 'b: 'a> Income {
           ErrorHandler::log(From::from(format!("Income {:?} does not exist in main_store.", self.name)))
         }
 
-        let mut payments_received: PaymentReceivedStore = HashMap::new();
+        let mut payments_received: PaymentReceivedStore = BTreeMap::new();
         for (id, payment_received) in store.iter() {
             if payment_received.income_id == self.id.unwrap() { // TODO: handle error
                 payments_received

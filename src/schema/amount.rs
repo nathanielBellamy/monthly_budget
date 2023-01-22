@@ -3,7 +3,7 @@ use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct Amount {
@@ -30,7 +30,7 @@ impl CsvRecord<Amount> for Amount {
 }
 impl CsvStore<Amount> for Amount {}
 
-pub type AmountStore = HashMap<usize, Amount>;
+pub type AmountStore = BTreeMap<usize, Amount>;
 
 impl Amount {
     pub fn randomize(&self) -> f64 {

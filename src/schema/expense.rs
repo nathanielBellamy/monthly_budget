@@ -4,8 +4,8 @@ use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
-// use std::collections::hash_map::Entry;
-use std::collections::HashMap;
+// use std::collections::btree_map::Entry;
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Expense {
@@ -33,7 +33,7 @@ impl CsvRecord<Expense> for Expense {
 }
 impl CsvStore<Expense> for Expense {}
 
-pub type ExpenseStore = HashMap<usize, Expense>;
+pub type ExpenseStore = BTreeMap<usize, Expense>;
 
 impl<'a, 'b: 'a> Expense {
     pub fn by_name(name: &'a str, store: &'b ExpenseStore) -> Option<Expense> {
@@ -48,7 +48,7 @@ impl<'a, 'b: 'a> Expense {
     }
 
     pub fn payments(&'a self, store: &'b mut PaymentStore) -> PaymentStore {
-        let mut payments: PaymentStore = HashMap::new();
+        let mut payments: PaymentStore = BTreeMap::new();
         for (id, payment) in store.iter() {
             if payment.expense_id == self.id.unwrap() {
                 payments.entry(*id).or_insert(payment.clone_record());

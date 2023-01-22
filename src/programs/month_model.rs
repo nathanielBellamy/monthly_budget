@@ -1,5 +1,5 @@
+use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
 use std::collections::BTreeMap;
-use std::collections::btree_map::Entry;
 use chrono::{NaiveDate};
 use std::error::Error;
 use crate::calendar::month::{MonthKey, Month};
@@ -7,8 +7,8 @@ use crate::calendar::day::{Day, DayStore};
 use crate::composite::payment_composite::{PaymentComposite, PaymentCompositeStore};
 use crate::composite::payment_received_composite::{PaymentReceivedComposite, PaymentReceivedCompositeStore};
 use crate::store::store::Store;
-
-
+use std::collections::btree_map::Entry;
+use crate::traits::csv_store::CsvStore;
 pub struct MonthModel {
   key: MonthKey,
 }
@@ -20,9 +20,11 @@ impl MonthModel {
     }
   }
 
+  // Model Payments and PaymentsReceived occuring at specific times throughout the specified month
+  // TODO: still early testing
   pub fn run(&self) -> Result<(), Box<dyn Error>> {
     let mut store = Store::new();
-    store.init(None)?;
+    store.init(Some("data/init/"))?;
 
 
     let mut month = Month {
@@ -30,50 +32,151 @@ impl MonthModel {
       days: MonthModel::construct_days(self.key),
     };
 
-    for (id, day) in &mut month.days {
-      let id_f = *id as f64;
-      let id_32 = *id as u32;
-      day.add_payment(PaymentComposite {
-        id: None,
-        account_id: None,
-        account_name: String::from("piggybank"),
-        amount_id: None,
-        amount_standard: id_f * 1000.00,
-        payment_id: None,
-        payment_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), id_32).unwrap()
-                                        .and_hms_opt(1, 1, 1).unwrap(),
-        expense_id: None,
-        expense_name: format!("Payment {:?}", id),
-      });
-      day.add_payment(PaymentComposite {
-        id: None,
-        account_id: None,
-        account_name: String::from("piggybank"),
-        amount_id: None,
-        amount_standard: id_f * 2000.00,
-        payment_id: None,
-        payment_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), id_32).unwrap()
-                                        .and_hms_opt(3, 3, 3).unwrap(),
-        expense_id: None,
-        expense_name: format!("Payment 2 - {:?}", id),
-      });
-      day.add_payment_received(PaymentReceivedComposite {
-        id: None,
-        account_id: None,
-        account_name: String::from("swearjar"),
-        amount_id: None,
-        amount_standard: 10000.34,
-        payment_received_id: None,
-        payment_received_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), id_32).unwrap()
-                                                  .and_hms_opt(2, 2, 2).unwrap(),
-        income_id: None,
-        income_name: String::from("lottery"),
+    // Set-up payments
+    // TODO: import this data from a JSON or Csv
+
+    // Pay mortgage at 5:30 pm on the 1st
+    if let Entry::Occupied(mut day) = month.days.entry(1){
+      day.get_mut().add_payment(
+        PaymentComposite {
+          id: None,
+          account_balance_id: None,
+          account_id: None,
+          account_name: String::from("piggybank"),
+          amount_id: None,
+          amount_standard: 1000.0,
+          payment_id: None,
+          payment_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), 1).unwrap()
+                                          .and_hms_opt(17, 30, 00).unwrap(),
+          expense_id: None,
+          expense_name: "mortgage".to_string(),
+          prev_balance: None,
+          ending_balance: None,
       });
     }
 
+    // Pay electric bill at 6:00 pm on the 1st
+    if let Entry::Occupied(mut day) = month.days.entry(1){
+      day.get_mut().add_payment(
+        PaymentComposite {
+          id: None,
+          account_balance_id: None,
+          account_id: None,
+          account_name: String::from("swearjar"),
+          amount_id: None,
+          amount_standard: 100.0,
+          payment_id: None,
+          payment_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), 1).unwrap()
+                                          .and_hms_opt(18, 00, 00).unwrap(),
+          expense_id: None,
+          expense_name: "electric".to_string(),
+          prev_balance: None,
+          ending_balance: None,
+      });
+    }
+
+    // Get paid at 3:00pm on the 3rd and 20th
+    let pay_dates: [usize; 2] = [3, 20];
+    for date in pay_dates.iter() {
+      if let Entry::Occupied(mut day) = month.days.entry(*date){
+        day.get_mut().add_payment_received(
+          PaymentReceivedComposite {
+            id: None,
+            account_balance_id: None,
+            account_id: None,
+            account_name: String::from("piggybank"),
+            amount_id: None,
+            amount_standard: 10000.00,
+            payment_received_id: None,
+            payment_received_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), *date as u32).unwrap()
+                                            .and_hms_opt(15, 00, 00).unwrap(),
+            income_id: None,
+            income_name: "spaceman".to_string(),
+            prev_balance: None,
+            ending_balance: None,
+
+        });
+      }
+    }
+
+    // groceirs on the 7th, 14th, 21st, 28th at 4:00pm
+    let grocery_dates: [usize; 4] = [7, 14, 21, 28];
+    for date in grocery_dates.iter() {
+      if let Entry::Occupied(mut day) = month.days.entry(*date){
+        day.get_mut().add_payment(
+          PaymentComposite {
+            id: None,
+            account_balance_id: None,
+            account_id: None,
+            account_name: String::from("piggybank"),
+            amount_id: None,
+            amount_standard: 250.00,
+            payment_id: None,
+            payment_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), *date as u32).unwrap()
+                                            .and_hms_opt(16, 00, 00).unwrap(),
+            expense_id: None,
+            expense_name: "grocery".to_string(),
+            prev_balance: None,
+            ending_balance: None,
+        });
+      }
+    }
+
+    // take the dog to the vet on the 18th at 1:30pm
+    if let Entry::Occupied(mut day) = month.days.entry(18){
+      day.get_mut().add_payment(
+        PaymentComposite {
+          id: None,
+          account_balance_id: None,
+          account_id: None,
+          account_name: String::from("swearjar"),
+          amount_id: None,
+          amount_standard: 500.0,
+          payment_id: None,
+          payment_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), 18).unwrap()
+                                          .and_hms_opt(13, 30, 00).unwrap(),
+          expense_id: None,
+          expense_name: "vet".to_string(),
+          prev_balance: None,
+          ending_balance: None,
+      });
+    }
+
+    // swear when stubbing toe at 4:26 am on the 6th, 13th, 26th
+    // TODO: handle "transfers"
+    let curse_dates: [usize; 3] = [6, 13, 26];
+    for date in curse_dates.iter() {
+      if let Entry::Occupied(mut day) = month.days.entry(*date){
+        day.get_mut().add_payment_received(
+          PaymentReceivedComposite {
+            id: None,
+            account_balance_id: None,
+            account_id: None,
+            account_name: String::from("swearjar"),
+            amount_id: None,
+            amount_standard: 1.00,
+            payment_received_id: None,
+            payment_received_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), *date as u32).unwrap()
+                                            .and_hms_opt(4, 26, 00).unwrap(),
+            income_id: None,
+            income_name: "curse_words".to_string(),
+            prev_balance: None,
+            ending_balance: None,
+        });
+      }
+    }
+
+    // iterate through the days and execute payments in order
+    // each payment event mutates store
     for (_id, day) in month.days.iter_mut() { // iter sorted by key thx to btree_map
         day.execute_payments_in_order(&mut store)?;
     }
+
+    let mut all_payment_disp_store: PaymentDisplayStore = month.all_payments_display();
+    PaymentDisplay::write_to_csv(&mut all_payment_disp_store, "data/all_payments.csv")?;
+
+    let mut all_payment_rec_disp_store: PaymentDisplayStore = month.all_payments_received_display();
+    PaymentDisplay::write_to_csv(&mut all_payment_rec_disp_store, "data/all_payments_received.csv")?;
 
     store.write_to_csv(None)?;
 
@@ -102,58 +205,3 @@ impl MonthModel {
 
 }
 
-  // payment_composite_test_1.create_payment(&mut main_store);
-
-  // let mut payment_composite_test_2 = PaymentComposite {
-  //     account_id: None,
-  //     account_name: String::from("new_bank"),
-  //     amount_id: None,
-  //     amount_standard: 5678.67,
-  //     payment_id: None,
-  //     payment_completed_at: Utc::now().naive_local(),
-  //     expense_id: None,
-  //     expense_name: String::from("The Better Stuff"),
-  // };
-
-  // payment_composite_test_2.create_payment(&mut main_store);
-
-  // let mut payment_composite_test_3 = PaymentComposite {
-  //     account_id: None,
-  //     account_name: String::from("credit_union"),
-  //     amount_id: None,
-  //     amount_standard: 121212.34,
-  //     payment_id: None,
-  //     payment_completed_at: Utc::now().naive_local(),
-  //     expense_id: None,
-  //     expense_name: String::from("The Best Stuff"),
-  // };
-
-  // payment_composite_test_3.create_payment(&mut main_store);
-
-  // let mut payment_received_composite_test_1 = PaymentReceivedComposite {
-  //     account_id: None,
-  //     account_name: String::from("credit_union"),
-  //     amount_id: None,
-  //     amount_standard: 2149055.34,
-  //     payment_received_id: None,
-  //     payment_received_completed_at: Utc::now().naive_local(),
-  //     income_id: None,
-  //     income_name: String::from("spaceman"),
-  // };
-
-  // payment_received_composite_test_1.create_payment_received(&mut main_store);
-
-  // let mut payment_received_composite_test_2 = PaymentReceivedComposite {
-  //     account_id: None,
-  //     account_name: String::from("credit_union"),
-  //     amount_id: None,
-  //     amount_standard: 100203.34,
-  //     payment_received_id: None,
-  //     payment_received_completed_at: Utc::now().naive_local(),
-  //     income_id: None,
-  //     income_name: String::from("cowboy"),
-  // };
-
-  // payment_received_composite_test_1.create_payment_received(&mut main_store);
-
-  // payment_received_composite_test_3.create_payment_received(&mut main_store);

@@ -3,7 +3,7 @@
 pub trait CsvRecord<T> {
     /*
       match record.id {
-        None => record is not yet saved in main_store,
+        None => record is not yet saved in store,
         Some(id) => record is a local copy of record in store
       }
     */

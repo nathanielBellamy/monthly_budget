@@ -11,12 +11,16 @@ use crate::store::store::Store;
 use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
+use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct PaymentComposite {
     pub id: Option<usize>,
     pub account_id: Option<usize>,
     pub account_name: String,
+    pub account_balance_id: Option<usize>, // id of account_balance resulting from creation of payment
+    pub prev_balance: Option<f64>,
+    pub ending_balance: Option<f64>,
     pub amount_id: Option<usize>,
     pub amount_standard: f64,
     pub payment_id: Option<usize>,
@@ -47,6 +51,18 @@ pub type PaymentCompositeStore = BTreeMap<usize, PaymentComposite>;
 type CreatePaymentResult = Result<(), Box<dyn Error>>;
 
 impl PaymentComposite {
+    pub fn display(&self) -> PaymentDisplay {
+      PaymentDisplay {
+        id: self.id,
+        name: self.expense_name.clone(),
+        amount: self.amount_standard,
+        account_name: self.account_name.clone(),
+        completed_at: self.payment_completed_at,
+        prev_balance: self.prev_balance,
+        ending_balance: self.ending_balance,
+      }
+    }
+
     pub fn create_payment(&mut self, store: &mut Store, complete_at: Option<NaiveDateTime>) -> CreatePaymentResult {
         if let Some(id) = self.payment_id {
           ErrorHandler::log(From::from(format!("Payment {:?} already exists.", id)))
@@ -61,7 +77,7 @@ impl PaymentComposite {
                     self.account_id = Some(
                       Account::save_to_store(
                         Account {
-                            id: self.account_id, // T::new_id returns T, this unwrap is a formality
+                            id: self.account_id,
                             name: self.account_name.clone(),
                         },
                         &mut store.accounts,
@@ -122,18 +138,23 @@ impl PaymentComposite {
         );
 
         // create new AccountBalance record
-        let old_balance = Account::by_id(self.account_id.unwrap(), &mut store.accounts)
+        let prev_balance = Account::by_id(self.account_id.unwrap(), &mut store.accounts)
                                    .unwrap()
                                    .current_balance(&mut store.account_balances);
-        AccountBalance::save_to_store(
+
+        self.prev_balance = Some(prev_balance);
+
+        let ending_balance = prev_balance - self.amount_standard;
+        self.ending_balance = Some(ending_balance);
+        self.account_balance_id = Some(AccountBalance::save_to_store(
           AccountBalance {
             id: None,
             account_id: self.account_id.unwrap(),
-            amount: old_balance - self.amount_standard,
+            amount: ending_balance,
             reported_at: completed_at,
           },
           &mut store.account_balances
-        );
+        ));
 
         Ok(())
     }

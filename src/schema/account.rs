@@ -4,6 +4,7 @@ use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::collections::btree_map::Entry;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Account {
@@ -46,15 +47,30 @@ impl Account {
         account
     }
 
+    pub fn account_balance_ids(&self, store: &mut AccountBalanceStore) -> Vec<usize> {
+      let mut balance_ids: Vec<usize> = vec![];
+      for (id, acc_bal) in store.iter() {
+        if acc_bal.account_id == self.id.unwrap() {
+          balance_ids.push(*id)
+        }
+      }
+
+      balance_ids
+    }
+
     // last_saved_balance
     pub fn current_balance(&self, store: &mut AccountBalanceStore) -> f64 {
         let mut curr_balance: Option<AccountBalance> = None;
-        for (_id, acc_bal) in store.iter() {
-            match curr_balance {
-              None => curr_balance = Some(*acc_bal), // set first
-              Some(last_acc_bal_so_far) => {
-                if acc_bal.reported_at > last_acc_bal_so_far.reported_at {
-                  curr_balance = Some(*acc_bal)
+        for id in self.account_balance_ids(store).iter() {
+            if let Entry::Occupied(acc_bal) = store.entry(*id){ // entry exists
+              match curr_balance {
+                None => {// set first
+                  curr_balance = Some(acc_bal.get().clone_record());
+                }, // set first
+                Some(last_acc_bal_so_far) => {
+                  if acc_bal.get().reported_at > last_acc_bal_so_far.reported_at {
+                    curr_balance = Some(acc_bal.get().clone_record())
+                  }
                 }
               }
             }

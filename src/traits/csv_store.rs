@@ -56,7 +56,7 @@ pub trait CsvStore<T: for<'a> Deserialize<'a> + for<'a> Serialize + std::fmt::De
         max_id + 1
     }
 
-    fn save_to_store(mut record: T, csv_store: &mut BTreeMap<usize, T>) -> usize {
+    fn save_to_store(mut record: T, csv_store: &mut BTreeMap<usize, T>) -> usize { // returns id newly saved record
         #[allow(unused_assignments)]
         let mut new_id: usize = 0;
         match record.id() {

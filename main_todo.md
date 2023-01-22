@@ -37,3 +37,15 @@
   - pick a rust engine and/or debug sqlx install
   - provide db-init from csv directory
 
+- generalize to accept JSON
+  - through WebAssembly, you could basically provide a custom local storage compiled from Rust
+  - the front-end's backend
+  - if there were ever a situation where you need to
+    - pull a large amount of data once
+    - operate on that data
+    - save results to server
+    - this would allow you to pull it through the JS `.fetch` api and then pass the data to rust, provide a JS front-end over a core Rust engine
+  - Ideally, you could build a stand-alone app (using something like https://github.com/tauri-apps/tauri) and a fully in-browser version from the same JS+Rust
+
+
+- handle account transfers

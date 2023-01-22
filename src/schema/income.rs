@@ -60,7 +60,7 @@ impl<'a, 'b: 'a> Income {
                     .or_insert(payment_received.clone_record());
             }
         }
-        println!("HERHEHEREHRERH: {:?}", payments_received);
+
         payments_received
     }
 

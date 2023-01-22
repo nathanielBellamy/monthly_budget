@@ -1,0 +1,6 @@
+id,name,amount,account_name,completed_at,prev_balance,ending_balance
+1,spaceman,10000.0,piggybank,2023-02-03T15:00:00,9000.0,19000.0
+2,curse_words,1.0,swearjar,2023-02-06T04:26:00,400.0,401.0
+3,curse_words,1.0,swearjar,2023-02-13T04:26:00,401.0,402.0
+4,spaceman,10000.0,piggybank,2023-02-20T15:00:00,18500.0,28500.0
+5,curse_words,1.0,swearjar,2023-02-26T04:26:00,-98.0,-97.0

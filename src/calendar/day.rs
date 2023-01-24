@@ -1,3 +1,4 @@
+use crate::composite::payment_event::{PaymentEvent, PaymentEventComposite};
 use std::error::Error;
 use chrono::NaiveDateTime;
 use std::collections::BTreeMap;
@@ -39,6 +40,14 @@ impl CsvStore<Day> for Day{}
 pub type DayStore = BTreeMap<usize, Day>;
 
 impl Day {
+    pub fn add_payment_event(&mut self, payment_event: PaymentEvent) -> () {
+      match payment_event.to_composite() {
+        PaymentEventComposite::P(pymnt_composite) => self.add_payment(pymnt_composite),
+        PaymentEventComposite::PR(pymnt_rec_composite) => self.add_payment_received(pymnt_rec_composite),
+        PaymentEventComposite::None => ()
+      }
+    }
+
     pub fn add_payment(&mut self, payment_comp: PaymentComposite) -> () {
         PaymentComposite::save_to_store(payment_comp, &mut self.payments);
     }

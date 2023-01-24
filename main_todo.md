@@ -49,3 +49,10 @@
 
 
 - handle account transfers
+
+- impliment csv_index
+  - provide index data stores
+  - `BTreeMap<my_searchable_column_type: any, record_id: usize>`
+
+
+

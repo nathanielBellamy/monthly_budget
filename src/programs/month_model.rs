@@ -1,22 +1,38 @@
+use crate::composite::payment_event::PaymentEvent;
 use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
 use std::collections::BTreeMap;
 use chrono::{NaiveDate};
 use std::error::Error;
 use crate::calendar::month::{MonthKey, Month};
 use crate::calendar::day::{Day, DayStore};
-use crate::composite::payment_composite::{PaymentComposite, PaymentCompositeStore};
-use crate::composite::payment_received_composite::{PaymentReceivedComposite, PaymentReceivedCompositeStore};
+use crate::composite::payment_composite::{PaymentCompositeStore};
+use crate::composite::payment_received_composite::{PaymentReceivedCompositeStore};
 use crate::store::store::Store;
 use std::collections::btree_map::Entry;
 use crate::traits::csv_store::CsvStore;
+
 pub struct MonthModel {
   key: MonthKey,
+  path_in: &'static str,
+  path_out: &'static str,
 }
 
 impl MonthModel {
-  pub fn new(month: MonthKey) -> MonthModel {
+  pub fn new(month_key: MonthKey, path_in: Option<&'static str>, path_out: Option<&'static str>) -> MonthModel {
+    let data_in = match path_in {
+      None => "data/init/",
+      Some(path) => path,
+    };
+
+    let data_out = match path_out {
+      None => "data/",
+      Some(path) => path,
+    };
+
     MonthModel {
-      key: month
+      key: month_key,
+      path_in: data_in,
+      path_out: data_out,
     }
   }
 
@@ -32,139 +48,7 @@ impl MonthModel {
       days: MonthModel::construct_days(self.key),
     };
 
-    // Set-up payments
-    // TODO: import this data from a JSON or Csv
-
-    // Pay mortgage at 5:30 pm on the 1st
-    if let Entry::Occupied(mut day) = month.days.entry(1){
-      day.get_mut().add_payment(
-        PaymentComposite {
-          id: None,
-          account_balance_id: None,
-          account_id: None,
-          account_name: String::from("piggybank"),
-          amount_id: None,
-          amount_standard: 1000.0,
-          payment_id: None,
-          payment_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), 1).unwrap()
-                                          .and_hms_opt(17, 30, 00).unwrap(),
-          expense_id: None,
-          expense_name: "mortgage".to_string(),
-          prev_balance: None,
-          ending_balance: None,
-      });
-    }
-
-    // Pay electric bill at 6:00 pm on the 1st
-    if let Entry::Occupied(mut day) = month.days.entry(1){
-      day.get_mut().add_payment(
-        PaymentComposite {
-          id: None,
-          account_balance_id: None,
-          account_id: None,
-          account_name: String::from("swearjar"),
-          amount_id: None,
-          amount_standard: 100.0,
-          payment_id: None,
-          payment_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), 1).unwrap()
-                                          .and_hms_opt(18, 00, 00).unwrap(),
-          expense_id: None,
-          expense_name: "electric".to_string(),
-          prev_balance: None,
-          ending_balance: None,
-      });
-    }
-
-    // Get paid at 3:00pm on the 3rd and 20th
-    let pay_dates: [usize; 2] = [3, 20];
-    for date in pay_dates.iter() {
-      if let Entry::Occupied(mut day) = month.days.entry(*date){
-        day.get_mut().add_payment_received(
-          PaymentReceivedComposite {
-            id: None,
-            account_balance_id: None,
-            account_id: None,
-            account_name: String::from("piggybank"),
-            amount_id: None,
-            amount_standard: 10000.00,
-            payment_received_id: None,
-            payment_received_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), *date as u32).unwrap()
-                                            .and_hms_opt(15, 00, 00).unwrap(),
-            income_id: None,
-            income_name: "spaceman".to_string(),
-            prev_balance: None,
-            ending_balance: None,
-
-        });
-      }
-    }
-
-    // groceirs on the 7th, 14th, 21st, 28th at 4:00pm
-    let grocery_dates: [usize; 4] = [7, 14, 21, 28];
-    for date in grocery_dates.iter() {
-      if let Entry::Occupied(mut day) = month.days.entry(*date){
-        day.get_mut().add_payment(
-          PaymentComposite {
-            id: None,
-            account_balance_id: None,
-            account_id: None,
-            account_name: String::from("piggybank"),
-            amount_id: None,
-            amount_standard: 250.00,
-            payment_id: None,
-            payment_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), *date as u32).unwrap()
-                                            .and_hms_opt(16, 00, 00).unwrap(),
-            expense_id: None,
-            expense_name: "grocery".to_string(),
-            prev_balance: None,
-            ending_balance: None,
-        });
-      }
-    }
-
-    // take the dog to the vet on the 18th at 1:30pm
-    if let Entry::Occupied(mut day) = month.days.entry(18){
-      day.get_mut().add_payment(
-        PaymentComposite {
-          id: None,
-          account_balance_id: None,
-          account_id: None,
-          account_name: String::from("swearjar"),
-          amount_id: None,
-          amount_standard: 500.0,
-          payment_id: None,
-          payment_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), 18).unwrap()
-                                          .and_hms_opt(13, 30, 00).unwrap(),
-          expense_id: None,
-          expense_name: "vet".to_string(),
-          prev_balance: None,
-          ending_balance: None,
-      });
-    }
-
-    // swear when stubbing toe at 4:26 am on the 6th, 13th, 26th
-    // TODO: handle "transfers"
-    let curse_dates: [usize; 3] = [6, 13, 26];
-    for date in curse_dates.iter() {
-      if let Entry::Occupied(mut day) = month.days.entry(*date){
-        day.get_mut().add_payment_received(
-          PaymentReceivedComposite {
-            id: None,
-            account_balance_id: None,
-            account_id: None,
-            account_name: String::from("swearjar"),
-            amount_id: None,
-            amount_standard: 1.00,
-            payment_received_id: None,
-            payment_received_completed_at: NaiveDate::from_ymd_opt(2023, Month::id(self.key), *date as u32).unwrap()
-                                            .and_hms_opt(4, 26, 00).unwrap(),
-            income_id: None,
-            income_name: "curse_words".to_string(),
-            prev_balance: None,
-            ending_balance: None,
-        });
-      }
-    }
+    MonthModel::record_payment_events_in_month(&mut month);
 
     // iterate through the days and execute payments in order
     // each payment event mutates store
@@ -203,5 +87,117 @@ impl MonthModel {
     days
   }
 
-}
+  // TODO: optomize
+  // TODO: PaymentEvent as CSVRecord
+  pub fn record_payment_events_in_month<'a>(month: &mut Month) -> (){
+    let month_id = Month::id(month.key);
+    let month_length = Month::length(month.key);
+    let payment_events = MonthModel::payment_events(month);
+    // step through days of the month
+    for (idx, date) in NaiveDate::from_ymd_opt(2023, month_id, 1).unwrap().iter_days().take(month_length as usize).enumerate() {
+      let date_id = idx + 1;
+      for (_index, pymt_event) in payment_events.iter().enumerate() {
+        if pymt_event.4.date() == date {
+          if let Entry::Occupied(mut day) = month.days.entry(date_id) {
+            day.get_mut().add_payment_event(pymt_event.clone());
+            // payment_events.remove(index); TODO: implement this idea, to reduce unecessary loops
+          }
+        }
+      }
+    }
+  }
 
+  pub fn payment_events<'a>(month: &mut Month) -> Vec<PaymentEvent> {
+        // TODO: ingest this data from somwhere eg. data/month.csv
+        vec![
+          PaymentEvent(
+            "payment_received",
+            "Spaceman".to_string(),
+            "Big Bank".to_string(),
+            10000.00,
+            NaiveDate::from_ymd_opt(2023, Month::id(month.key), 6).unwrap()
+                       .and_hms_opt(12, 00, 00).unwrap()
+          ),
+          PaymentEvent(
+            "payment_received",
+            "Cowboy".to_string(),
+            "Credit Union".to_string(),
+            10000.00,
+            NaiveDate::from_ymd_opt(2023, Month::id(month.key), 20).unwrap()
+                       .and_hms_opt(12, 00, 00).unwrap()
+          ),
+          PaymentEvent(
+            "payment",
+            "Mortgage".to_string(),
+            "Big Bank".to_string(),
+            3100.0,
+            NaiveDate::from_ymd_opt(2023, Month::id(month.key), 10).unwrap()
+                       .and_hms_opt(15, 00, 00).unwrap()
+          ),
+          PaymentEvent(
+            "payment",
+            "Natural Gas".to_string(),
+            "Credit Union".to_string(),
+            125.00,
+            NaiveDate::from_ymd_opt(2023, Month::id(month.key), 6).unwrap()
+                       .and_hms_opt(15, 00, 00).unwrap()
+          ),
+          PaymentEvent(
+            "payment",
+            "Cable".to_string(),
+            "Big Bank".to_string(),
+            80.0,
+            NaiveDate::from_ymd_opt(2023, Month::id(month.key), 10).unwrap()
+                       .and_hms_opt(15, 00, 00).unwrap()
+          ),
+          PaymentEvent(
+            "payment",
+            "Garbage/Recycling".to_string(),
+            "Credit Union".to_string(),
+            60.0,
+            NaiveDate::from_ymd_opt(2023, Month::id(month.key), 2).unwrap()
+                       .and_hms_opt(15, 00, 00).unwrap()
+          ),
+          PaymentEvent(
+            "payment",
+            "Groceries".to_string(),
+            "Big Bank".to_string(),
+            250.00,
+            NaiveDate::from_ymd_opt(2023, Month::id(month.key), 7).unwrap()
+                       .and_hms_opt(15, 00, 00).unwrap()
+          ),
+          PaymentEvent(
+            "payment",
+            "Groceries".to_string(),
+            "Big Bank".to_string(),
+            250.00,
+            NaiveDate::from_ymd_opt(2023, Month::id(month.key), 14).unwrap()
+                       .and_hms_opt(15, 00, 00).unwrap()
+          ),
+          PaymentEvent(
+            "payment",
+            "Groceries".to_string(),
+            "Credit Union".to_string(),
+            250.00,
+            NaiveDate::from_ymd_opt(2023, Month::id(month.key), 21).unwrap()
+                       .and_hms_opt(15, 00, 00).unwrap()
+          ),
+          PaymentEvent(
+            "payment",
+            "Groceries".to_string(),
+            "Big Bank".to_string(),
+            250.00,
+            NaiveDate::from_ymd_opt(2023, Month::id(month.key), 28).unwrap()
+                       .and_hms_opt(15, 00, 00).unwrap()
+          ),
+          PaymentEvent(
+            "payment",
+            "Dog Food".to_string(),
+            "Big Bank".to_string(),
+            46.99,
+            NaiveDate::from_ymd_opt(2023, Month::id(month.key), 17 as u32).unwrap()
+                       .and_hms_opt(13, 00, 00).unwrap()
+          ),
+        ]
+    }
+}

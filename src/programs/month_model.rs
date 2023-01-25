@@ -1,3 +1,4 @@
+use crate::composite::account_summary::AccountSummary;
 use crate::traits::csv_record::CsvRecord;
 use crate::composite::payment_summary::PaymentSummary;
 use crate::schema::expense::Expense;
@@ -59,6 +60,9 @@ impl MonthModel {
     for (_id, day) in month.days.iter_mut() { // iter sorted by key thx to btree_map
         day.execute_payments_in_order(&mut store)?;
     }
+
+    let mut account_summary_store = AccountSummary::by_id(1, &mut store);
+    AccountSummary::write_to_csv(&mut account_summary_store, "data/account_1_summary.csv")?;
 
     let mut expense_summary = MonthModel::construct_payment_summary(&mut store);
     PaymentSummary::write_to_csv(&mut expense_summary, "data/expense_summary.csv")?;

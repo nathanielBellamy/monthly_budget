@@ -63,6 +63,16 @@ impl<'a, 'b: 'a> PaymentReceived {
             Some(amt) => Some(amt.standard),
         }
     }
+
+    pub fn ids_by_account_id(account_id: usize, store: &mut PaymentReceivedStore) -> Vec<usize> {
+      let mut payment_rec_ids: Vec<usize> = vec![];
+      for (id, payment_rec) in store.iter() {
+        if payment_rec.account_id == account_id {
+          payment_rec_ids.push(*id);
+        }
+      }
+      payment_rec_ids
+    }
 }
 
 #[cfg(test)]

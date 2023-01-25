@@ -64,3 +64,53 @@ impl PaymentEvent {
       }
     }
 }
+
+#[cfg(test)]
+mod expense_spec {
+    use crate::store::store::Store;
+    use chrono::NaiveDate;
+    use super::*;
+    use crate::spec::spec::Spec;
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn to_composite__returns_payment_composite_when_0_is_payment() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        match PaymentEvent(
+          "payment",
+          "My Payment".to_string(),
+          "My Bank Account".to_string(),
+          1234.56,
+          NaiveDate::from_ymd_opt(2023, 1, 2).unwrap()
+                     .and_hms_opt(12, 00, 00).unwrap()
+        ).to_composite() {
+          PaymentEventComposite::P(payment) => {
+            assert_eq!(payment.expense_name, "My Payment".to_string())
+          },
+          _ => assert_eq!(0, 1),
+        };
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn to_composite__returns_payment_received_composite_when_0_is_payment_received() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        match PaymentEvent(
+          "payment_received",
+          "My Payment Received".to_string(),
+          "My Bank Account".to_string(),
+          1234.56,
+          NaiveDate::from_ymd_opt(2023, 1, 2).unwrap()
+                     .and_hms_opt(12, 00, 00).unwrap()
+        ).to_composite() {
+          PaymentEventComposite::PR(payment) => {
+            assert_eq!(payment.income_name, "My Payment Received".to_string())
+          },
+          _ => assert_eq!(0, 1),
+        };
+    }
+}

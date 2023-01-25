@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct PaymentSummary{
   pub id: Option<usize>,
-  pub name: String, // name 0
-  pub total: f64, // total 1
+  pub name: String,
+  pub total: f64,
 }
 
 impl PaymentSummary {

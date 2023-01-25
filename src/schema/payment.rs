@@ -1,3 +1,4 @@
+use crate::schema::expense::ExpenseStore;
 use crate::schema::account::{Account, AccountStore};
 use crate::schema::amount::{Amount, AmountStore};
 use crate::store::store::Store;
@@ -46,6 +47,16 @@ impl<'a, 'b: 'a> Payment {
         amount
     }
 
+    pub fn expense_name(&self, store: &mut ExpenseStore) -> Option<String> {
+      let mut name: Option<String> = None;
+      for (id, exp) in store.iter() {
+        if *id == self.expense_id {
+          name = Some(exp.name.clone())
+        }
+      }
+      name
+    }
+
     pub fn from_account(&'a self, store: &'b AccountStore) -> Option<Account> {
         let mut account: Option<Account> = None;
         for (id, acc) in store.iter() {
@@ -70,6 +81,16 @@ impl<'a, 'b: 'a> Payment {
         total += payment.standard_amount(amount_store).unwrap();
       }
       total
+    }
+
+    pub fn ids_by_account_id(account_id: usize, store: &mut PaymentStore) -> Vec<usize> {
+      let mut payment_ids: Vec<usize> = vec![];
+      for (id, payment) in store.iter() {
+        if payment.account_id == account_id {
+          payment_ids.push(*id);
+        }
+      }
+      payment_ids
     }
 }
 

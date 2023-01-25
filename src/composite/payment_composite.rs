@@ -102,8 +102,9 @@ impl PaymentComposite {
         }
 
         if let None = self.expense_id {
+            let expense_name = self.expense_name.clone();
             // try name lookup
-            match Expense::by_name(&self.expense_name, &store.expenses) {
+            match Expense::by_name(expense_name, &store.expenses) {
                 None => {
                     // create Expense record
                     let new_id = Expense::save_to_store(

@@ -54,5 +54,7 @@
   - provide index data stores
   - `BTreeMap<my_searchable_column_type: any, record_id: usize>`
 
+- understand why serde doesn't like deserializing into `&str`
+  - you may notice that structs use `String` for name values: this is why
 
 

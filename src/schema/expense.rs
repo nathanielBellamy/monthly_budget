@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Debug)]
+#[derive(Default)]
 pub struct Expense {
     pub id: Option<usize>,
     pub active: bool,
@@ -35,16 +36,47 @@ impl CsvStore<Expense> for Expense {}
 
 pub type ExpenseStore = BTreeMap<usize, Expense>;
 
+// TODO: cleanup unecessary lifetimes
 impl<'a, 'b: 'a> Expense {
-    pub fn by_name(name: &'a str, store: &'b ExpenseStore) -> Option<Expense> {
+    pub fn by_name(name: String, store: &'b ExpenseStore) -> Option<Expense> {
         let mut expense: Option<Expense> = None;
-        for (id, exp) in store.iter() {
-            if exp.name.to_owned() == name {
+        for (_id, exp) in store.iter() {
+            if exp.name == name {
                 expense = Some(exp.clone_record());
                 break;
             }
         }
         expense
+    }
+
+    pub fn name_by_id(id: usize, store: &mut Store) -> String {
+      match Expense::by_id(id, &mut store.expenses){
+        None => format!("No Name Found for Expense Id: {:?}", id),
+        Some(expense) => {
+          let name = expense.name.clone();
+          name
+        },
+      }
+    }
+
+    pub fn total_by_id(id: usize, store: &mut Store) -> f64 {
+      match Expense::by_id(id, &mut store.expenses){
+        None => 0.0,
+        Some(expense) => {
+          let payments = expense.payments(&mut store.payments);
+          Payment::total(payments, &store.amounts)
+        }
+      }
+    }
+
+    pub fn total_by_name(name: String, store: &mut Store) -> f64 {
+      match Expense::by_name(name, &mut store.expenses){
+        None => 0.0,
+        Some(expense) => {
+          let payments = expense.payments(&mut store.payments);
+          Payment::total(payments, &store.amounts)
+        }
+      }
     }
 
     pub fn payments(&'a self, store: &'b mut PaymentStore) -> PaymentStore {

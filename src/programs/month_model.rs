@@ -1,3 +1,7 @@
+use crate::traits::csv_record::CsvRecord;
+use crate::composite::payment_summary::PaymentSummary;
+use crate::schema::expense::Expense;
+use crate::composite::payment_summary::PaymentSummaryStore;
 use crate::composite::payment_event::PaymentEvent;
 use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
 use std::collections::BTreeMap;
@@ -56,6 +60,9 @@ impl MonthModel {
         day.execute_payments_in_order(&mut store)?;
     }
 
+    let mut expense_summary = MonthModel::construct_payment_summary(&mut store);
+    PaymentSummary::write_to_csv(&mut expense_summary, "data/expense_summary.csv")?;
+
     let mut all_payment_disp_store: PaymentDisplayStore = month.all_payments_display();
     PaymentDisplay::write_to_csv(&mut all_payment_disp_store, "data/all_payments.csv")?;
 
@@ -65,6 +72,21 @@ impl MonthModel {
     store.write_to_csv(None)?;
 
     Ok(())
+  }
+
+  pub fn construct_payment_summary(mut store: &mut Store) -> PaymentSummaryStore {
+    let mut payment_summary_store = PaymentSummaryStore::new();
+    let expense_ids: Vec<usize> = store.expenses.keys().cloned().collect();
+    for expense_id in expense_ids { // sorted expense ids
+      payment_summary_store.entry(expense_id).or_insert(
+        PaymentSummary{
+          id: Some(expense_id),
+          name: Expense::name_by_id(expense_id, &mut store).to_string(),
+          total: Expense::total_by_id(expense_id, &mut store),
+        }
+      );
+    }
+    payment_summary_store
   }
 
   pub fn construct_days(month: MonthKey) -> DayStore {
@@ -109,6 +131,7 @@ impl MonthModel {
 
   pub fn payment_events<'a>(month: &mut Month) -> Vec<PaymentEvent> {
         // TODO: ingest this data from somwhere eg. data/month.csv
+        // TODO: enum for payment, payment_received
         vec![
           PaymentEvent(
             "payment_received",

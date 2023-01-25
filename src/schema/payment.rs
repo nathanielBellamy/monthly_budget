@@ -63,6 +63,14 @@ impl<'a, 'b: 'a> Payment {
             Some(amt) => Some(amt.standard),
         }
     }
+
+    pub fn total(payment_store: PaymentStore, amount_store: &AmountStore) -> f64 {
+      let mut total: f64 = 0.0;
+      for (_id, payment) in payment_store.iter() {
+        total += payment.standard_amount(amount_store).unwrap();
+      }
+      total
+    }
 }
 
 #[cfg(test)]

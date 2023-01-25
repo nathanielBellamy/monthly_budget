@@ -1,11 +1,7 @@
 id,active,name
-1,true,mortgage
-2,true,electric
-3,true,grocery
-4,true,vet
-5,true,Garbage/Recycling
-6,true,Natural Gas
-7,true,Groceries
-8,true,Mortgage
-9,true,Cable
-10,true,Dog Food
+1,true,Garbage/Recycling
+2,true,Natural Gas
+3,true,Groceries
+4,true,Mortgage
+5,true,Cable
+6,true,Dog Food

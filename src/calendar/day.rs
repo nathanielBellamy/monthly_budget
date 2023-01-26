@@ -66,7 +66,7 @@ impl Day {
         payment_times.push((*id, pymnt_rec.payment_received_completed_at, "payment_received"))
       }
 
-      payment_times.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+      payment_times.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
 
       for pymnt in payment_times.iter(){
         match pymnt.2 {

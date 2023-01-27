@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use rust_decimal::prelude::*;
 use crate::composite::payment_composite::PaymentComposite;
 use crate::composite::payment_received_composite::PaymentReceivedComposite;
 
@@ -7,7 +8,7 @@ pub struct PaymentEvent( // tuple struct used for generality
   pub &'static str, // type 0
   pub String, // name 1
   pub String, // acc_name 2
-  pub f64, // amount 3
+  pub Decimal, // amount 3
   pub NaiveDateTime, // completed_at 4
 );
 
@@ -82,7 +83,7 @@ mod expense_spec {
           "payment",
           "My Payment".to_string(),
           "My Bank Account".to_string(),
-          1234.56,
+          Decimal::new(123456, 2),
           NaiveDate::from_ymd_opt(2023, 1, 2).unwrap()
                      .and_hms_opt(12, 00, 00).unwrap()
         ).to_composite() {
@@ -103,7 +104,7 @@ mod expense_spec {
           "payment_received",
           "My Payment Received".to_string(),
           "My Bank Account".to_string(),
-          1234.56,
+          Decimal::new(123456, 2),
           NaiveDate::from_ymd_opt(2023, 1, 2).unwrap()
                      .and_hms_opt(12, 00, 00).unwrap()
         ).to_composite() {

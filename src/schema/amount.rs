@@ -1,4 +1,5 @@
 use crate::store::store::Store;
+use rust_decimal::Decimal;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use rand::Rng;
@@ -8,10 +9,13 @@ use std::collections::BTreeMap;
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct Amount {
     pub id: Option<usize>,
-    pub standard: f64,
+    #[serde(with = "rust_decimal::serde::float")]
+    pub standard: Decimal,
     // use to over/under estimate
-    pub low: Option<f64>,
-    pub high: Option<f64>,
+    #[serde(with = "rust_decimal::serde::float_option")]
+    pub low: Option<Decimal>,
+    #[serde(with = "rust_decimal::serde::float_option")]
+    pub high: Option<Decimal>,
 }
 
 impl CsvRecord<Amount> for Amount {
@@ -33,15 +37,15 @@ impl CsvStore<Amount> for Amount {}
 pub type AmountStore = BTreeMap<usize, Amount>;
 
 impl Amount {
-    pub fn randomize(&self) -> f64 {
-        let mut low: f64 = 0.0;
-        let high: f64;
+    pub fn randomize(&self) -> Decimal {
+        let mut low = Decimal::new(00, 1);
+        let high: Decimal;
         if let Some(num) = self.low {
             low = num
         }
         match self.high {
             Some(num) => high = num,
-            _ => high = self.standard * 3.0, // TODO: 3 is a magic number here
+            _ => high = self.standard * Decimal::new(30, 1), // TODO: 3 is a magic number here
                                              //   tune logic for useful randomization
         }
         rand::thread_rng().gen_range(low..high)
@@ -60,7 +64,7 @@ mod amount_spec {
         Spec::init(&mut store);
 
         let amount = Amount::by_id(1, &mut store.amounts).unwrap();
-        assert_eq!(3100.00, amount.standard);
+        assert_eq!(Decimal::new(310000, 2), amount.standard);
     }
 
     #[test]

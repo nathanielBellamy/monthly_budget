@@ -4,13 +4,15 @@ use chrono::NaiveDateTime;
 use std::collections::BTreeMap;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
+use rust_decimal::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AccountSummary{
   pub id: Option<usize>,
   pub name: String,
-  pub balance: f64,
+  #[serde(with = "rust_decimal::serde::float")]
+  pub balance: Decimal,
   pub reported_at: NaiveDateTime,
 }
 

@@ -11,7 +11,8 @@ use crate::store::store::Store;
 use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
-use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
+use rust_decimal::prelude::*;
+use crate::composite::payment_display::{PaymentDisplay};
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct PaymentComposite {
@@ -19,10 +20,13 @@ pub struct PaymentComposite {
     pub account_id: Option<usize>,
     pub account_name: String,
     pub account_balance_id: Option<usize>, // id of account_balance resulting from creation of payment
-    pub prev_balance: Option<f64>,
-    pub ending_balance: Option<f64>,
+    #[serde(with = "rust_decimal::serde::float_option")]
+    pub prev_balance: Option<Decimal>,
+    #[serde(with = "rust_decimal::serde::float_option")]
+    pub ending_balance: Option<Decimal>,
     pub amount_id: Option<usize>,
-    pub amount_standard: f64,
+    #[serde(with = "rust_decimal::serde::float")]
+    pub amount_standard: Decimal,
     pub payment_id: Option<usize>,
     pub payment_completed_at: NaiveDateTime,
     pub expense_id: Option<usize>,

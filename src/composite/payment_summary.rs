@@ -2,13 +2,15 @@ use std::collections::BTreeMap;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use serde::{Deserialize, Serialize};
+use rust_decimal::prelude::*;
 
 // TODO: rename Expense Summary
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct PaymentSummary{
   pub id: Option<usize>,
   pub name: String,
-  pub total: f64,
+  #[serde(with = "rust_decimal::serde::float")]
+  pub total: Decimal,
 }
 
 impl PaymentSummary {

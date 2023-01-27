@@ -1,3 +1,4 @@
+use rust_decimal::Decimal;
 use crate::schema::account::Account;
 use crate::schema::amount::{Amount, AmountStore};
 use crate::store::store::Store;
@@ -57,7 +58,7 @@ impl<'a, 'b: 'a> PaymentReceived {
         account
     }
 
-    pub fn standard_amount(&self, store: &AmountStore) -> Option<f64> {
+    pub fn standard_amount(&self, store: &AmountStore) -> Option<Decimal> {
         match self.amount(store) {
             None => None,
             Some(amt) => Some(amt.standard),

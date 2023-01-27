@@ -38,7 +38,7 @@ pub type IncomeStore = BTreeMap<usize, Income>;
 impl<'a, 'b: 'a> Income {
     pub fn by_name(name: &'a str, store: &'b IncomeStore) -> Option<Income> {
         let mut income: Option<Income> = None;
-        for (id, inc) in store.iter() {
+        for (_id, inc) in store.iter() {
             if inc.name.to_owned() == name {
                 income = Some(inc.clone_record());
                 break;
@@ -87,6 +87,16 @@ impl<'a, 'b: 'a> Income {
 mod income_spec {
     use super::*;
     use crate::spec::spec::Spec;
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn by_name__retrieves_records_from_store() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let income = Income::by_name("spaceman", &mut store.incomes).unwrap();
+        assert_eq!(2, income.id.unwrap());
+    }
 
     #[test]
     #[allow(non_snake_case)]

@@ -2,6 +2,7 @@ use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
+use rust_decimal::Decimal;
 use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
@@ -9,7 +10,8 @@ pub struct AccountBalance {
     pub id: Option<usize>,
     pub account_id: usize,
     pub reported_at: NaiveDateTime,
-    pub amount: f64,
+    #[serde(with = "rust_decimal::serde::float")]
+    pub amount: Decimal,
 }
 
 pub type AccountBalanceStore = BTreeMap<usize, AccountBalance>;

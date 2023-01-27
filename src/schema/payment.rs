@@ -1,3 +1,4 @@
+use rust_decimal::Decimal;
 use crate::schema::expense::ExpenseStore;
 use crate::schema::account::{Account, AccountStore};
 use crate::schema::amount::{Amount, AmountStore};
@@ -68,15 +69,15 @@ impl<'a, 'b: 'a> Payment {
         account
     }
 
-    pub fn standard_amount(&self, store: &AmountStore) -> Option<f64> {
+    pub fn standard_amount(&self, store: &AmountStore) -> Option<Decimal> {
         match self.amount(store) {
             None => None,
             Some(amt) => Some(amt.standard),
         }
     }
 
-    pub fn total(payment_store: PaymentStore, amount_store: &AmountStore) -> f64 {
-      let mut total: f64 = 0.0;
+    pub fn total(payment_store: PaymentStore, amount_store: &AmountStore) -> Decimal {
+      let mut total = Decimal::new(00, 1);
       for (_id, payment) in payment_store.iter() {
         total += payment.standard_amount(amount_store).unwrap();
       }

@@ -40,6 +40,14 @@ impl CsvStore<Day> for Day{}
 pub type DayStore = BTreeMap<usize, Day>;
 
 impl Day {
+    pub fn new(year: i32, month: u32, day: u32) -> Day {
+      Day{
+        id: None,
+        payments: PaymentCompositeStore::new(),
+        payments_received: PaymentReceivedCompositeStore::new(),
+        date: NaiveDate::from_ymd_opt(year, month, day).unwrap(),
+      }
+    }
     pub fn add_payment_event(&mut self, payment_event: PaymentEvent) -> () {
       match payment_event.to_composite() {
         PaymentEventComposite::P(pymnt_composite) => self.add_payment(pymnt_composite),
@@ -68,16 +76,16 @@ impl Day {
 
       payment_times.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
 
-      for pymnt in payment_times.iter(){
-        match pymnt.2 {
+      for pymnt_event in payment_times.iter(){
+        match pymnt_event.2 {
           "payment" => {
-            if let Entry::Occupied(mut record) = self.payments.entry(pymnt.0) {
-              record.get_mut().create_payment(store, Some(pymnt.1))?;
+            if let Entry::Occupied(mut record) = self.payments.entry(pymnt_event.0) {
+              record.get_mut().create_payment(store, Some(pymnt_event.1))?;
             }
           },
           "payment_received" => {
-            if let Entry::Occupied(mut record) = self.payments_received.entry(pymnt.0) {
-              record.get_mut().create_payment_received(store, Some(pymnt.1))?;
+            if let Entry::Occupied(mut record) = self.payments_received.entry(pymnt_event.0) {
+              record.get_mut().create_payment_received(store, Some(pymnt_event.1))?;
             }
           },
           _ => ()
@@ -89,12 +97,116 @@ impl Day {
 
 #[cfg(test)]
 mod day_spec {
-    // use super::*;
-    // use crate::spec::spec::Spec;
+
+
+  use super::*;
+  use crate::spec::spec::Spec;
+  use crate::schema::account::Account;
+  use crate::schema::account_balance::AccountBalance;
+  use crate::schema::account_balance::AccountBalanceStore;
+  use rust_decimal::Decimal;
 
     #[test]
     #[allow(non_snake_case)]
-    fn add_payment__adds_payment_to_self_payments() {
-      assert_eq!(2, 2);
+    fn add_payment_event__adds_payment_when_event_0_is_payment() {
+      let mut store = Store::new();
+      Spec::init(&mut store);
+
+      let mut day = Day::new(2023, 6, 6);
+      let payment_event = PaymentEvent(
+        "payment",
+        "My Payment".to_string(),
+        "Big Bank".to_string(),
+        Decimal::new(12345, 2),
+        NaiveDate::from_ymd_opt(2023, 6, 6).unwrap()
+                  .and_hms_opt(12, 00, 00).unwrap()
+      );
+
+      assert_eq!(0, day.payments.len());
+      day.add_payment_event(payment_event);
+      assert_eq!(1, day.payments.len());
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn add_payment_event__adds_payment_received_when_event_0_is_payment_received() {
+      let mut store = Store::new();
+      Spec::init(&mut store);
+
+      let mut day = Day::new(2023, 6, 6);
+      let payment_event = PaymentEvent(
+        "payment_received",
+        "My Payment Received".to_string(),
+        "Big Bank".to_string(),
+        Decimal::new(12345, 2),
+        NaiveDate::from_ymd_opt(2023, 6, 6).unwrap()
+                  .and_hms_opt(12, 00, 00).unwrap()
+      );
+
+      assert_eq!(0, day.payments_received.len());
+      day.add_payment_event(payment_event);
+      assert_eq!(1, day.payments_received.len());
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn execute_payments_in_order__enacts_all_payment_events_on_day_in_chrono_order() {
+      let mut store = Store::new();
+      Spec::init(&mut store);
+
+      let mut day = Day::new(2023, 6, 6);
+      day.add_payment_event(PaymentEvent(
+        "payment",
+        "My Payment".to_string(),
+        "New Bank".to_string(),
+        Decimal::new(001, 2),
+        NaiveDate::from_ymd_opt(2023, 6, 6).unwrap()
+                  .and_hms_opt(12, 00, 01).unwrap()
+      ));
+      day.add_payment_event(PaymentEvent(
+        "payment_received",
+        "My Payment Received".to_string(),
+        "New Bank".to_string(),
+        Decimal::new(010, 2),
+        NaiveDate::from_ymd_opt(2023, 6, 6).unwrap()
+                  .and_hms_opt(12, 00, 02).unwrap()
+      ));
+      day.add_payment_event(PaymentEvent(
+        "payment",
+        "My Payment".to_string(),
+        "New Bank".to_string(),
+        Decimal::new(100, 2),
+        NaiveDate::from_ymd_opt(2023, 6, 6).unwrap()
+                  .and_hms_opt(12, 00, 03).unwrap()
+      ));
+      day.add_payment_event(PaymentEvent(
+        "payment_received",
+        "My Payment Received".to_string(),
+        "New Bank".to_string(),
+        Decimal::new(1000, 2),
+        NaiveDate::from_ymd_opt(2023, 6, 6).unwrap()
+                  .and_hms_opt(12, 00, 04).unwrap()
+      ));
+
+      assert_eq!(2, day.payments.len());
+      assert_eq!(2, day.payments_received.len());
+
+      day.execute_payments_in_order(&mut store).unwrap();
+
+      let account = Account::by_name("New Bank", &mut store.accounts).unwrap();
+      let account_balance_ids = account.account_balance_ids(&mut store.account_balances);
+
+      let mut acc_bal_store = AccountBalanceStore::new();
+      for acc_bal_id in account_balance_ids.iter() {
+        let mut acc_bal = store.account_balances[acc_bal_id].clone_record();
+        acc_bal.id = None;
+        AccountBalance::save_to_store(acc_bal, &mut acc_bal_store);
+      }
+
+      assert_eq!(Decimal::new(-0001, 2), acc_bal_store[&1].amount);
+      assert_eq!(Decimal::new(009, 2), acc_bal_store[&2].amount);
+      assert_eq!(Decimal::new(-091, 2), acc_bal_store[&3].amount);
+      assert_eq!(Decimal::new(909, 2), acc_bal_store[&4].amount);
+
     }
 }

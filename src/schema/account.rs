@@ -3,6 +3,7 @@ use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use serde::{Deserialize, Serialize};
+use rust_decimal::Decimal;
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
 
@@ -59,14 +60,14 @@ impl Account {
     }
 
     // last_saved_balance
-    pub fn current_balance(&self, store: &mut AccountBalanceStore) -> f64 {
+    pub fn current_balance(&self, store: &mut AccountBalanceStore) -> Decimal {
         let mut curr_balance: Option<AccountBalance> = None;
         for id in self.account_balance_ids(store).iter() {
             if let Entry::Occupied(acc_bal) = store.entry(*id){ // entry exists
               match curr_balance {
                 None => {// set first
                   curr_balance = Some(acc_bal.get().clone_record());
-                }, // set first
+                },
                 Some(last_acc_bal_so_far) => {
                   if acc_bal.get().reported_at > last_acc_bal_so_far.reported_at {
                     curr_balance = Some(acc_bal.get().clone_record())
@@ -77,19 +78,8 @@ impl Account {
         }
 
         match curr_balance {
-          None => 0.0,
+          None => Decimal::new(00, 1),
           Some(bal) => bal.amount
-        }
-    }
-
-    pub fn find_or_create<'a, 'b: 'a>(
-        id: Option<usize>,
-        name: &'a str,
-        store: &'b mut Store,
-    ) -> Option<Account> {
-        match id {
-            None => Account::by_name(&name[..], &mut store.accounts),
-            Some(id) => Account::by_id(id, &mut store.accounts), // failure here indicates id mismatch data
         }
     }
 }
@@ -117,5 +107,31 @@ mod account_spec {
 
         let account = Account::by_name("piggybank", &mut store.accounts).unwrap();
         assert_eq!(1, account.id.unwrap())
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn current_balance__returns_amount_of_account_balance_with_most_recent_reported_at() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let account = Account::by_name("piggybank", &mut store.accounts).unwrap();
+        assert_eq!(Decimal::new(2000, 1), account.current_balance(&mut store.account_balances));
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn account_balance_ids__returns_vec_of_ids() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let account = Account::by_name("piggybank", &mut store.accounts).unwrap();
+        let account_balance_ids = account.account_balance_ids(&mut store.account_balances);
+        assert_eq!(vec![1,2], account_balance_ids);
+
+        for id in account_balance_ids.iter() {
+          let balance = AccountBalance::by_id(*id, &mut store.account_balances).unwrap();
+          assert_eq!(balance.account_id, account.id.unwrap());
+        }
     }
 }

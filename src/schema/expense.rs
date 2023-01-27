@@ -4,7 +4,7 @@ use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
-// use std::collections::btree_map::Entry;
+use rust_decimal::Decimal;
 use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -59,19 +59,9 @@ impl<'a, 'b: 'a> Expense {
       }
     }
 
-    pub fn total_by_id(id: usize, store: &mut Store) -> f64 {
+    pub fn total_by_id(id: usize, store: &mut Store) -> Decimal {
       match Expense::by_id(id, &mut store.expenses){
-        None => 0.0,
-        Some(expense) => {
-          let payments = expense.payments(&mut store.payments);
-          Payment::total(payments, &store.amounts)
-        }
-      }
-    }
-
-    pub fn total_by_name(name: String, store: &mut Store) -> f64 {
-      match Expense::by_name(name, &mut store.expenses){
-        None => 0.0,
+        None => Decimal::new(00, 1),
         Some(expense) => {
           let payments = expense.payments(&mut store.payments);
           Payment::total(payments, &store.amounts)
@@ -109,6 +99,26 @@ impl<'a, 'b: 'a> Expense {
 mod expense_spec {
     use super::*;
     use crate::spec::spec::Spec;
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn by_name__retrieves_expense_from_store_by_name() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let expense = Expense::by_name("mortgage".to_string(), &mut store.expenses).unwrap();
+        assert_eq!(1, expense.id.unwrap());
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn name_by_id__retrieves_expense_from_store_by_name() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let name = Expense::name_by_id(1, &mut store);
+        assert_eq!("mortgage".to_string(), name);
+    }
 
     #[test]
     #[allow(non_snake_case)]

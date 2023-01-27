@@ -2,17 +2,21 @@ use chrono::NaiveDateTime;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use std::collections::BTreeMap;
+use rust_decimal::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct PaymentDisplay {
   pub id: Option<usize>,
   pub name: String,
-  pub amount: f64,
+  #[serde(with = "rust_decimal::serde::float")]
+  pub amount: Decimal,
   pub account_name: String,
   pub completed_at: NaiveDateTime,
-  pub prev_balance: Option<f64>,
-  pub ending_balance: Option<f64>,
+  #[serde(with = "rust_decimal::serde::float_option")]
+  pub prev_balance: Option<Decimal>,
+  #[serde(with = "rust_decimal::serde::float_option")]
+  pub ending_balance: Option<Decimal>,
 }
 
 impl CsvRecord<PaymentDisplay> for PaymentDisplay {

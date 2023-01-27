@@ -203,10 +203,10 @@ mod day_spec {
         AccountBalance::save_to_store(acc_bal, &mut acc_bal_store);
       }
 
-      assert_eq!(Decimal::new(-0001, 2), acc_bal_store[&1].amount);
-      assert_eq!(Decimal::new(009, 2), acc_bal_store[&2].amount);
-      assert_eq!(Decimal::new(-091, 2), acc_bal_store[&3].amount);
-      assert_eq!(Decimal::new(909, 2), acc_bal_store[&4].amount);
+      assert_eq!(Decimal::new(-0001, 2), acc_bal_store[&1].amount); // pay .01
+      assert_eq!(Decimal::new(009, 2), acc_bal_store[&2].amount); // receive .1
+      assert_eq!(Decimal::new(-091, 2), acc_bal_store[&3].amount); // pay 1
+      assert_eq!(Decimal::new(909, 2), acc_bal_store[&4].amount); // receive 10
 
     }
 }

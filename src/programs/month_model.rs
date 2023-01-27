@@ -141,7 +141,7 @@ impl MonthModel {
             "payment_received",
             "Spaceman".to_string(),
             "Big Bank".to_string(),
-            Decimal::new(1000000, 2),
+            Decimal::new(10000, 0),
             NaiveDate::from_ymd_opt(2023, Month::id(month.key), 6).unwrap()
                        .and_hms_opt(12, 00, 00).unwrap()
           ),
@@ -149,7 +149,7 @@ impl MonthModel {
             "payment_received",
             "Cowboy".to_string(),
             "Credit Union".to_string(),
-            Decimal::new(1000000, 2),
+            Decimal::new(10000, 0),
             NaiveDate::from_ymd_opt(2023, Month::id(month.key), 20).unwrap()
                        .and_hms_opt(12, 00, 00).unwrap()
           ),
@@ -157,7 +157,7 @@ impl MonthModel {
             "payment",
             "Mortgage".to_string(),
             "Big Bank".to_string(),
-            Decimal::new(31000, 2),
+            Decimal::new(3100, 0),
             NaiveDate::from_ymd_opt(2023, Month::id(month.key), 10).unwrap()
                        .and_hms_opt(15, 00, 00).unwrap()
           ),
@@ -165,7 +165,7 @@ impl MonthModel {
             "payment",
             "Natural Gas".to_string(),
             "Credit Union".to_string(),
-            Decimal::new(12500, 2),
+            Decimal::new(125, 0),
             NaiveDate::from_ymd_opt(2023, Month::id(month.key), 6).unwrap()
                        .and_hms_opt(15, 00, 00).unwrap()
           ),
@@ -173,7 +173,7 @@ impl MonthModel {
             "payment",
             "Natural Gas".to_string(),
             "Credit Union".to_string(),
-            Decimal::new(125000, 2),
+            Decimal::new(125, 0),
             NaiveDate::from_ymd_opt(2023, Month::id(month.key), 6).unwrap()
                        .and_hms_opt(15, 00, 00).unwrap()
           ),
@@ -181,7 +181,7 @@ impl MonthModel {
             "payment",
             "Cable".to_string(),
             "Big Bank".to_string(),
-            Decimal::new(8000, 2),
+            Decimal::new(80, 0),
             NaiveDate::from_ymd_opt(2023, Month::id(month.key), 10).unwrap()
                        .and_hms_opt(15, 00, 00).unwrap()
           ),
@@ -189,7 +189,7 @@ impl MonthModel {
             "payment",
             "Garbage/Recycling".to_string(),
             "Credit Union".to_string(),
-            Decimal::new(6000, 2),
+            Decimal::new(60, 0),
             NaiveDate::from_ymd_opt(2023, Month::id(month.key), 2).unwrap()
                        .and_hms_opt(15, 00, 00).unwrap()
           ),
@@ -197,7 +197,7 @@ impl MonthModel {
             "payment",
             "Groceries".to_string(),
             "Big Bank".to_string(),
-            Decimal::new(25000, 2),
+            Decimal::new(250, 0),
             NaiveDate::from_ymd_opt(2023, Month::id(month.key), 7).unwrap()
                        .and_hms_opt(15, 00, 00).unwrap()
           ),
@@ -205,7 +205,7 @@ impl MonthModel {
             "payment",
             "Groceries".to_string(),
             "Big Bank".to_string(),
-            Decimal::new(25000, 2),
+            Decimal::new(250, 0),
             NaiveDate::from_ymd_opt(2023, Month::id(month.key), 14).unwrap()
                        .and_hms_opt(15, 00, 00).unwrap()
           ),
@@ -213,7 +213,7 @@ impl MonthModel {
             "payment",
             "Groceries".to_string(),
             "Credit Union".to_string(),
-            Decimal::new(25000, 2),
+            Decimal::new(250, 0),
             NaiveDate::from_ymd_opt(2023, Month::id(month.key), 21).unwrap()
                        .and_hms_opt(15, 00, 00).unwrap()
           ),
@@ -221,7 +221,7 @@ impl MonthModel {
             "payment",
             "Groceries".to_string(),
             "Big Bank".to_string(),
-            Decimal::new(25000, 2),
+            Decimal::new(250, 0),
             NaiveDate::from_ymd_opt(2023, Month::id(month.key), 28).unwrap()
                        .and_hms_opt(15, 00, 00).unwrap()
           ),

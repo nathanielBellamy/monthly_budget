@@ -73,7 +73,7 @@ impl Store {
 
         for res in import_res.iter() {
             if let Err(err) = res {
-                return Err(From::from(format!("Init Store Error: {:?}", err)));
+                return Err(From::from(format!("Init Store Error: {err}")));
             }
         }
         Ok(self)

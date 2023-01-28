@@ -7,7 +7,7 @@ pub struct ErrorHandler;
 
 impl ErrorHandler {
     pub fn log(err: Box<dyn Error>) {
-        println!("{:?}", err);
+        println!("{err}");
         write_error_to_log(err);
     }
 }
@@ -25,10 +25,10 @@ fn write_error_to_log(err: Box<dyn Error>) {
         .open("src/error/error_log");
 
     match file {
-        Err(e) => println!("ERROR LOG FILE LOAD ERROR: {:?}", e),
+        Err(e) => println!("ERROR LOG FILE LOAD ERROR: {e}"),
         Ok(mut file) => {
-            if let Err(e) = writeln!(file, "{}", error) {
-                println!("ERROR LOG ERROR: {:?}", e);
+            if let Err(e) = writeln!(file, "{error}") {
+                println!("ERROR LOG ERROR: {e}");
             }
         }
     }

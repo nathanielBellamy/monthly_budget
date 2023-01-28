@@ -106,9 +106,8 @@ impl PaymentComposite {
         }
 
         if let None = self.expense_id {
-            let expense_name = self.expense_name.clone();
             // try name lookup
-            match Expense::by_name(expense_name, &store.expenses) {
+            match Expense::by_name(&self.expense_name, &store.expenses) {
                 None => {
                     // create Expense record
                     let new_id = Expense::save_to_store(
@@ -125,7 +124,7 @@ impl PaymentComposite {
             }
         }
 
-        let completed_at = match complete_at {
+        self.payment_completed_at = match complete_at {
           None => Utc::now().naive_local(),
           Some(ndt) => ndt
         };
@@ -134,7 +133,7 @@ impl PaymentComposite {
         Payment::save_to_store(
             Payment {
                 id: None,
-                completed_at: completed_at,
+                completed_at: self.payment_completed_at,
                 account_id: self.account_id.unwrap(),
                 amount_id: self.amount_id.unwrap(),
                 expense_id: self.expense_id.unwrap(),
@@ -156,7 +155,7 @@ impl PaymentComposite {
             id: None,
             account_id: self.account_id.unwrap(),
             amount: ending_balance,
-            reported_at: completed_at,
+            reported_at: self.payment_completed_at,
           },
           &mut store.account_balances
         ));
@@ -169,13 +168,180 @@ impl PaymentComposite {
 mod payment_composite_spec {
     use super::*;
     use crate::spec::spec::Spec;
+    use chrono::NaiveDate;
+
+    fn payment_comp() -> PaymentComposite {
+      PaymentComposite {
+        id: None,
+        account_id: None,
+        account_name: "piggybank".to_string(),
+        account_balance_id: None,
+        prev_balance: None,
+        ending_balance: None,
+        amount_id: None,
+        amount_standard: Decimal::new(12345, 2),
+        payment_id: None,
+        payment_completed_at: NaiveDate::from_ymd_opt(2023, 2, 17).unwrap()
+                                        .and_hms_opt(13, 00, 00).unwrap(),
+        expense_id: None,
+        expense_name: "dog food".to_string(),
+      }
+    }
 
     #[test]
     #[allow(non_snake_case)]
-    fn create_payment__creates_account_if_none_exists() {
+    fn create_payment__retrieves_account_id_by_name_when_self_account_id_is_none_and_account_exists() {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        assert_eq!(2, 2);
+        let mut payment_comp = payment_comp();
+        payment_comp.create_payment(&mut store, None).unwrap();
+        assert_eq!(1, payment_comp.account_id.unwrap());
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    // TODO: eventually may want to change this behavior to raise an error saying account dne
+    fn create_payment__creates_account_when_self_account_id_is_none_and_account_name_does_not_exist() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let mut payment_comp = payment_comp();
+        payment_comp.account_name = "New Account".to_string();
+        assert_eq!(2, store.accounts.len());
+        payment_comp.create_payment(&mut store, None).unwrap();
+        assert_eq!(3, store.accounts.len());
+        assert_eq!(3, Account::by_name("New Account", &mut store.accounts).unwrap().id.unwrap())
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn create_payment__creates_amount_record_when_self_amount_id_is_none() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let mut payment_comp = payment_comp();
+        assert_eq!(5, store.amounts.len());
+        payment_comp.create_payment(&mut store, None).unwrap();
+        assert_eq!(6, store.amounts.len());
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn create_payment__retrieves_expense_id_by_name_when_self_expense_id_is_none_and_expense_exists() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let mut payment_comp = payment_comp();
+        payment_comp.expense_name = "dog food".to_string();
+        payment_comp.create_payment(&mut store, None).unwrap();
+        assert_eq!(3, payment_comp.expense_id.unwrap());
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn create_payment__creates_expense_when_self_expense_id_is_none_and_expense_name_does_not_exist() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let mut payment_comp = payment_comp();
+        payment_comp.expense_name = "New Expense".to_string();
+        assert_eq!(3, store.expenses.len());
+        payment_comp.create_payment(&mut store, None).unwrap();
+        assert_eq!(4, store.expenses.len());
+        assert_eq!(4, Expense::by_name("New Expense", &mut store.expenses).unwrap().id.unwrap())
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    // TODO: find out how to enact something like Ruby/Rspec's Timecop
+    fn create_payment__sets_self_payment_completed_at_to_current_time_when_complete_at_is_none() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let mut payment_comp = payment_comp();
+        payment_comp.create_payment(&mut store, None).unwrap();
+        assert_eq!(false, payment_comp.payment_completed_at == NaiveDate::from_ymd_opt(2023, 2, 17).unwrap()
+                                                                          .and_hms_opt(13, 00, 00).unwrap());
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn create_payment__sets_self_payment_completed_at_when_complete_at_is_passed_in() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let mut payment_comp = payment_comp();
+        payment_comp.create_payment(
+          &mut store,
+          Some(NaiveDate::from_ymd_opt(3000, 4, 1).unwrap()
+                          .and_hms_opt(13, 00, 00).unwrap())
+        ).unwrap();
+
+        assert_eq!(
+          NaiveDate::from_ymd_opt(3000, 4, 1).unwrap()
+                    .and_hms_opt(13, 00, 00).unwrap(),
+          payment_comp.payment_completed_at
+        );
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn create_payment__gets_current_balance_of_account() {
+        // at this point in create_payment, account is guaranteed to exist
+        // either existed before or was created by the method
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let mut payment_comp = payment_comp();
+        payment_comp.create_payment(&mut store, None).unwrap();
+        assert_eq!(Decimal::new(200,0), payment_comp.prev_balance.unwrap());
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn create_payment__sets_self_prev_balance_to_0_when_new_account() {
+        // at this point in create_payment, account is guaranteed to exist
+        // either existed before or was created by the method
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let mut payment_comp = payment_comp();
+        payment_comp.account_name = "New Account".to_string();
+        payment_comp.create_payment(&mut store, None).unwrap();
+        assert_eq!(Decimal::new(0,0), payment_comp.prev_balance.unwrap());
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn create_payment__creates_payment_record() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let mut payment_comp = payment_comp();
+        assert_eq!(4, store.payments.len());
+        payment_comp.create_payment(&mut store, None).unwrap();
+        assert_eq!(5, store.payments.len());
+        let new_payment = store.payments[&5].clone_record();
+        assert_eq!(new_payment.account_id, payment_comp.account_id.unwrap());
+        assert_eq!(new_payment.expense_id, payment_comp.expense_id.unwrap());
+        assert_eq!(new_payment.amount_id, payment_comp.amount_id.unwrap());
+        assert_eq!(new_payment.completed_at, payment_comp.payment_completed_at);
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn create_payment__creates_account_balance_record() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let mut payment_comp = payment_comp();
+        assert_eq!(4, store.account_balances.len());
+        payment_comp.create_payment(&mut store, None).unwrap();
+        assert_eq!(5, store.account_balances.len());
+        let new_acc_bal = store.account_balances[&5].clone_record();
+        assert_eq!(new_acc_bal.account_id, payment_comp.account_id.unwrap());
+        assert_eq!(new_acc_bal.amount, payment_comp.ending_balance.unwrap());
+        assert_eq!(new_acc_bal.reported_at, payment_comp.payment_completed_at)
     }
 }

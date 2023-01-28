@@ -230,7 +230,7 @@ impl MonthModel {
             "Dog Food".to_string(),
             "Big Bank".to_string(),
             Decimal::new(4699, 2),
-            NaiveDate::from_ymd_opt(2023, Month::id(month.key), 17 as u32).unwrap()
+            NaiveDate::from_ymd_opt(2023, Month::id(month.key), 17).unwrap()
                        .and_hms_opt(13, 00, 00).unwrap()
           ),
         ]

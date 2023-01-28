@@ -38,7 +38,7 @@ pub type ExpenseStore = BTreeMap<usize, Expense>;
 
 // TODO: cleanup unecessary lifetimes
 impl<'a, 'b: 'a> Expense {
-    pub fn by_name(name: String, store: &'b ExpenseStore) -> Option<Expense> {
+    pub fn by_name(name: &'a str, store: &'b ExpenseStore) -> Option<Expense> {
         let mut expense: Option<Expense> = None;
         for (_id, exp) in store.iter() {
             if exp.name == name {
@@ -106,7 +106,7 @@ mod expense_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let expense = Expense::by_name("mortgage".to_string(), &mut store.expenses).unwrap();
+        let expense = Expense::by_name("mortgage", &mut store.expenses).unwrap();
         assert_eq!(1, expense.id.unwrap());
     }
 

@@ -1,5 +1,5 @@
 use crate::schema::payment::{Payment, PaymentStore};
-use crate::store::store::Store;
+use crate::storage::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use rust_decimal::Decimal;
@@ -49,10 +49,7 @@ impl<'a, 'b: 'a> Expense {
     pub fn name_by_id(id: usize, store: &mut Store) -> String {
         match Expense::by_id(id, &mut store.expenses) {
             None => format!("No Name Found for Expense Id: {:?}", id),
-            Some(expense) => {
-                let name = expense.name.clone();
-                name
-            }
+            Some(expense) => expense.name
         }
     }
 
@@ -70,7 +67,7 @@ impl<'a, 'b: 'a> Expense {
         let mut payments: PaymentStore = BTreeMap::new();
         for (id, payment) in store.iter() {
             if payment.expense_id == self.id.unwrap() {
-                payments.entry(*id).or_insert(payment.clone_record());
+                payments.entry(*id).or_insert_with(|| payment.clone_record());
             }
         }
         payments
@@ -96,7 +93,7 @@ impl<'a, 'b: 'a> Expense {
 #[cfg(test)]
 mod expense_spec {
     use super::*;
-    use crate::spec::spec::Spec;
+    use crate::test::spec::Spec;
     use chrono::NaiveDateTime;
 
     #[test]

@@ -1,5 +1,5 @@
 use crate::schema::account::Account;
-use crate::store::store::Store;
+use crate::storage::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::NaiveDateTime;
@@ -67,7 +67,7 @@ impl CsvStore<AccountSummary> for AccountSummary {}
 #[cfg(test)]
 mod account_summary_spec {
     use super::*;
-    use crate::spec::spec::Spec;
+    use crate::test::spec::Spec;
 
     #[test]
     #[allow(non_snake_case)]

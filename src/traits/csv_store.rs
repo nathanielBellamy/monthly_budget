@@ -1,4 +1,4 @@
-use crate::error_handler::error_handler::ErrorHandler;
+use crate::error::error_handler::ErrorHandler;
 use crate::traits::csv_record::CsvRecord;
 use csv::Reader;
 use serde::{Deserialize, Serialize};
@@ -44,7 +44,7 @@ pub trait CsvStore<
 
     fn new_id(csv_store: &BTreeMap<usize, T>) -> usize {
         let mut max_id: usize = 0;
-        for (id, _record) in csv_store {
+        for id in csv_store.keys() {
             if *id > max_id {
                 max_id = *id
             }

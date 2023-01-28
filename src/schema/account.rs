@@ -39,7 +39,7 @@ impl Account {
     pub fn by_name<'a, 'b: 'a>(name: &'a str, store: &'b AccountStore) -> Option<Account> {
         let mut account: Option<Account> = None;
         for (_id, acc) in store.iter() {
-            if acc.name.to_owned() == name {
+            if acc.name == name {
                 account = Some(acc.clone_record());
                 break;
             }
@@ -88,8 +88,8 @@ impl Account {
 #[cfg(test)]
 mod account_spec {
     use super::*;
-    use crate::spec::spec::Spec;
-    use crate::store::store::Store;
+    use crate::test::spec::Spec;
+    use crate::storage::store::Store;
 
     #[test]
     #[allow(non_snake_case)]

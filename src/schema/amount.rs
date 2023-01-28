@@ -28,7 +28,7 @@ impl CsvRecord<Amount> for Amount {
     }
 
     fn clone_record(&self) -> Amount {
-        self.clone()
+        *self
     }
 }
 impl CsvStore<Amount> for Amount {}
@@ -39,15 +39,14 @@ impl Amount {
     #[allow(unused)]
     pub fn randomize(&self) -> Decimal {
         let mut low = Decimal::new(00, 1);
-        let high: Decimal;
         if let Some(num) = self.low {
             low = num
         }
-        match self.high {
-            Some(num) => high = num,
-            _ => high = self.standard * Decimal::new(30, 1), // TODO: 3 is a magic number here
-                                                             //   tune logic for useful randomization
-        }
+        let high: Decimal = match self.high {
+            Some(num) => num,
+            _ => self.standard * Decimal::new(30, 1), // TODO: 3 is a magic number here
+                                                        //   tune logic for useful randomization
+        };
         rand::thread_rng().gen_range(low..high)
     }
 }
@@ -55,8 +54,8 @@ impl Amount {
 #[cfg(test)]
 mod amount_spec {
     use super::*;
-    use crate::spec::spec::Spec;
-    use crate::store::store::Store;
+    use crate::test::spec::Spec;
+    use crate::storage::store::Store;
 
     #[test]
     #[allow(non_snake_case)]

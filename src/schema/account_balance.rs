@@ -27,7 +27,7 @@ impl CsvRecord<AccountBalance> for AccountBalance {
     }
 
     fn clone_record(&self) -> AccountBalance {
-        self.clone()
+        *self
     }
 }
 impl CsvStore<AccountBalance> for AccountBalance {}

@@ -8,7 +8,7 @@ use crate::composite::payment_received_composite::PaymentReceivedCompositeStore;
 use crate::composite::payment_summary::PaymentSummary;
 use crate::composite::payment_summary::PaymentSummaryStore;
 use crate::schema::expense::Expense;
-use crate::store::store::Store;
+use crate::storage::store::Store;
 use crate::traits::csv_store::CsvStore;
 use chrono::NaiveDate;
 use rust_decimal::Decimal;
@@ -67,19 +67,19 @@ impl MonthModel {
             day.execute_payments_in_order(&mut store)?;
         }
 
-        let mut account_summary_store = AccountSummary::by_id(1, &mut store);
-        AccountSummary::write_to_csv(&mut account_summary_store, "data/account_1_summary.csv")?;
+        let account_summary_store = AccountSummary::by_id(1, &mut store);
+        AccountSummary::write_to_csv(&account_summary_store, "data/account_1_summary.csv")?;
 
-        let mut expense_summary = MonthModel::construct_payment_summary(&mut store);
-        PaymentSummary::write_to_csv(&mut expense_summary, "data/expense_summary.csv")?;
+        let expense_summary = MonthModel::construct_payment_summary(&mut store);
+        PaymentSummary::write_to_csv(&expense_summary, "data/expense_summary.csv")?;
 
-        let mut all_payment_disp_store: PaymentDisplayStore = month.all_payments_display();
-        PaymentDisplay::write_to_csv(&mut all_payment_disp_store, "data/all_payments.csv")?;
+        let all_payment_disp_store: PaymentDisplayStore = month.all_payments_display();
+        PaymentDisplay::write_to_csv(&all_payment_disp_store, "data/all_payments.csv")?;
 
-        let mut all_payment_rec_disp_store: PaymentDisplayStore =
+        let all_payment_rec_disp_store: PaymentDisplayStore =
             month.all_payments_received_display();
         PaymentDisplay::write_to_csv(
-            &mut all_payment_rec_disp_store,
+            &all_payment_rec_disp_store,
             "data/all_payments_received.csv",
         )?;
 
@@ -88,7 +88,7 @@ impl MonthModel {
         Ok(())
     }
 
-    pub fn construct_payment_summary(mut store: &mut Store) -> PaymentSummaryStore {
+    pub fn construct_payment_summary(store: &mut Store) -> PaymentSummaryStore {
         let mut payment_summary_store = PaymentSummaryStore::new();
         let expense_ids: Vec<usize> = store.expenses.keys().cloned().collect();
         for expense_id in expense_ids {
@@ -97,8 +97,8 @@ impl MonthModel {
                 .entry(expense_id)
                 .or_insert(PaymentSummary {
                     id: Some(expense_id),
-                    name: Expense::name_by_id(expense_id, &mut store).to_string(),
-                    total: Expense::total_by_id(expense_id, &mut store),
+                    name: Expense::name_by_id(expense_id, store).to_string(),
+                    total: Expense::total_by_id(expense_id, store),
                 });
         }
         payment_summary_store
@@ -124,7 +124,7 @@ impl MonthModel {
 
     // TODO: optomize
     // TODO: PaymentEvent as CSVRecord
-    pub fn record_payment_events_in_month<'a>(month: &mut Month) -> () {
+    pub fn record_payment_events_in_month(month: &mut Month) {
         let month_id = Month::id(month.key);
         let month_length = Month::length(month.key);
         let payment_events = MonthModel::payment_events(month);
@@ -147,7 +147,7 @@ impl MonthModel {
         }
     }
 
-    pub fn payment_events<'a>(month: &mut Month) -> Vec<PaymentEvent> {
+    pub fn payment_events(month: &mut Month) -> Vec<PaymentEvent> {
         // TODO: ingest this data from somwhere eg. data/month.csv
         // TODO: enum for payment, payment_received
         vec![

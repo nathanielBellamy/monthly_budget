@@ -1,11 +1,11 @@
 use crate::composite::payment_display::PaymentDisplay;
-use crate::error_handler::error_handler::ErrorHandler;
+use crate::error::error_handler::ErrorHandler;
 use crate::schema::account::Account;
 use crate::schema::account_balance::AccountBalance;
 use crate::schema::amount::Amount;
 use crate::schema::expense::Expense;
 use crate::schema::payment::Payment;
-use crate::store::store::Store;
+use crate::storage::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime, Utc};
@@ -76,12 +76,12 @@ impl PaymentComposite {
             ErrorHandler::log(From::from(format!("Payment {:?} already exists.", id)))
         }
 
-        if let None = self.account_id {
+        if self.account_id.is_none() {
             // try lookup by name
-            match Account::by_name(&self.account_name, &mut store.accounts) {
+            match Account::by_name(&self.account_name, &store.accounts) {
                 None => {
                     // create Account record
-                    self.account_id = Some(Account::new_id(&mut store.accounts));
+                    self.account_id = Some(Account::new_id(&store.accounts));
                     self.account_id = Some(Account::save_to_store(
                         Account {
                             id: self.account_id,
@@ -94,7 +94,7 @@ impl PaymentComposite {
             }
         }
 
-        if let None = self.amount_id {
+        if self.amount_id.is_none() {
             // create Amount record
             self.amount_id = Some(Amount::save_to_store(
                 Amount {
@@ -107,7 +107,7 @@ impl PaymentComposite {
             ));
         }
 
-        if let None = self.expense_id {
+        if self.expense_id.is_none() {
             // try name lookup
             match Expense::by_name(&self.expense_name, &store.expenses) {
                 None => {
@@ -131,7 +131,7 @@ impl PaymentComposite {
             Some(ndt) => ndt,
         };
         // create Payment record
-        self.payment_id = Some(Payment::new_id(&mut store.payments));
+        self.payment_id = Some(Payment::new_id(&store.payments));
         Payment::save_to_store(
             Payment {
                 id: None,
@@ -169,7 +169,7 @@ impl PaymentComposite {
 #[cfg(test)]
 mod payment_composite_spec {
     use super::*;
-    use crate::spec::spec::Spec;
+    use crate::test::spec::Spec;
     use chrono::NaiveDate;
 
     fn payment_comp() -> PaymentComposite {

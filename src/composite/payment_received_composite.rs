@@ -1,11 +1,11 @@
 use crate::composite::payment_display::PaymentDisplay;
-use crate::error_handler::error_handler::ErrorHandler;
+use crate::error::error_handler::ErrorHandler;
 use crate::schema::account::Account;
 use crate::schema::account_balance::AccountBalance;
 use crate::schema::amount::Amount;
 use crate::schema::income::Income;
 use crate::schema::payment_received::PaymentReceived;
-use crate::store::store::Store;
+use crate::storage::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime, Utc};
@@ -79,12 +79,12 @@ impl PaymentReceivedComposite {
             )))
         }
 
-        if let None = self.account_id {
+        if self.account_id.is_none() {
             // try lookup by name
-            match Account::by_name(&self.account_name, &mut store.accounts) {
+            match Account::by_name(&self.account_name, &store.accounts) {
                 None => {
                     // create Account record
-                    self.account_id = Some(Account::new_id(&mut store.accounts));
+                    self.account_id = Some(Account::new_id(&store.accounts));
                     self.account_id = Some(Account::save_to_store(
                         Account {
                             id: self.account_id, // T::new_id returns T, this unwrap is a formality
@@ -97,7 +97,7 @@ impl PaymentReceivedComposite {
             }
         }
 
-        if let None = self.amount_id {
+        if self.amount_id.is_none() {
             // create Amount record
             self.amount_id = Some(Amount::save_to_store(
                 Amount {
@@ -110,7 +110,7 @@ impl PaymentReceivedComposite {
             ));
         }
 
-        if let None = self.income_id {
+        if self.income_id.is_none() {
             // try name lookup
             match Income::by_name(&self.income_name, &store.incomes) {
                 None => {
@@ -135,7 +135,7 @@ impl PaymentReceivedComposite {
         };
 
         // create PaymentReceived record
-        self.payment_received_id = Some(PaymentReceived::new_id(&mut store.payments_received));
+        self.payment_received_id = Some(PaymentReceived::new_id(&store.payments_received));
         PaymentReceived::save_to_store(
             PaymentReceived {
                 id: None,
@@ -173,7 +173,7 @@ impl PaymentReceivedComposite {
 #[cfg(test)]
 mod payment_composite_spec {
     use super::*;
-    use crate::spec::spec::Spec;
+    use crate::test::spec::Spec;
     use chrono::NaiveDate;
 
     fn payment_rec_comp() -> PaymentReceivedComposite {

@@ -1,4 +1,4 @@
-use crate::error_handler::error_handler::ErrorHandler;
+use crate::error::error_handler::ErrorHandler;
 use crate::schema::payment_received::{PaymentReceived, PaymentReceivedStore};
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
@@ -37,7 +37,7 @@ impl<'a, 'b: 'a> Income {
     pub fn by_name(name: &'a str, store: &'b IncomeStore) -> Option<Income> {
         let mut income: Option<Income> = None;
         for (_id, inc) in store.iter() {
-            if inc.name.to_owned() == name {
+            if inc.name == name {
                 income = Some(inc.clone_record());
                 break;
             }
@@ -46,7 +46,7 @@ impl<'a, 'b: 'a> Income {
     }
 
     pub fn payments_received(&'a self, store: &'b PaymentReceivedStore) -> PaymentReceivedStore {
-        if let None = self.id {
+        if self.id.is_none() {
             ErrorHandler::log(From::from(format!(
                 "Income {:?} does not exist in main_store.",
                 self.name
@@ -59,7 +59,7 @@ impl<'a, 'b: 'a> Income {
                 // TODO: handle error
                 payments_received
                     .entry(*id)
-                    .or_insert(payment_received.clone_record());
+                    .or_insert_with(|| payment_received.clone_record());
             }
         }
 
@@ -89,8 +89,8 @@ impl<'a, 'b: 'a> Income {
 #[cfg(test)]
 mod income_spec {
     use super::*;
-    use crate::spec::spec::Spec;
-    use crate::store::store::Store;
+    use crate::test::spec::Spec;
+    use crate::storage::store::Store;
     use chrono::NaiveDateTime;
 
     #[test]

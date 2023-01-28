@@ -1,6 +1,6 @@
 use crate::schema::account::Account;
 use crate::schema::amount::{Amount, AmountStore};
-use crate::store::store::Store;
+use crate::storage::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::NaiveDateTime;
@@ -28,7 +28,7 @@ impl CsvRecord<PaymentReceived> for PaymentReceived {
     }
 
     fn clone_record(&self) -> PaymentReceived {
-        self.clone()
+        *self
     }
 }
 impl CsvStore<PaymentReceived> for PaymentReceived {}
@@ -48,7 +48,7 @@ impl<'a, 'b: 'a> PaymentReceived {
     }
 
     #[allow(unused)]
-    pub fn to_account(&'a self, store: &'b Store) -> Option<&Account> {
+    pub fn deposit_to_account(&'a self, store: &'b Store) -> Option<&Account> {
         let mut account: Option<&Account> = None;
         for (id, acc) in store.accounts.iter() {
             if *id == self.account_id {
@@ -61,10 +61,7 @@ impl<'a, 'b: 'a> PaymentReceived {
 
     #[allow(unused)]
     pub fn standard_amount(&self, store: &AmountStore) -> Option<Decimal> {
-        match self.amount(store) {
-            None => None,
-            Some(amt) => Some(amt.standard),
-        }
+        self.amount(store).map(|amt| amt.standard)
     }
 
     #[allow(unused)]
@@ -82,7 +79,7 @@ impl<'a, 'b: 'a> PaymentReceived {
 #[cfg(test)]
 mod payment_received_spec {
     use super::*;
-    use crate::spec::spec::Spec;
+    use crate::test::spec::Spec;
 
     #[test]
     #[allow(non_snake_case)]
@@ -91,7 +88,7 @@ mod payment_received_spec {
         Spec::init(&mut store);
 
         let payment_rec = PaymentReceived::by_id(1, &mut store.payments_received).unwrap();
-        let to_acc = payment_rec.to_account(&store).unwrap();
+        let to_acc = payment_rec.deposit_to_account(&store).unwrap();
         assert_eq!(payment_rec.account_id, to_acc.id.unwrap())
     }
 

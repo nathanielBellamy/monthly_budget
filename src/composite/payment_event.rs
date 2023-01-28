@@ -20,7 +20,7 @@ impl PaymentEvent {
             self.1.clone(),
             self.2.clone(),
             self.3,
-            self.4.clone(),
+            self.4,
         )
     }
 }
@@ -70,8 +70,8 @@ impl PaymentEvent {
 #[cfg(test)]
 mod expense_spec {
     use super::*;
-    use crate::spec::spec::Spec;
-    use crate::store::store::Store;
+    use crate::test::spec::Spec;
+    use crate::storage::store::Store;
     use chrono::NaiveDate;
 
     #[test]

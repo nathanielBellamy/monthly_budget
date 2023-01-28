@@ -3,7 +3,7 @@ use crate::composite::payment_event::{PaymentEvent, PaymentEventComposite};
 use crate::composite::payment_received_composite::{
     PaymentReceivedComposite, PaymentReceivedCompositeStore,
 };
-use crate::store::store::Store;
+use crate::storage::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::NaiveDate;
@@ -50,7 +50,7 @@ impl Day {
             date: NaiveDate::from_ymd_opt(year, month, day).unwrap(),
         }
     }
-    pub fn add_payment_event(&mut self, payment_event: PaymentEvent) -> () {
+    pub fn add_payment_event(&mut self, payment_event: PaymentEvent) {
         match payment_event.to_composite() {
             PaymentEventComposite::P(pymnt_composite) => self.add_payment(pymnt_composite),
             PaymentEventComposite::PR(pymnt_rec_composite) => {
@@ -60,11 +60,11 @@ impl Day {
         }
     }
 
-    pub fn add_payment(&mut self, payment_comp: PaymentComposite) -> () {
+    pub fn add_payment(&mut self, payment_comp: PaymentComposite)  {
         PaymentComposite::save_to_store(payment_comp, &mut self.payments);
     }
 
-    pub fn add_payment_received(&mut self, payment_rec_comp: PaymentReceivedComposite) -> () {
+    pub fn add_payment_received(&mut self, payment_rec_comp: PaymentReceivedComposite)  {
         PaymentReceivedComposite::save_to_store(payment_rec_comp, &mut self.payments_received);
     }
 
@@ -115,7 +115,7 @@ mod day_spec {
     use crate::schema::account::Account;
     use crate::schema::account_balance::AccountBalance;
     use crate::schema::account_balance::AccountBalanceStore;
-    use crate::spec::spec::Spec;
+    use crate::test::spec::Spec;
     use rust_decimal::Decimal;
 
     #[test]

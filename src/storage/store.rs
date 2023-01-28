@@ -36,11 +36,10 @@ impl Store {
     }
 
     pub fn init(&mut self, dir: Option<&'static str>) -> StoreInitResult {
-        let path: &str;
-        match dir {
-            None => path = "data/",
-            Some(root) => path = root,
-        }
+        let path: &str = match dir {
+            None => "data/",
+            Some(root) => root,
+        };
         let import_res: [CsvReadResult; 7] = [
             Account::init_store(
                 &mut self.accounts,

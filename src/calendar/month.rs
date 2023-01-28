@@ -150,8 +150,8 @@ pub enum MonthKey {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::spec::spec::Spec;
-    use crate::store::store::Store;
+    use crate::test::spec::Spec;
+    use crate::storage::store::Store;
 
     #[test]
     #[allow(non_snake_case)]

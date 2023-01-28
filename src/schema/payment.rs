@@ -28,7 +28,7 @@ impl CsvRecord<Payment> for Payment {
     }
 
     fn clone_record(&self) -> Payment {
-        self.clone()
+        *self
     }
 }
 impl CsvStore<Payment> for Payment {}
@@ -59,7 +59,7 @@ impl<'a, 'b: 'a> Payment {
     }
 
     #[allow(unused)]
-    pub fn from_account(&'a self, store: &'b AccountStore) -> Option<Account> {
+    pub fn pull_from_account(&'a self, store: &'b AccountStore) -> Option<Account> {
         let mut account: Option<Account> = None;
         for (id, acc) in store.iter() {
             if *id == self.account_id {
@@ -71,10 +71,7 @@ impl<'a, 'b: 'a> Payment {
     }
 
     pub fn standard_amount(&self, store: &AmountStore) -> Option<Decimal> {
-        match self.amount(store) {
-            None => None,
-            Some(amt) => Some(amt.standard),
-        }
+        self.amount(store).map(|amt| amt.standard)
     }
 
     pub fn total(payment_store: PaymentStore, amount_store: &AmountStore) -> Decimal {
@@ -100,8 +97,8 @@ impl<'a, 'b: 'a> Payment {
 #[cfg(test)]
 mod payment_spec {
     use super::*;
-    use crate::spec::spec::Spec;
-    use crate::store::store::Store;
+    use crate::test::spec::Spec;
+    use crate::storage::store::Store;
 
     #[test]
     #[allow(non_snake_case)]
@@ -110,7 +107,7 @@ mod payment_spec {
         Spec::init(&mut store);
 
         let payment = Payment::by_id(1, &mut store.payments).unwrap();
-        let from_acc = payment.from_account(&store.accounts).unwrap();
+        let from_acc = payment.pull_from_account(&store.accounts).unwrap();
         assert_eq!(payment.account_id, from_acc.id.unwrap());
     }
 

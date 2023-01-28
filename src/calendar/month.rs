@@ -7,14 +7,16 @@ use crate::traits::csv_store::CsvStore;
 pub struct Month {
     pub key: MonthKey,
     pub days: DayStore,
+    pub year: i32,
 }
 
 impl Month {
     #[allow(unused)]
-    pub fn new(key: MonthKey) -> Month {
+    pub fn new(year: i32, key: MonthKey) -> Month {
         Month {
             key,
             days: DayStore::new(),
+            year,
         }
     }
 
@@ -29,7 +31,7 @@ impl Month {
 
         let mut store = PaymentDisplayStore::new();
         for pd in all_pd.iter() {
-            let mut new_pd = (*pd).clone_record();
+            let mut new_pd = pd.clone_record();
             new_pd.id = None; // clear id tied to day, will be set in chrono order for month
             PaymentDisplay::save_to_store(new_pd, &mut store);
         }
@@ -37,7 +39,6 @@ impl Month {
         store
     }
 
-    // TODO: unite this and the method above
     pub fn all_payments_received_display(&mut self) -> PaymentDisplayStore {
         let mut all_pd: Vec<PaymentDisplay> = vec![];
         for (_id, day) in self.days.iter_mut() {
@@ -49,7 +50,7 @@ impl Month {
 
         let mut store = PaymentDisplayStore::new();
         for pd in all_pd.iter() {
-            let mut new_pd = (*pd).clone_record();
+            let mut new_pd = pd.clone_record();
             new_pd.id = None; // clear id tied to day, will be set in chrono order for month
             PaymentDisplay::save_to_store(new_pd, &mut store);
         }
@@ -93,9 +94,32 @@ impl Month {
         }
     }
 
+    pub fn next_month(month: MonthKey) -> MonthKey {
+        // u32 expected by NaiveDate
+        match month {
+            MonthKey::Jan => MonthKey::Feb,
+            MonthKey::Feb => MonthKey::Mar,
+            MonthKey::Mar => MonthKey::Apr,
+            MonthKey::Apr => MonthKey::May,
+            MonthKey::May => MonthKey::Jun,
+            MonthKey::Jun => MonthKey::Jul,
+            MonthKey::Jul => MonthKey::Aug,
+            MonthKey::Aug => MonthKey::Sep,
+            MonthKey::Sep => MonthKey::Oct,
+            MonthKey::Oct => MonthKey::Nov,
+            MonthKey::Nov => MonthKey::Dec,
+            MonthKey::Dec => MonthKey::Jan,
+        }
+    }
+
     #[allow(unused)]
-    pub fn display_name(&self) -> &str {
-        match self.key {
+    pub fn name(&self) -> &'static str {
+        Month::display_name(self.key)
+    }
+
+    #[allow(unused)]
+    pub fn display_name(month: MonthKey) -> &'static str {
+        match month {
             MonthKey::Jan => "January",
             MonthKey::Feb => "February",
             MonthKey::Mar => "March",
@@ -130,7 +154,7 @@ impl Month {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[allow(unused)]
 pub enum MonthKey {
     Jan,
@@ -159,7 +183,7 @@ mod tests {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let res = Month::new(MonthKey::Jan);
-        assert_eq!("January", res.display_name());
+        let res = Month::new(2023, MonthKey::Jan);
+        assert_eq!("January", res.name());
     }
 }

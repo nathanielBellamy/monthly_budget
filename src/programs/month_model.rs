@@ -12,12 +12,14 @@ use crate::storage::store::Store;
 use crate::traits::csv_store::CsvStore;
 use chrono::NaiveDate;
 use rust_decimal::Decimal;
-use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::error::Error;
 
 pub struct MonthModel {
+    year: i32,
     key: MonthKey,
+    month: Month,
+    output_results: bool,
     #[allow(unused)]
     path_in: &'static str,
     #[allow(unused)]
@@ -26,7 +28,9 @@ pub struct MonthModel {
 
 impl MonthModel {
     pub fn new(
+        year: i32,
         month_key: MonthKey,
+        output_results: bool,
         path_in: Option<&'static str>,
         path_out: Option<&'static str>,
     ) -> MonthModel {
@@ -42,6 +46,9 @@ impl MonthModel {
 
         MonthModel {
             key: month_key,
+            year,
+            month: Month::new(year, month_key),
+            output_results,
             path_in: data_in,
             path_out: data_out,
         }
@@ -49,40 +56,59 @@ impl MonthModel {
 
     // Model Payments and PaymentsReceived occuring at specific times throughout the specified month
     // TODO: still early testing
-    pub fn run(&self) -> Result<(), Box<dyn Error>> {
-        let mut store = Store::new();
-        store.init(Some("data/init/"))?;
-
-        let mut month = Month {
-            key: self.key,
-            days: MonthModel::construct_days(self.key),
+    pub fn run(
+        &mut self,
+        store_ext: Option<&mut Store>,
+        dir: Option<&'static str>,
+    ) -> Result<(), Box<dyn Error>> {
+        let path: Option<&str> = match dir {
+            None => Some("data/init/"),
+            Some(directory) => Some(directory),
         };
 
-        MonthModel::record_payment_events_in_month(&mut month);
+        let mut self_store = Store::new();
+        let store = match store_ext {
+            Some(passed_in) => passed_in,
+            None => {
+                self_store.init(path)?;
+                &mut self_store
+            }
+        };
+
+        self.month = Month {
+            key: self.key,
+            days: MonthModel::construct_days(self.year, self.key),
+            year: self.year,
+        };
+
+        self.record_payment_events_in_month();
 
         // iterate through the days and execute payments in order
         // each payment event mutates store
-        for (_id, day) in month.days.iter_mut() {
+        for (_id, day) in self.month.days.iter_mut() {
             // iter sorted by key thx to btree_map
-            day.execute_payments_in_order(&mut store)?;
+            day.execute_payments_in_order(store)?;
         }
 
-        let account_summary_store = AccountSummary::by_id(1, &mut store);
-        AccountSummary::write_to_csv(&account_summary_store, "data/account_1_summary.csv")?;
+        if self.output_results {
+            let account_summary_store = AccountSummary::by_id(1, store);
+            AccountSummary::write_to_csv(&account_summary_store, "data/account_1_summary.csv")?;
 
-        let expense_summary = MonthModel::construct_payment_summary(&mut store);
-        PaymentSummary::write_to_csv(&expense_summary, "data/expense_summary.csv")?;
+            let expense_summary = MonthModel::construct_payment_summary(store);
+            PaymentSummary::write_to_csv(&expense_summary, "data/expense_summary.csv")?;
 
-        let all_payment_disp_store: PaymentDisplayStore = month.all_payments_display();
-        PaymentDisplay::write_to_csv(&all_payment_disp_store, "data/all_payments.csv")?;
+            let all_payment_disp_store: PaymentDisplayStore = self.month.all_payments_display();
+            PaymentDisplay::write_to_csv(&all_payment_disp_store, "data/all_payments.csv")?;
 
-        let all_payment_rec_disp_store: PaymentDisplayStore = month.all_payments_received_display();
-        PaymentDisplay::write_to_csv(
-            &all_payment_rec_disp_store,
-            "data/all_payments_received.csv",
-        )?;
+            let all_payment_rec_disp_store: PaymentDisplayStore =
+                self.month.all_payments_received_display();
+            PaymentDisplay::write_to_csv(
+                &all_payment_rec_disp_store,
+                "data/all_payments_received.csv",
+            )?;
 
-        store.write_to_csv(None)?;
+            store.write_to_csv(None)?;
+        }
 
         Ok(())
     }
@@ -103,7 +129,7 @@ impl MonthModel {
         payment_summary_store
     }
 
-    pub fn construct_days(month: MonthKey) -> DayStore {
+    pub fn construct_days(year: i32, month: MonthKey) -> DayStore {
         let length: u32 = Month::length(month);
         let month_id: u32 = Month::id(month);
         let mut days: DayStore = BTreeMap::new();
@@ -114,40 +140,26 @@ impl MonthModel {
                 id: Some(id),
                 payments: PaymentCompositeStore::new(),
                 payments_received: PaymentReceivedCompositeStore::new(),
-                date: NaiveDate::from_ymd_opt(2023, month_id, date).unwrap(),
+                date: NaiveDate::from_ymd_opt(year, month_id, date).unwrap(),
             });
         }
 
         days
     }
 
-    // TODO: optomize
-    // TODO: PaymentEvent as CSVRecord
-    pub fn record_payment_events_in_month(month: &mut Month) {
-        let month_id = Month::id(month.key);
-        let month_length = Month::length(month.key);
-        let payment_events = MonthModel::payment_events(month);
-        // step through days of the month
-        for (idx, date) in NaiveDate::from_ymd_opt(2023, month_id, 1)
-            .unwrap()
-            .iter_days()
-            .take(month_length as usize)
-            .enumerate()
-        {
-            let date_id = idx + 1;
-            for (_index, pymt_event) in payment_events.iter().enumerate() {
-                if pymt_event.4.date() == date {
-                    if let Entry::Occupied(mut day) = month.days.entry(date_id) {
-                        day.get_mut().add_payment_event(pymt_event.clone());
-                        // payment_events.remove(index); TODO: implement this idea, to reduce unecessary loops
-                    }
+    // TODO: PaymentEvent as JSONRecord
+    pub fn record_payment_events_in_month(&mut self) {
+        let payment_events = self.payment_events();
+        for payment_event in payment_events.iter() {
+            for (_id, day) in self.month.days.iter_mut() {
+                if payment_event.4.date() == day.date {
+                    day.add_payment_event(payment_event.clone());
                 }
             }
         }
     }
 
-    pub fn payment_events(month: &mut Month) -> Vec<PaymentEvent> {
-        // TODO: ingest this data from somwhere eg. data/month.csv
+    pub fn payment_events(&self) -> Vec<PaymentEvent> {
         // TODO: enum for payment, payment_received
         vec![
             PaymentEvent(
@@ -155,7 +167,7 @@ impl MonthModel {
                 "Spaceman".to_string(),
                 "Big Bank".to_string(),
                 Decimal::new(10000, 0),
-                NaiveDate::from_ymd_opt(2023, Month::id(month.key), 6)
+                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 6)
                     .unwrap()
                     .and_hms_opt(12, 00, 00)
                     .unwrap(),
@@ -165,7 +177,7 @@ impl MonthModel {
                 "Cowboy".to_string(),
                 "Credit Union".to_string(),
                 Decimal::new(10000, 0),
-                NaiveDate::from_ymd_opt(2023, Month::id(month.key), 20)
+                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 20)
                     .unwrap()
                     .and_hms_opt(12, 00, 00)
                     .unwrap(),
@@ -175,7 +187,7 @@ impl MonthModel {
                 "Mortgage".to_string(),
                 "Big Bank".to_string(),
                 Decimal::new(3100, 0),
-                NaiveDate::from_ymd_opt(2023, Month::id(month.key), 10)
+                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 10)
                     .unwrap()
                     .and_hms_opt(15, 00, 00)
                     .unwrap(),
@@ -185,7 +197,7 @@ impl MonthModel {
                 "Natural Gas".to_string(),
                 "Credit Union".to_string(),
                 Decimal::new(125, 0),
-                NaiveDate::from_ymd_opt(2023, Month::id(month.key), 6)
+                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 6)
                     .unwrap()
                     .and_hms_opt(15, 00, 00)
                     .unwrap(),
@@ -195,7 +207,7 @@ impl MonthModel {
                 "Natural Gas".to_string(),
                 "Credit Union".to_string(),
                 Decimal::new(125, 0),
-                NaiveDate::from_ymd_opt(2023, Month::id(month.key), 6)
+                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 6)
                     .unwrap()
                     .and_hms_opt(15, 00, 00)
                     .unwrap(),
@@ -205,7 +217,7 @@ impl MonthModel {
                 "Cable".to_string(),
                 "Big Bank".to_string(),
                 Decimal::new(80, 0),
-                NaiveDate::from_ymd_opt(2023, Month::id(month.key), 10)
+                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 10)
                     .unwrap()
                     .and_hms_opt(15, 00, 00)
                     .unwrap(),
@@ -215,7 +227,7 @@ impl MonthModel {
                 "Garbage/Recycling".to_string(),
                 "Credit Union".to_string(),
                 Decimal::new(60, 0),
-                NaiveDate::from_ymd_opt(2023, Month::id(month.key), 2)
+                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 2)
                     .unwrap()
                     .and_hms_opt(15, 00, 00)
                     .unwrap(),
@@ -225,7 +237,7 @@ impl MonthModel {
                 "Groceries".to_string(),
                 "Big Bank".to_string(),
                 Decimal::new(250, 0),
-                NaiveDate::from_ymd_opt(2023, Month::id(month.key), 7)
+                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 7)
                     .unwrap()
                     .and_hms_opt(15, 00, 00)
                     .unwrap(),
@@ -235,7 +247,7 @@ impl MonthModel {
                 "Groceries".to_string(),
                 "Big Bank".to_string(),
                 Decimal::new(250, 0),
-                NaiveDate::from_ymd_opt(2023, Month::id(month.key), 14)
+                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 14)
                     .unwrap()
                     .and_hms_opt(15, 00, 00)
                     .unwrap(),
@@ -245,7 +257,7 @@ impl MonthModel {
                 "Groceries".to_string(),
                 "Credit Union".to_string(),
                 Decimal::new(250, 0),
-                NaiveDate::from_ymd_opt(2023, Month::id(month.key), 21)
+                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 21)
                     .unwrap()
                     .and_hms_opt(15, 00, 00)
                     .unwrap(),
@@ -255,7 +267,7 @@ impl MonthModel {
                 "Groceries".to_string(),
                 "Big Bank".to_string(),
                 Decimal::new(250, 0),
-                NaiveDate::from_ymd_opt(2023, Month::id(month.key), 28)
+                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 28)
                     .unwrap()
                     .and_hms_opt(15, 00, 00)
                     .unwrap(),
@@ -265,7 +277,7 @@ impl MonthModel {
                 "Dog Food".to_string(),
                 "Big Bank".to_string(),
                 Decimal::new(4699, 2),
-                NaiveDate::from_ymd_opt(2023, Month::id(month.key), 17)
+                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 17)
                     .unwrap()
                     .and_hms_opt(13, 00, 00)
                     .unwrap(),

@@ -76,8 +76,7 @@ impl MonthModel {
         let all_payment_disp_store: PaymentDisplayStore = month.all_payments_display();
         PaymentDisplay::write_to_csv(&all_payment_disp_store, "data/all_payments.csv")?;
 
-        let all_payment_rec_disp_store: PaymentDisplayStore =
-            month.all_payments_received_display();
+        let all_payment_rec_disp_store: PaymentDisplayStore = month.all_payments_received_display();
         PaymentDisplay::write_to_csv(
             &all_payment_rec_disp_store,
             "data/all_payments_received.csv",

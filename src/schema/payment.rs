@@ -97,8 +97,8 @@ impl<'a, 'b: 'a> Payment {
 #[cfg(test)]
 mod payment_spec {
     use super::*;
-    use crate::test::spec::Spec;
     use crate::storage::store::Store;
+    use crate::test::spec::Spec;
 
     #[test]
     #[allow(non_snake_case)]

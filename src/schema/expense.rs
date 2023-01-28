@@ -49,7 +49,7 @@ impl<'a, 'b: 'a> Expense {
     pub fn name_by_id(id: usize, store: &mut Store) -> String {
         match Expense::by_id(id, &mut store.expenses) {
             None => format!("No Name Found for Expense Id: {:?}", id),
-            Some(expense) => expense.name
+            Some(expense) => expense.name,
         }
     }
 
@@ -67,7 +67,9 @@ impl<'a, 'b: 'a> Expense {
         let mut payments: PaymentStore = BTreeMap::new();
         for (id, payment) in store.iter() {
             if payment.expense_id == self.id.unwrap() {
-                payments.entry(*id).or_insert_with(|| payment.clone_record());
+                payments
+                    .entry(*id)
+                    .or_insert_with(|| payment.clone_record());
             }
         }
         payments

@@ -89,8 +89,8 @@ impl<'a, 'b: 'a> Income {
 #[cfg(test)]
 mod income_spec {
     use super::*;
-    use crate::test::spec::Spec;
     use crate::storage::store::Store;
+    use crate::test::spec::Spec;
     use chrono::NaiveDateTime;
 
     #[test]

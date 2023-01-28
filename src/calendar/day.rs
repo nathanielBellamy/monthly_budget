@@ -60,11 +60,11 @@ impl Day {
         }
     }
 
-    pub fn add_payment(&mut self, payment_comp: PaymentComposite)  {
+    pub fn add_payment(&mut self, payment_comp: PaymentComposite) {
         PaymentComposite::save_to_store(payment_comp, &mut self.payments);
     }
 
-    pub fn add_payment_received(&mut self, payment_rec_comp: PaymentReceivedComposite)  {
+    pub fn add_payment_received(&mut self, payment_rec_comp: PaymentReceivedComposite) {
         PaymentReceivedComposite::save_to_store(payment_rec_comp, &mut self.payments_received);
     }
 

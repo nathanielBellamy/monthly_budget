@@ -45,7 +45,7 @@ impl Amount {
         let high: Decimal = match self.high {
             Some(num) => num,
             _ => self.standard * Decimal::new(30, 1), // TODO: 3 is a magic number here
-                                                        //   tune logic for useful randomization
+                                                      //   tune logic for useful randomization
         };
         rand::thread_rng().gen_range(low..high)
     }
@@ -54,8 +54,8 @@ impl Amount {
 #[cfg(test)]
 mod amount_spec {
     use super::*;
-    use crate::test::spec::Spec;
     use crate::storage::store::Store;
+    use crate::test::spec::Spec;
 
     #[test]
     #[allow(non_snake_case)]

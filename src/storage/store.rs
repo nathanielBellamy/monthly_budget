@@ -43,31 +43,31 @@ impl Store {
         let import_res: [CsvReadResult; 7] = [
             Account::init_store(
                 &mut self.accounts,
-                format!("{}{}", path, "accounts.csv").as_str(),
+                format!("{path}{}", "accounts.csv").as_str(),
             ),
             AccountBalance::init_store(
                 &mut self.account_balances,
-                format!("{}{}", path, "account_balances.csv").as_str(),
+                format!("{path}{}", "account_balances.csv").as_str(),
             ),
             Amount::init_store(
                 &mut self.amounts,
-                format!("{}{}", path, "amounts.csv").as_str(),
+                format!("{path}{}", "amounts.csv").as_str(),
             ),
             Expense::init_store(
                 &mut self.expenses,
-                format!("{}{}", path, "expenses.csv").as_str(),
+                format!("{path}{}", "expenses.csv").as_str(),
             ),
             Income::init_store(
                 &mut self.incomes,
-                format!("{}{}", path, "incomes.csv").as_str(),
+                format!("{path}{}", "incomes.csv").as_str(),
             ),
             Payment::init_store(
                 &mut self.payments,
-                format!("{}{}", path, "payments.csv").as_str(),
+                format!("{path}{}", "payments.csv").as_str(),
             ),
             PaymentReceived::init_store(
                 &mut self.payments_received,
-                format!("{}{}", path, "payments_received.csv").as_str(),
+                format!("{path}{}", "payments_received.csv").as_str(),
             ),
         ];
 
@@ -82,33 +82,24 @@ impl Store {
     pub fn write_to_csv(&self, dir: Option<&'static str>) -> StoreWriteResult {
         let path = dir.unwrap_or("data/");
         let write_res: [CsvWriteResult; 7] = [
-            Account::write_to_csv(
-                &self.accounts,
-                format!("{}{}", path, "accounts.csv").as_str(),
-            ),
+            Account::write_to_csv(&self.accounts, format!("{path}{}", "accounts.csv").as_str()),
             AccountBalance::write_to_csv(
                 &self.account_balances,
-                format!("{}{}", path, "account_balances.csv").as_str(),
+                format!("{path}{}", "account_balances.csv").as_str(),
             ),
-            Amount::write_to_csv(&self.amounts, format!("{}{}", path, "amounts.csv").as_str()),
-            Expense::write_to_csv(
-                &self.expenses,
-                format!("{}{}", path, "expenses.csv").as_str(),
-            ),
-            Income::write_to_csv(&self.incomes, format!("{}{}", path, "incomes.csv").as_str()),
-            Payment::write_to_csv(
-                &self.payments,
-                format!("{}{}", path, "payments.csv").as_str(),
-            ),
+            Amount::write_to_csv(&self.amounts, format!("{path}{}", "amounts.csv").as_str()),
+            Expense::write_to_csv(&self.expenses, format!("{path}{}", "expenses.csv").as_str()),
+            Income::write_to_csv(&self.incomes, format!("{path}{}", "incomes.csv").as_str()),
+            Payment::write_to_csv(&self.payments, format!("{path}{}", "payments.csv").as_str()),
             PaymentReceived::write_to_csv(
                 &self.payments_received,
-                format!("{}{}", path, "payments_received.csv").as_str(),
+                format!("{path}{}", "payments_received.csv").as_str(),
             ),
         ];
 
         for res in write_res.iter() {
             if let Err(err) = res {
-                return Err(From::from(format!("Csv Store Write Error: {:?}", err)));
+                return Err(From::from(format!("Csv Store Write Error: {err}")));
             }
         }
 

@@ -48,7 +48,7 @@ impl<'a, 'b: 'a> Expense {
 
     pub fn name_by_id(id: usize, store: &mut Store) -> String {
         match Expense::by_id(id, &mut store.expenses) {
-            None => format!("No Name Found for Expense Id: {:?}", id),
+            None => format!("No Name Found for Expense Id: {id}"),
             Some(expense) => expense.name,
         }
     }

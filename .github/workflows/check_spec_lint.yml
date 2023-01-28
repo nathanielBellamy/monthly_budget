@@ -2,7 +2,7 @@
 # https://github.com/actions-rs/example/blob/master/.github/workflows/quickstart.yml
 on: [push]
 
-name: Run Specs + Lint
+name: Check, Spec, Lint
 
 jobs:
   check:

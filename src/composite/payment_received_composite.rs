@@ -73,10 +73,7 @@ impl PaymentReceivedComposite {
         complete_at: Option<NaiveDateTime>,
     ) -> CreatePaymentReceivedResult {
         if let Some(id) = self.payment_received_id {
-            ErrorHandler::log(From::from(format!(
-                "PaymentReceived {:?} already exists.",
-                id
-            )))
+            ErrorHandler::log(From::from(format!("PaymentReceived {id} already exists.")))
         }
 
         if self.account_id.is_none() {

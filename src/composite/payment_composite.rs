@@ -73,7 +73,7 @@ impl PaymentComposite {
         complete_at: Option<NaiveDateTime>,
     ) -> CreatePaymentResult {
         if let Some(id) = self.payment_id {
-            ErrorHandler::log(From::from(format!("Payment {:?} already exists.", id)))
+            ErrorHandler::log(From::from(format!("Payment {id} already exists.")))
         }
 
         if self.account_id.is_none() {

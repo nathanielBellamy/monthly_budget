@@ -18,7 +18,9 @@ use crate::traits::csv_store::CsvStore;
 
 pub struct MonthModel {
   key: MonthKey,
+  #[allow(unused)]
   path_in: &'static str,
+  #[allow(unused)]
   path_out: &'static str,
 }
 

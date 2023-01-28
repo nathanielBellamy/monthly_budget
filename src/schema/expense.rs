@@ -2,7 +2,6 @@ use crate::schema::payment::{Payment, PaymentStore};
 use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
@@ -36,7 +35,6 @@ impl CsvStore<Expense> for Expense {}
 
 pub type ExpenseStore = BTreeMap<usize, Expense>;
 
-// TODO: cleanup unecessary lifetimes
 impl<'a, 'b: 'a> Expense {
     pub fn by_name(name: &'a str, store: &'b ExpenseStore) -> Option<Expense> {
         let mut expense: Option<Expense> = None;
@@ -79,6 +77,7 @@ impl<'a, 'b: 'a> Expense {
         payments
     }
 
+    #[allow(unused)]
     pub fn last_payment(&'a self, store: &'b mut PaymentStore) -> Option<Payment> {
         let mut last_payment: Option<Payment> = None;
         for (_id, payment) in self.payments(store).iter() {
@@ -99,6 +98,7 @@ impl<'a, 'b: 'a> Expense {
 mod expense_spec {
     use super::*;
     use crate::spec::spec::Spec;
+    use chrono::NaiveDateTime;
 
     #[test]
     #[allow(non_snake_case)]

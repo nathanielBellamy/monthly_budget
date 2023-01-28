@@ -9,6 +9,7 @@ pub struct Tag {
     pub content: String,
 }
 
+#[allow(unused)]
 pub type TagStore = BTreeMap<usize, Tag>;
 
 impl CsvRecord<Tag> for Tag {

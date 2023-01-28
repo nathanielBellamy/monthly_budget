@@ -1,4 +1,3 @@
-use crate::store::store::Store;
 use rust_decimal::Decimal;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
@@ -37,6 +36,7 @@ impl CsvStore<Amount> for Amount {}
 pub type AmountStore = BTreeMap<usize, Amount>;
 
 impl Amount {
+    #[allow(unused)]
     pub fn randomize(&self) -> Decimal {
         let mut low = Decimal::new(00, 1);
         let high: Decimal;
@@ -56,6 +56,7 @@ impl Amount {
 mod amount_spec {
     use super::*;
     use crate::spec::spec::Spec;
+    use crate::store::store::Store;
 
     #[test]
     #[allow(non_snake_case)]

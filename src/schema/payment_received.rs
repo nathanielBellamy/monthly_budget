@@ -47,6 +47,7 @@ impl<'a, 'b: 'a> PaymentReceived {
         amount
     }
 
+    #[allow(unused)]
     pub fn to_account(&'a self, store: &'b Store) -> Option<&Account> {
         let mut account: Option<&Account> = None;
         for (id, acc) in store.accounts.iter() {
@@ -58,6 +59,7 @@ impl<'a, 'b: 'a> PaymentReceived {
         account
     }
 
+    #[allow(unused)]
     pub fn standard_amount(&self, store: &AmountStore) -> Option<Decimal> {
         match self.amount(store) {
             None => None,
@@ -65,6 +67,7 @@ impl<'a, 'b: 'a> PaymentReceived {
         }
     }
 
+    #[allow(unused)]
     pub fn ids_by_account_id(account_id: usize, store: &mut PaymentReceivedStore) -> Vec<usize> {
       let mut payment_rec_ids: Vec<usize> = vec![];
       for (id, payment_rec) in store.iter() {

@@ -63,3 +63,21 @@ impl CsvRecord<AccountSummary> for AccountSummary {
 }
 
 impl CsvStore<AccountSummary> for AccountSummary {}
+
+#[cfg(test)]
+mod account_summary_spec {
+    use super::*;
+    use crate::spec::spec::Spec;
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn by_id__gathers_all_account_balances_for_account_by_id() {
+      let mut store = Store::new();
+      Spec::init(&mut store);
+
+      let account_summary = AccountSummary::by_id(1, &mut store);
+      assert_eq!(2, account_summary.len());
+      assert_eq!("piggybank".to_string(), account_summary[&1].name);
+      assert_eq!("piggybank".to_string(), account_summary[&2].name);
+    }
+}

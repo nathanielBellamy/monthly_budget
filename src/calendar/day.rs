@@ -40,6 +40,7 @@ impl CsvStore<Day> for Day{}
 pub type DayStore = BTreeMap<usize, Day>;
 
 impl Day {
+    #[allow(unused)]
     pub fn new(year: i32, month: u32, day: u32) -> Day {
       Day{
         id: None,

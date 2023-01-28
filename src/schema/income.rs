@@ -1,9 +1,7 @@
 use crate::error_handler::error_handler::ErrorHandler;
 use crate::schema::payment_received::{PaymentReceived, PaymentReceivedStore};
-use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -64,6 +62,7 @@ impl<'a, 'b: 'a> Income {
         payments_received
     }
 
+    #[allow(unused)]
     pub fn last_payment_received(
         &'a self,
         store: &'b PaymentReceivedStore,
@@ -87,6 +86,8 @@ impl<'a, 'b: 'a> Income {
 mod income_spec {
     use super::*;
     use crate::spec::spec::Spec;
+    use chrono::NaiveDateTime;
+    use crate::store::store::Store;
 
     #[test]
     #[allow(non_snake_case)]

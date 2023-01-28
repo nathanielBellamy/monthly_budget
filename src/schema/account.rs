@@ -1,5 +1,4 @@
 use crate::schema::account_balance::{AccountBalance, AccountBalanceStore};
-use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use serde::{Deserialize, Serialize};
@@ -88,6 +87,7 @@ impl Account {
 mod account_spec {
     use super::*;
     use crate::spec::spec::Spec;
+    use crate::store::store::Store;
 
     #[test]
     #[allow(non_snake_case)]

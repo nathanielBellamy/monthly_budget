@@ -1,8 +1,7 @@
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
-use crate::calendar::day::{DayStore};
-use crate::store::store::Store;
+use crate::calendar::day::DayStore;
 
 #[derive(Debug)]
 pub struct Month {
@@ -11,6 +10,13 @@ pub struct Month {
 }
 
 impl Month {
+    #[allow(unused)]
+    pub fn new(key: MonthKey) -> Month {
+      Month {
+        key,
+        days: DayStore::new(),
+      }
+    }
 
     pub fn all_payments_display(&mut self) -> PaymentDisplayStore {
       let mut all_pd: Vec<PaymentDisplay> = vec![];
@@ -19,9 +25,7 @@ impl Month {
           all_pd.push(payment.display());
         }
       }
-
       all_pd.sort_by(|a, b| a.completed_at.partial_cmp(&b.completed_at).unwrap());
-
 
       let mut store = PaymentDisplayStore::new();
       for pd in all_pd.iter() {
@@ -41,9 +45,7 @@ impl Month {
           all_pd.push(payment_rec.display());
         }
       }
-
       all_pd.sort_by(|a, b| a.completed_at.partial_cmp(&b.completed_at).unwrap());
-
 
       let mut store = PaymentDisplayStore::new();
       for pd in all_pd.iter() {
@@ -89,6 +91,7 @@ impl Month {
       }
     }
 
+    #[allow(unused)]
     pub fn display_name(&self) -> &str {
         match self.key {
             MonthKey::Jan => "January",
@@ -106,6 +109,7 @@ impl Month {
         }
     }
 
+    #[allow(unused)]
     pub fn display_number(&self) -> &str {
         match self.key {
             MonthKey::Jan => "01",
@@ -125,6 +129,7 @@ impl Month {
 }
 
 #[derive(Clone, Copy, Debug)]
+#[allow(unused)]
 pub enum MonthKey {
     Jan,
     Feb,
@@ -144,13 +149,15 @@ pub enum MonthKey {
 mod tests {
     use super::*;
     use crate::spec::spec::Spec;
+    use crate::store::store::Store;
 
     #[test]
     #[allow(non_snake_case)]
-    fn test_1() {
+    fn new__returns_month() {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        assert_eq!(2,2);
+        let res = Month::new(MonthKey::Jan);
+        assert_eq!("January", res.display_name());
     }
 }

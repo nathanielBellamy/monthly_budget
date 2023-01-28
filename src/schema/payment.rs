@@ -2,7 +2,6 @@ use rust_decimal::Decimal;
 use crate::schema::expense::ExpenseStore;
 use crate::schema::account::{Account, AccountStore};
 use crate::schema::amount::{Amount, AmountStore};
-use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime};
@@ -48,6 +47,7 @@ impl<'a, 'b: 'a> Payment {
         amount
     }
 
+    #[allow(unused)]
     pub fn expense_name(&self, store: &mut ExpenseStore) -> Option<String> {
       let mut name: Option<String> = None;
       for (id, exp) in store.iter() {
@@ -58,6 +58,7 @@ impl<'a, 'b: 'a> Payment {
       name
     }
 
+    #[allow(unused)]
     pub fn from_account(&'a self, store: &'b AccountStore) -> Option<Account> {
         let mut account: Option<Account> = None;
         for (id, acc) in store.iter() {
@@ -84,6 +85,7 @@ impl<'a, 'b: 'a> Payment {
       total
     }
 
+    #[allow(unused)]
     pub fn ids_by_account_id(account_id: usize, store: &mut PaymentStore) -> Vec<usize> {
       let mut payment_ids: Vec<usize> = vec![];
       for (id, payment) in store.iter() {
@@ -99,6 +101,7 @@ impl<'a, 'b: 'a> Payment {
 mod payment_spec {
     use super::*;
     use crate::spec::spec::Spec;
+    use crate::store::store::Store;
 
     #[test]
     #[allow(non_snake_case)]

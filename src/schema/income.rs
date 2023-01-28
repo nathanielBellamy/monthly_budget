@@ -18,8 +18,8 @@ impl CsvRecord<Income> for Income {
     }
 
     fn set_id(&mut self, new_id: usize) -> Option<usize> {
-      self.id = Some(new_id);
-      self.id
+        self.id = Some(new_id);
+        self.id
     }
 
     fn clone_record(&self) -> Income {
@@ -47,12 +47,16 @@ impl<'a, 'b: 'a> Income {
 
     pub fn payments_received(&'a self, store: &'b PaymentReceivedStore) -> PaymentReceivedStore {
         if let None = self.id {
-          ErrorHandler::log(From::from(format!("Income {:?} does not exist in main_store.", self.name)))
+            ErrorHandler::log(From::from(format!(
+                "Income {:?} does not exist in main_store.",
+                self.name
+            )))
         }
 
         let mut payments_received: PaymentReceivedStore = BTreeMap::new();
         for (id, payment_received) in store.iter() {
-            if payment_received.income_id == self.id.unwrap() { // TODO: handle error
+            if payment_received.income_id == self.id.unwrap() {
+                // TODO: handle error
                 payments_received
                     .entry(*id)
                     .or_insert(payment_received.clone_record());
@@ -86,8 +90,8 @@ impl<'a, 'b: 'a> Income {
 mod income_spec {
     use super::*;
     use crate::spec::spec::Spec;
-    use chrono::NaiveDateTime;
     use crate::store::store::Store;
+    use chrono::NaiveDateTime;
 
     #[test]
     #[allow(non_snake_case)]
@@ -111,7 +115,8 @@ mod income_spec {
         assert_eq!(first_payment_received.id.unwrap(), 1);
         assert_eq!(
             first_payment_received.completed_at,
-            NaiveDateTime::parse_from_str("2023-01-01 11:11:11-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
+            NaiveDateTime::parse_from_str("2023-01-01 11:11:11-08:00", "%Y-%m-%d %H:%M:%S %z")
+                .unwrap()
         );
         assert_eq!(first_payment_received.income_id, income.id.unwrap());
         assert_eq!(first_payment_received.amount_id, 2);
@@ -121,7 +126,8 @@ mod income_spec {
         assert_eq!(second_payment_received.income_id, income.id.unwrap());
         assert_eq!(
             second_payment_received.completed_at,
-            NaiveDateTime::parse_from_str("2023-01-03 13:13:13-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
+            NaiveDateTime::parse_from_str("2023-01-03 13:13:13-08:00", "%Y-%m-%d %H:%M:%S %z")
+                .unwrap()
         );
         assert_eq!(second_payment_received.amount_id, 2);
     }

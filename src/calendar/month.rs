@@ -1,7 +1,7 @@
+use crate::calendar::day::DayStore;
+use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
-use crate::calendar::day::DayStore;
 
 #[derive(Debug)]
 pub struct Month {
@@ -12,83 +12,85 @@ pub struct Month {
 impl Month {
     #[allow(unused)]
     pub fn new(key: MonthKey) -> Month {
-      Month {
-        key,
-        days: DayStore::new(),
-      }
+        Month {
+            key,
+            days: DayStore::new(),
+        }
     }
 
     pub fn all_payments_display(&mut self) -> PaymentDisplayStore {
-      let mut all_pd: Vec<PaymentDisplay> = vec![];
-      for (_id, day) in self.days.iter_mut() {
-        for (_id, payment) in day.payments.iter_mut() {
-          all_pd.push(payment.display());
+        let mut all_pd: Vec<PaymentDisplay> = vec![];
+        for (_id, day) in self.days.iter_mut() {
+            for (_id, payment) in day.payments.iter_mut() {
+                all_pd.push(payment.display());
+            }
         }
-      }
-      all_pd.sort_by(|a, b| a.completed_at.partial_cmp(&b.completed_at).unwrap());
+        all_pd.sort_by(|a, b| a.completed_at.partial_cmp(&b.completed_at).unwrap());
 
-      let mut store = PaymentDisplayStore::new();
-      for pd in all_pd.iter() {
-        let mut new_pd = (*pd).clone_record();
-        new_pd.id = None; // clear id tied to day, will be set in chrono order for month
-        PaymentDisplay::save_to_store(new_pd, &mut store);
-      }
+        let mut store = PaymentDisplayStore::new();
+        for pd in all_pd.iter() {
+            let mut new_pd = (*pd).clone_record();
+            new_pd.id = None; // clear id tied to day, will be set in chrono order for month
+            PaymentDisplay::save_to_store(new_pd, &mut store);
+        }
 
-      store
+        store
     }
 
     // TODO: unite this and the method above
     pub fn all_payments_received_display(&mut self) -> PaymentDisplayStore {
-      let mut all_pd: Vec<PaymentDisplay> = vec![];
-      for (_id, day) in self.days.iter_mut() {
-        for (_id, payment_rec) in day.payments_received.iter_mut() {
-          all_pd.push(payment_rec.display());
+        let mut all_pd: Vec<PaymentDisplay> = vec![];
+        for (_id, day) in self.days.iter_mut() {
+            for (_id, payment_rec) in day.payments_received.iter_mut() {
+                all_pd.push(payment_rec.display());
+            }
         }
-      }
-      all_pd.sort_by(|a, b| a.completed_at.partial_cmp(&b.completed_at).unwrap());
+        all_pd.sort_by(|a, b| a.completed_at.partial_cmp(&b.completed_at).unwrap());
 
-      let mut store = PaymentDisplayStore::new();
-      for pd in all_pd.iter() {
-        let mut new_pd = (*pd).clone_record();
-        new_pd.id = None; // clear id tied to day, will be set in chrono order for month
-        PaymentDisplay::save_to_store(new_pd, &mut store);
-      }
+        let mut store = PaymentDisplayStore::new();
+        for pd in all_pd.iter() {
+            let mut new_pd = (*pd).clone_record();
+            new_pd.id = None; // clear id tied to day, will be set in chrono order for month
+            PaymentDisplay::save_to_store(new_pd, &mut store);
+        }
 
-      store
+        store
     }
 
-    pub fn id(month: MonthKey) -> u32 { // u32 expected by NaiveDate
-      match month {
-        MonthKey::Jan => 1,
-        MonthKey::Feb => 2,
-        MonthKey::Mar => 3,
-        MonthKey::Apr => 4,
-        MonthKey::May => 5,
-        MonthKey::Jun => 6,
-        MonthKey::Jul => 7,
-        MonthKey::Aug => 8,
-        MonthKey::Sep => 9,
-        MonthKey::Oct => 10,
-        MonthKey::Nov => 11,
-        MonthKey::Dec => 12,
-      }
+    pub fn id(month: MonthKey) -> u32 {
+        // u32 expected by NaiveDate
+        match month {
+            MonthKey::Jan => 1,
+            MonthKey::Feb => 2,
+            MonthKey::Mar => 3,
+            MonthKey::Apr => 4,
+            MonthKey::May => 5,
+            MonthKey::Jun => 6,
+            MonthKey::Jul => 7,
+            MonthKey::Aug => 8,
+            MonthKey::Sep => 9,
+            MonthKey::Oct => 10,
+            MonthKey::Nov => 11,
+            MonthKey::Dec => 12,
+        }
     }
 
-    pub fn length(month: MonthKey) -> u32 { // u32 expected by NaiveDate
-      match month {
-        MonthKey::Jan => 31,
-        MonthKey::Feb => 28,
-        MonthKey::Mar => 31,
-        MonthKey::Apr => 30,
-        MonthKey::May => 31,
-        MonthKey::Jun => 30,
-        MonthKey::Jul => 31,
-        MonthKey::Aug => 31,
-        MonthKey::Sep => 30,
-        MonthKey::Oct => 31,
-        MonthKey::Nov => 30,
-        MonthKey::Dec => 31,
-      }
+    pub fn length(month: MonthKey) -> u32 {
+        // u32 expected by NaiveDate
+        match month {
+            MonthKey::Jan => 31,
+            MonthKey::Feb => 28,
+            MonthKey::Mar => 31,
+            MonthKey::Apr => 30,
+            MonthKey::May => 31,
+            MonthKey::Jun => 30,
+            MonthKey::Jul => 31,
+            MonthKey::Aug => 31,
+            MonthKey::Sep => 30,
+            MonthKey::Oct => 31,
+            MonthKey::Nov => 30,
+            MonthKey::Dec => 31,
+        }
     }
 
     #[allow(unused)]

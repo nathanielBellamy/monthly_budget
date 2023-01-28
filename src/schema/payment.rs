@@ -1,10 +1,10 @@
-use rust_decimal::Decimal;
-use crate::schema::expense::ExpenseStore;
 use crate::schema::account::{Account, AccountStore};
 use crate::schema::amount::{Amount, AmountStore};
+use crate::schema::expense::ExpenseStore;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use chrono::{NaiveDateTime};
+use chrono::NaiveDateTime;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -23,8 +23,8 @@ impl CsvRecord<Payment> for Payment {
     }
 
     fn set_id(&mut self, new_id: usize) -> Option<usize> {
-      self.id = Some(new_id);
-      self.id
+        self.id = Some(new_id);
+        self.id
     }
 
     fn clone_record(&self) -> Payment {
@@ -49,13 +49,13 @@ impl<'a, 'b: 'a> Payment {
 
     #[allow(unused)]
     pub fn expense_name(&self, store: &mut ExpenseStore) -> Option<String> {
-      let mut name: Option<String> = None;
-      for (id, exp) in store.iter() {
-        if *id == self.expense_id {
-          name = Some(exp.name.clone())
+        let mut name: Option<String> = None;
+        for (id, exp) in store.iter() {
+            if *id == self.expense_id {
+                name = Some(exp.name.clone())
+            }
         }
-      }
-      name
+        name
     }
 
     #[allow(unused)]
@@ -78,22 +78,22 @@ impl<'a, 'b: 'a> Payment {
     }
 
     pub fn total(payment_store: PaymentStore, amount_store: &AmountStore) -> Decimal {
-      let mut total = Decimal::new(00, 1);
-      for (_id, payment) in payment_store.iter() {
-        total += payment.standard_amount(amount_store).unwrap();
-      }
-      total
+        let mut total = Decimal::new(00, 1);
+        for (_id, payment) in payment_store.iter() {
+            total += payment.standard_amount(amount_store).unwrap();
+        }
+        total
     }
 
     #[allow(unused)]
     pub fn ids_by_account_id(account_id: usize, store: &mut PaymentStore) -> Vec<usize> {
-      let mut payment_ids: Vec<usize> = vec![];
-      for (id, payment) in store.iter() {
-        if payment.account_id == account_id {
-          payment_ids.push(*id);
+        let mut payment_ids: Vec<usize> = vec![];
+        for (id, payment) in store.iter() {
+            if payment.account_id == account_id {
+                payment_ids.push(*id);
+            }
         }
-      }
-      payment_ids
+        payment_ids
     }
 }
 

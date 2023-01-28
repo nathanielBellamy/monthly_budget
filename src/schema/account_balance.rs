@@ -1,8 +1,8 @@
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use chrono::{NaiveDateTime};
-use serde::{Deserialize, Serialize};
+use chrono::NaiveDateTime;
 use rust_decimal::Decimal;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
@@ -22,8 +22,8 @@ impl CsvRecord<AccountBalance> for AccountBalance {
     }
 
     fn set_id(&mut self, new_id: usize) -> Option<usize> {
-      self.id = Some(new_id);
-      self.id
+        self.id = Some(new_id);
+        self.id
     }
 
     fn clone_record(&self) -> AccountBalance {

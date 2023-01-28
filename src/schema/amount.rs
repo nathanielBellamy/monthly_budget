@@ -1,7 +1,7 @@
-use rust_decimal::Decimal;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use rand::Rng;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -23,8 +23,8 @@ impl CsvRecord<Amount> for Amount {
     }
 
     fn set_id(&mut self, new_id: usize) -> Option<usize> {
-      self.id = Some(new_id);
-      self.id
+        self.id = Some(new_id);
+        self.id
     }
 
     fn clone_record(&self) -> Amount {
@@ -46,7 +46,7 @@ impl Amount {
         match self.high {
             Some(num) => high = num,
             _ => high = self.standard * Decimal::new(30, 1), // TODO: 3 is a magic number here
-                                             //   tune logic for useful randomization
+                                                             //   tune logic for useful randomization
         }
         rand::thread_rng().gen_range(low..high)
     }

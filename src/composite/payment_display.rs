@@ -1,41 +1,41 @@
-use chrono::NaiveDateTime;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use std::collections::BTreeMap;
+use chrono::NaiveDateTime;
 use rust_decimal::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct PaymentDisplay {
-  pub id: Option<usize>,
-  pub name: String,
-  #[serde(with = "rust_decimal::serde::float")]
-  pub amount: Decimal,
-  pub account_name: String,
-  pub completed_at: NaiveDateTime,
-  #[serde(with = "rust_decimal::serde::float_option")]
-  pub prev_balance: Option<Decimal>,
-  #[serde(with = "rust_decimal::serde::float_option")]
-  pub ending_balance: Option<Decimal>,
+    pub id: Option<usize>,
+    pub name: String,
+    #[serde(with = "rust_decimal::serde::float")]
+    pub amount: Decimal,
+    pub account_name: String,
+    pub completed_at: NaiveDateTime,
+    #[serde(with = "rust_decimal::serde::float_option")]
+    pub prev_balance: Option<Decimal>,
+    #[serde(with = "rust_decimal::serde::float_option")]
+    pub ending_balance: Option<Decimal>,
 }
 
 impl CsvRecord<PaymentDisplay> for PaymentDisplay {
-  fn id(&self) -> Option<usize> {
+    fn id(&self) -> Option<usize> {
         self.id
     }
 
-  fn set_id(&mut self, new_id: usize) -> Option<usize> {
-    self.id = Some(new_id);
-    self.id
-  }
+    fn set_id(&mut self, new_id: usize) -> Option<usize> {
+        self.id = Some(new_id);
+        self.id
+    }
 
-  fn clone_record(&self) -> PaymentDisplay {
-      PaymentDisplay {
-        name: self.name.clone(),
-        account_name: self.account_name.clone(),
-        ..*self
-      }
-  }
+    fn clone_record(&self) -> PaymentDisplay {
+        PaymentDisplay {
+            name: self.name.clone(),
+            account_name: self.account_name.clone(),
+            ..*self
+        }
+    }
 }
 
 impl CsvStore<PaymentDisplay> for PaymentDisplay {}

@@ -1,18 +1,18 @@
-use crate::traits::csv_record::CsvRecord;
-use std::collections::BTreeMap;
-use crate::schema::account_balance::AccountBalance;
-use crate::schema::payment_received::PaymentReceived;
-use crate::schema::income::Income;
-use std::error::Error;
+use crate::composite::payment_display::PaymentDisplay;
 use crate::error_handler::error_handler::ErrorHandler;
 use crate::schema::account::Account;
+use crate::schema::account_balance::AccountBalance;
 use crate::schema::amount::Amount;
+use crate::schema::income::Income;
+use crate::schema::payment_received::PaymentReceived;
 use crate::store::store::Store;
+use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use rust_decimal::prelude::*;
 use chrono::{NaiveDateTime, Utc};
+use rust_decimal::prelude::*;
 use serde::{Deserialize, Serialize};
-use crate::composite::payment_display::{PaymentDisplay};
+use std::collections::BTreeMap;
+use std::error::Error;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PaymentReceivedComposite {
@@ -39,8 +39,8 @@ impl CsvRecord<PaymentReceivedComposite> for PaymentReceivedComposite {
     }
 
     fn set_id(&mut self, new_id: usize) -> Option<usize> {
-      self.id = Some(new_id);
-      self.id
+        self.id = Some(new_id);
+        self.id
     }
 
     fn clone_record(&self) -> PaymentReceivedComposite {
@@ -56,20 +56,27 @@ type CreatePaymentReceivedResult = Result<(), Box<dyn Error>>;
 
 impl PaymentReceivedComposite {
     pub fn display(&self) -> PaymentDisplay {
-      PaymentDisplay {
-        id: self.id,
-        name: self.income_name.clone(),
-        amount: self.amount_standard,
-        account_name: self.account_name.clone(),
-        completed_at: self.payment_received_completed_at,
-        prev_balance: self.prev_balance,
-        ending_balance: self.ending_balance,
-      }
+        PaymentDisplay {
+            id: self.id,
+            name: self.income_name.clone(),
+            amount: self.amount_standard,
+            account_name: self.account_name.clone(),
+            completed_at: self.payment_received_completed_at,
+            prev_balance: self.prev_balance,
+            ending_balance: self.ending_balance,
+        }
     }
 
-    pub fn create_payment_received(&mut self, store: &mut Store, complete_at: Option<NaiveDateTime>) -> CreatePaymentReceivedResult {
+    pub fn create_payment_received(
+        &mut self,
+        store: &mut Store,
+        complete_at: Option<NaiveDateTime>,
+    ) -> CreatePaymentReceivedResult {
         if let Some(id) = self.payment_received_id {
-          ErrorHandler::log(From::from(format!("PaymentReceived {:?} already exists.", id)))
+            ErrorHandler::log(From::from(format!(
+                "PaymentReceived {:?} already exists.",
+                id
+            )))
         }
 
         if let None = self.account_id {
@@ -78,31 +85,29 @@ impl PaymentReceivedComposite {
                 None => {
                     // create Account record
                     self.account_id = Some(Account::new_id(&mut store.accounts));
-                    self.account_id = Some(
-                      Account::save_to_store(
+                    self.account_id = Some(Account::save_to_store(
                         Account {
                             id: self.account_id, // T::new_id returns T, this unwrap is a formality
                             name: self.account_name.clone(),
                         },
                         &mut store.accounts,
                     ));
-                },
+                }
                 Some(acc) => self.account_id = acc.id,
             }
         }
 
         if let None = self.amount_id {
-          // create Amount record
-          self.amount_id = Some(
-            Amount::save_to_store(
-              Amount {
-                id: self.amount_id,
-                standard: self.amount_standard,
-                high: None,
-                low: None,
-              },
-              &mut store.amounts
-          ));
+            // create Amount record
+            self.amount_id = Some(Amount::save_to_store(
+                Amount {
+                    id: self.amount_id,
+                    standard: self.amount_standard,
+                    high: None,
+                    low: None,
+                },
+                &mut store.amounts,
+            ));
         }
 
         if let None = self.income_id {
@@ -111,22 +116,22 @@ impl PaymentReceivedComposite {
                 None => {
                     // create Income record
                     let new_id = Income::save_to_store(
-                      Income{
-                        id: None,
-                        active: true,
-                        name: self.income_name.clone(),
-                      },
-                      &mut store.incomes
+                        Income {
+                            id: None,
+                            active: true,
+                            name: self.income_name.clone(),
+                        },
+                        &mut store.incomes,
                     );
                     self.income_id = Some(new_id);
-                },
+                }
                 Some(inc) => self.income_id = inc.id,
             }
         }
 
         self.payment_received_completed_at = match complete_at {
-          None => Utc::now().naive_local(),
-          Some(ndt) => ndt
+            None => Utc::now().naive_local(),
+            Some(ndt) => ndt,
         };
 
         // create PaymentReceived record
@@ -144,21 +149,21 @@ impl PaymentReceivedComposite {
 
         // create new account balance record
         let prev_balance = Account::by_id(self.account_id.unwrap(), &mut store.accounts)
-                                   .unwrap()
-                                   .current_balance(&mut store.account_balances);
+            .unwrap()
+            .current_balance(&mut store.account_balances);
         self.prev_balance = Some(prev_balance);
 
         let ending_balance = prev_balance + self.amount_standard;
         self.ending_balance = Some(ending_balance);
 
         self.account_balance_id = Some(AccountBalance::save_to_store(
-          AccountBalance {
-            id: None,
-            account_id: self.account_id.unwrap(),
-            amount: ending_balance,
-            reported_at: self.payment_received_completed_at,
-          },
-          &mut store.account_balances
+            AccountBalance {
+                id: None,
+                account_id: self.account_id.unwrap(),
+                amount: ending_balance,
+                reported_at: self.payment_received_completed_at,
+            },
+            &mut store.account_balances,
         ));
 
         Ok(())
@@ -172,47 +177,61 @@ mod payment_composite_spec {
     use chrono::NaiveDate;
 
     fn payment_rec_comp() -> PaymentReceivedComposite {
-      PaymentReceivedComposite {
-          id: None,
-          account_id: None,
-          account_name: "piggybank".to_string(),
-          account_balance_id: None,
-          prev_balance: None,
-          ending_balance: None,
-          amount_id: None,
-          amount_standard: Decimal::new(12345, 2),
-          payment_received_id: None,
-          payment_received_completed_at: NaiveDate::from_ymd_opt(2023, 2, 17).unwrap()
-                                                   .and_hms_opt(13, 00, 00).unwrap(),
-          income_id: None,
-          income_name: "cowboy".to_string(),
+        PaymentReceivedComposite {
+            id: None,
+            account_id: None,
+            account_name: "piggybank".to_string(),
+            account_balance_id: None,
+            prev_balance: None,
+            ending_balance: None,
+            amount_id: None,
+            amount_standard: Decimal::new(12345, 2),
+            payment_received_id: None,
+            payment_received_completed_at: NaiveDate::from_ymd_opt(2023, 2, 17)
+                .unwrap()
+                .and_hms_opt(13, 00, 00)
+                .unwrap(),
+            income_id: None,
+            income_name: "cowboy".to_string(),
         }
     }
 
     #[test]
     #[allow(non_snake_case)]
-    fn create_payment_received__retrieves_account_id_by_name_when_self_account_id_is_none_and_account_exists() {
+    fn create_payment_received__retrieves_account_id_by_name_when_self_account_id_is_none_and_account_exists(
+    ) {
         let mut store = Store::new();
         Spec::init(&mut store);
 
         let mut payment_rec_comp = payment_rec_comp();
-        payment_rec_comp.create_payment_received(&mut store, None).unwrap();
+        payment_rec_comp
+            .create_payment_received(&mut store, None)
+            .unwrap();
         assert_eq!(1, payment_rec_comp.account_id.unwrap());
     }
 
     #[test]
     #[allow(non_snake_case)]
     // TODO: eventually may want to change this behavior to raise an error saying account dne
-    fn create_payment_received__creates_account_when_self_account_id_is_none_and_account_name_does_not_exist() {
+    fn create_payment_received__creates_account_when_self_account_id_is_none_and_account_name_does_not_exist(
+    ) {
         let mut store = Store::new();
         Spec::init(&mut store);
 
         let mut payment_rec_comp = payment_rec_comp();
         payment_rec_comp.account_name = "New Account".to_string();
         assert_eq!(2, store.accounts.len());
-        payment_rec_comp.create_payment_received(&mut store, None).unwrap();
+        payment_rec_comp
+            .create_payment_received(&mut store, None)
+            .unwrap();
         assert_eq!(3, store.accounts.len());
-        assert_eq!(3, Account::by_name("New Account", &mut store.accounts).unwrap().id.unwrap())
+        assert_eq!(
+            3,
+            Account::by_name("New Account", &mut store.accounts)
+                .unwrap()
+                .id
+                .unwrap()
+        )
     }
 
     #[test]
@@ -223,48 +242,68 @@ mod payment_composite_spec {
 
         let mut payment_rec_comp = payment_rec_comp();
         assert_eq!(5, store.amounts.len());
-        payment_rec_comp.create_payment_received(&mut store, None).unwrap();
+        payment_rec_comp
+            .create_payment_received(&mut store, None)
+            .unwrap();
         assert_eq!(6, store.amounts.len());
     }
 
     #[test]
     #[allow(non_snake_case)]
-    fn create_payment_received__retrieves_income_id_by_name_when_self_income_id_is_none_and_income_exists() {
+    fn create_payment_received__retrieves_income_id_by_name_when_self_income_id_is_none_and_income_exists(
+    ) {
         let mut store = Store::new();
         Spec::init(&mut store);
 
         let mut payment_rec_comp = payment_rec_comp();
-        payment_rec_comp.create_payment_received(&mut store, None).unwrap();
+        payment_rec_comp
+            .create_payment_received(&mut store, None)
+            .unwrap();
         assert_eq!(1, payment_rec_comp.income_id.unwrap());
     }
 
     #[test]
     #[allow(non_snake_case)]
-    fn create_payment_received__creates_income_when_self_income_id_is_none_and_income_name_does_not_exist() {
+    fn create_payment_received__creates_income_when_self_income_id_is_none_and_income_name_does_not_exist(
+    ) {
         let mut store = Store::new();
         Spec::init(&mut store);
 
         let mut payment_rec_comp = payment_rec_comp();
         payment_rec_comp.income_name = "New Income".to_string();
         assert_eq!(2, store.incomes.len());
-        payment_rec_comp.create_payment_received(&mut store, None).unwrap();
+        payment_rec_comp
+            .create_payment_received(&mut store, None)
+            .unwrap();
         assert_eq!(3, store.incomes.len());
-        assert_eq!(3, Income::by_name("New Income", &mut store.incomes).unwrap().id.unwrap())
+        assert_eq!(
+            3,
+            Income::by_name("New Income", &mut store.incomes)
+                .unwrap()
+                .id
+                .unwrap()
+        )
     }
 
     #[test]
     #[allow(non_snake_case)]
     // TODO: find out how to enact something like Ruby/Rspec's Timecop
-    fn create_payment_received__sets_self_payment_completed_at_to_current_time_when_complete_at_is_none() {
+    fn create_payment_received__sets_self_payment_completed_at_to_current_time_when_complete_at_is_none(
+    ) {
         let mut store = Store::new();
         Spec::init(&mut store);
 
         let mut payment_rec_comp = payment_rec_comp();
-        payment_rec_comp.create_payment_received(&mut store, None).unwrap();
+        payment_rec_comp
+            .create_payment_received(&mut store, None)
+            .unwrap();
         assert_eq!(
-          false,
-          payment_rec_comp.payment_received_completed_at == NaiveDate::from_ymd_opt(2023, 2, 17).unwrap()
-                                                              .and_hms_opt(13, 00, 00).unwrap()
+            false,
+            payment_rec_comp.payment_received_completed_at
+                == NaiveDate::from_ymd_opt(2023, 2, 17)
+                    .unwrap()
+                    .and_hms_opt(13, 00, 00)
+                    .unwrap()
         );
     }
 
@@ -275,15 +314,23 @@ mod payment_composite_spec {
         Spec::init(&mut store);
 
         let mut payment_rec_comp = payment_rec_comp();
-        payment_rec_comp.create_payment_received(
-          &mut store,
-          Some(NaiveDate::from_ymd_opt(3000, 4, 1).unwrap()
-                          .and_hms_opt(13, 00, 00).unwrap())
-        ).unwrap();
+        payment_rec_comp
+            .create_payment_received(
+                &mut store,
+                Some(
+                    NaiveDate::from_ymd_opt(3000, 4, 1)
+                        .unwrap()
+                        .and_hms_opt(13, 00, 00)
+                        .unwrap(),
+                ),
+            )
+            .unwrap();
         assert_eq!(
-          NaiveDate::from_ymd_opt(3000, 4, 1).unwrap()
-                    .and_hms_opt(13, 00, 00).unwrap(),
-          payment_rec_comp.payment_received_completed_at
+            NaiveDate::from_ymd_opt(3000, 4, 1)
+                .unwrap()
+                .and_hms_opt(13, 00, 00)
+                .unwrap(),
+            payment_rec_comp.payment_received_completed_at
         );
     }
 
@@ -296,8 +343,10 @@ mod payment_composite_spec {
         Spec::init(&mut store);
 
         let mut payment_rec_comp = payment_rec_comp();
-        payment_rec_comp.create_payment_received(&mut store, None).unwrap();
-        assert_eq!(Decimal::new(200,0), payment_rec_comp.prev_balance.unwrap());
+        payment_rec_comp
+            .create_payment_received(&mut store, None)
+            .unwrap();
+        assert_eq!(Decimal::new(200, 0), payment_rec_comp.prev_balance.unwrap());
     }
 
     #[test]
@@ -309,8 +358,10 @@ mod payment_composite_spec {
         Spec::init(&mut store);
 
         let mut payment_rec_comp = payment_rec_comp();
-        payment_rec_comp.create_payment_received(&mut store, None).unwrap();
-        assert_eq!(Decimal::new(200,0), payment_rec_comp.prev_balance.unwrap());
+        payment_rec_comp
+            .create_payment_received(&mut store, None)
+            .unwrap();
+        assert_eq!(Decimal::new(200, 0), payment_rec_comp.prev_balance.unwrap());
     }
 
     #[test]
@@ -321,13 +372,18 @@ mod payment_composite_spec {
 
         let mut payment_rec_comp = payment_rec_comp();
         assert_eq!(3, store.payments_received.len());
-        payment_rec_comp.create_payment_received(&mut store, None).unwrap();
+        payment_rec_comp
+            .create_payment_received(&mut store, None)
+            .unwrap();
         assert_eq!(4, store.payments.len());
         let new_payment = store.payments_received[&4].clone_record();
         assert_eq!(new_payment.account_id, payment_rec_comp.account_id.unwrap());
         assert_eq!(new_payment.income_id, payment_rec_comp.income_id.unwrap());
         assert_eq!(new_payment.amount_id, payment_rec_comp.amount_id.unwrap());
-        assert_eq!(new_payment.completed_at, payment_rec_comp.payment_received_completed_at);
+        assert_eq!(
+            new_payment.completed_at,
+            payment_rec_comp.payment_received_completed_at
+        );
     }
 
     #[test]
@@ -338,11 +394,16 @@ mod payment_composite_spec {
 
         let mut payment_rec_comp = payment_rec_comp();
         assert_eq!(4, store.account_balances.len());
-        payment_rec_comp.create_payment_received(&mut store, None).unwrap();
+        payment_rec_comp
+            .create_payment_received(&mut store, None)
+            .unwrap();
         assert_eq!(5, store.account_balances.len());
         let new_acc_bal = store.account_balances[&5].clone_record();
         assert_eq!(new_acc_bal.account_id, payment_rec_comp.account_id.unwrap());
         assert_eq!(new_acc_bal.amount, payment_rec_comp.ending_balance.unwrap());
-        assert_eq!(new_acc_bal.reported_at, payment_rec_comp.payment_received_completed_at)
+        assert_eq!(
+            new_acc_bal.reported_at,
+            payment_rec_comp.payment_received_completed_at
+        )
     }
 }

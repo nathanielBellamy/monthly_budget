@@ -1,18 +1,18 @@
-use crate::traits::csv_record::CsvRecord;
-use std::collections::BTreeMap;
-use crate::schema::account_balance::AccountBalance;
-use std::error::Error;
+use crate::composite::payment_display::PaymentDisplay;
 use crate::error_handler::error_handler::ErrorHandler;
 use crate::schema::account::Account;
+use crate::schema::account_balance::AccountBalance;
 use crate::schema::amount::Amount;
 use crate::schema::expense::Expense;
 use crate::schema::payment::Payment;
 use crate::store::store::Store;
+use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use chrono::{NaiveDateTime, Utc};
-use serde::{Deserialize, Serialize};
 use rust_decimal::prelude::*;
-use crate::composite::payment_display::{PaymentDisplay};
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+use std::error::Error;
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct PaymentComposite {
@@ -39,8 +39,8 @@ impl CsvRecord<PaymentComposite> for PaymentComposite {
     }
 
     fn set_id(&mut self, new_id: usize) -> Option<usize> {
-      self.id = Some(new_id);
-      self.id
+        self.id = Some(new_id);
+        self.id
     }
 
     fn clone_record(&self) -> PaymentComposite {
@@ -56,20 +56,24 @@ type CreatePaymentResult = Result<(), Box<dyn Error>>;
 
 impl PaymentComposite {
     pub fn display(&self) -> PaymentDisplay {
-      PaymentDisplay {
-        id: self.id,
-        name: self.expense_name.clone(),
-        amount: self.amount_standard,
-        account_name: self.account_name.clone(),
-        completed_at: self.payment_completed_at,
-        prev_balance: self.prev_balance,
-        ending_balance: self.ending_balance,
-      }
+        PaymentDisplay {
+            id: self.id,
+            name: self.expense_name.clone(),
+            amount: self.amount_standard,
+            account_name: self.account_name.clone(),
+            completed_at: self.payment_completed_at,
+            prev_balance: self.prev_balance,
+            ending_balance: self.ending_balance,
+        }
     }
 
-    pub fn create_payment(&mut self, store: &mut Store, complete_at: Option<NaiveDateTime>) -> CreatePaymentResult {
+    pub fn create_payment(
+        &mut self,
+        store: &mut Store,
+        complete_at: Option<NaiveDateTime>,
+    ) -> CreatePaymentResult {
         if let Some(id) = self.payment_id {
-          ErrorHandler::log(From::from(format!("Payment {:?} already exists.", id)))
+            ErrorHandler::log(From::from(format!("Payment {:?} already exists.", id)))
         }
 
         if let None = self.account_id {
@@ -78,31 +82,29 @@ impl PaymentComposite {
                 None => {
                     // create Account record
                     self.account_id = Some(Account::new_id(&mut store.accounts));
-                    self.account_id = Some(
-                      Account::save_to_store(
+                    self.account_id = Some(Account::save_to_store(
                         Account {
                             id: self.account_id,
                             name: self.account_name.clone(),
                         },
                         &mut store.accounts,
                     ));
-                },
+                }
                 Some(acc) => self.account_id = acc.id,
             }
         }
 
         if let None = self.amount_id {
-          // create Amount record
-          self.amount_id = Some(
-            Amount::save_to_store(
-              Amount {
-                id: self.amount_id,
-                standard: self.amount_standard,
-                high: None,
-                low: None,
-              },
-              &mut store.amounts
-          ));
+            // create Amount record
+            self.amount_id = Some(Amount::save_to_store(
+                Amount {
+                    id: self.amount_id,
+                    standard: self.amount_standard,
+                    high: None,
+                    low: None,
+                },
+                &mut store.amounts,
+            ));
         }
 
         if let None = self.expense_id {
@@ -111,22 +113,22 @@ impl PaymentComposite {
                 None => {
                     // create Expense record
                     let new_id = Expense::save_to_store(
-                      Expense{
-                        id: None,
-                        active: true,
-                        name: self.expense_name.clone(),
-                      },
-                      &mut store.expenses
+                        Expense {
+                            id: None,
+                            active: true,
+                            name: self.expense_name.clone(),
+                        },
+                        &mut store.expenses,
                     );
                     self.expense_id = Some(new_id);
-                },
+                }
                 Some(exp) => self.expense_id = exp.id,
             }
         }
 
         self.payment_completed_at = match complete_at {
-          None => Utc::now().naive_local(),
-          Some(ndt) => ndt
+            None => Utc::now().naive_local(),
+            Some(ndt) => ndt,
         };
         // create Payment record
         self.payment_id = Some(Payment::new_id(&mut store.payments));
@@ -143,21 +145,21 @@ impl PaymentComposite {
 
         // create new AccountBalance record
         let prev_balance = Account::by_id(self.account_id.unwrap(), &mut store.accounts)
-                                   .unwrap()
-                                   .current_balance(&mut store.account_balances);
+            .unwrap()
+            .current_balance(&mut store.account_balances);
 
         self.prev_balance = Some(prev_balance);
 
         let ending_balance = prev_balance - self.amount_standard;
         self.ending_balance = Some(ending_balance);
         self.account_balance_id = Some(AccountBalance::save_to_store(
-          AccountBalance {
-            id: None,
-            account_id: self.account_id.unwrap(),
-            amount: ending_balance,
-            reported_at: self.payment_completed_at,
-          },
-          &mut store.account_balances
+            AccountBalance {
+                id: None,
+                account_id: self.account_id.unwrap(),
+                amount: ending_balance,
+                reported_at: self.payment_completed_at,
+            },
+            &mut store.account_balances,
         ));
 
         Ok(())
@@ -171,26 +173,29 @@ mod payment_composite_spec {
     use chrono::NaiveDate;
 
     fn payment_comp() -> PaymentComposite {
-      PaymentComposite {
-        id: None,
-        account_id: None,
-        account_name: "piggybank".to_string(),
-        account_balance_id: None,
-        prev_balance: None,
-        ending_balance: None,
-        amount_id: None,
-        amount_standard: Decimal::new(12345, 2),
-        payment_id: None,
-        payment_completed_at: NaiveDate::from_ymd_opt(2023, 2, 17).unwrap()
-                                        .and_hms_opt(13, 00, 00).unwrap(),
-        expense_id: None,
-        expense_name: "dog food".to_string(),
-      }
+        PaymentComposite {
+            id: None,
+            account_id: None,
+            account_name: "piggybank".to_string(),
+            account_balance_id: None,
+            prev_balance: None,
+            ending_balance: None,
+            amount_id: None,
+            amount_standard: Decimal::new(12345, 2),
+            payment_id: None,
+            payment_completed_at: NaiveDate::from_ymd_opt(2023, 2, 17)
+                .unwrap()
+                .and_hms_opt(13, 00, 00)
+                .unwrap(),
+            expense_id: None,
+            expense_name: "dog food".to_string(),
+        }
     }
 
     #[test]
     #[allow(non_snake_case)]
-    fn create_payment__retrieves_account_id_by_name_when_self_account_id_is_none_and_account_exists() {
+    fn create_payment__retrieves_account_id_by_name_when_self_account_id_is_none_and_account_exists(
+    ) {
         let mut store = Store::new();
         Spec::init(&mut store);
 
@@ -202,7 +207,8 @@ mod payment_composite_spec {
     #[test]
     #[allow(non_snake_case)]
     // TODO: eventually may want to change this behavior to raise an error saying account dne
-    fn create_payment__creates_account_when_self_account_id_is_none_and_account_name_does_not_exist() {
+    fn create_payment__creates_account_when_self_account_id_is_none_and_account_name_does_not_exist(
+    ) {
         let mut store = Store::new();
         Spec::init(&mut store);
 
@@ -211,7 +217,13 @@ mod payment_composite_spec {
         assert_eq!(2, store.accounts.len());
         payment_comp.create_payment(&mut store, None).unwrap();
         assert_eq!(3, store.accounts.len());
-        assert_eq!(3, Account::by_name("New Account", &mut store.accounts).unwrap().id.unwrap())
+        assert_eq!(
+            3,
+            Account::by_name("New Account", &mut store.accounts)
+                .unwrap()
+                .id
+                .unwrap()
+        )
     }
 
     #[test]
@@ -228,7 +240,8 @@ mod payment_composite_spec {
 
     #[test]
     #[allow(non_snake_case)]
-    fn create_payment__retrieves_expense_id_by_name_when_self_expense_id_is_none_and_expense_exists() {
+    fn create_payment__retrieves_expense_id_by_name_when_self_expense_id_is_none_and_expense_exists(
+    ) {
         let mut store = Store::new();
         Spec::init(&mut store);
 
@@ -240,7 +253,8 @@ mod payment_composite_spec {
 
     #[test]
     #[allow(non_snake_case)]
-    fn create_payment__creates_expense_when_self_expense_id_is_none_and_expense_name_does_not_exist() {
+    fn create_payment__creates_expense_when_self_expense_id_is_none_and_expense_name_does_not_exist(
+    ) {
         let mut store = Store::new();
         Spec::init(&mut store);
 
@@ -249,7 +263,13 @@ mod payment_composite_spec {
         assert_eq!(3, store.expenses.len());
         payment_comp.create_payment(&mut store, None).unwrap();
         assert_eq!(4, store.expenses.len());
-        assert_eq!(4, Expense::by_name("New Expense", &mut store.expenses).unwrap().id.unwrap())
+        assert_eq!(
+            4,
+            Expense::by_name("New Expense", &mut store.expenses)
+                .unwrap()
+                .id
+                .unwrap()
+        )
     }
 
     #[test]
@@ -261,8 +281,14 @@ mod payment_composite_spec {
 
         let mut payment_comp = payment_comp();
         payment_comp.create_payment(&mut store, None).unwrap();
-        assert_eq!(false, payment_comp.payment_completed_at == NaiveDate::from_ymd_opt(2023, 2, 17).unwrap()
-                                                                          .and_hms_opt(13, 00, 00).unwrap());
+        assert_eq!(
+            false,
+            payment_comp.payment_completed_at
+                == NaiveDate::from_ymd_opt(2023, 2, 17)
+                    .unwrap()
+                    .and_hms_opt(13, 00, 00)
+                    .unwrap()
+        );
     }
 
     #[test]
@@ -272,16 +298,24 @@ mod payment_composite_spec {
         Spec::init(&mut store);
 
         let mut payment_comp = payment_comp();
-        payment_comp.create_payment(
-          &mut store,
-          Some(NaiveDate::from_ymd_opt(3000, 4, 1).unwrap()
-                          .and_hms_opt(13, 00, 00).unwrap())
-        ).unwrap();
+        payment_comp
+            .create_payment(
+                &mut store,
+                Some(
+                    NaiveDate::from_ymd_opt(3000, 4, 1)
+                        .unwrap()
+                        .and_hms_opt(13, 00, 00)
+                        .unwrap(),
+                ),
+            )
+            .unwrap();
 
         assert_eq!(
-          NaiveDate::from_ymd_opt(3000, 4, 1).unwrap()
-                    .and_hms_opt(13, 00, 00).unwrap(),
-          payment_comp.payment_completed_at
+            NaiveDate::from_ymd_opt(3000, 4, 1)
+                .unwrap()
+                .and_hms_opt(13, 00, 00)
+                .unwrap(),
+            payment_comp.payment_completed_at
         );
     }
 
@@ -295,7 +329,7 @@ mod payment_composite_spec {
 
         let mut payment_comp = payment_comp();
         payment_comp.create_payment(&mut store, None).unwrap();
-        assert_eq!(Decimal::new(200,0), payment_comp.prev_balance.unwrap());
+        assert_eq!(Decimal::new(200, 0), payment_comp.prev_balance.unwrap());
     }
 
     #[test]
@@ -309,7 +343,7 @@ mod payment_composite_spec {
         let mut payment_comp = payment_comp();
         payment_comp.account_name = "New Account".to_string();
         payment_comp.create_payment(&mut store, None).unwrap();
-        assert_eq!(Decimal::new(0,0), payment_comp.prev_balance.unwrap());
+        assert_eq!(Decimal::new(0, 0), payment_comp.prev_balance.unwrap());
     }
 
     #[test]

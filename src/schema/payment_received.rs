@@ -1,10 +1,10 @@
-use rust_decimal::Decimal;
 use crate::schema::account::Account;
 use crate::schema::amount::{Amount, AmountStore};
 use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use chrono::{NaiveDateTime};
+use chrono::NaiveDateTime;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -23,8 +23,8 @@ impl CsvRecord<PaymentReceived> for PaymentReceived {
     }
 
     fn set_id(&mut self, new_id: usize) -> Option<usize> {
-      self.id = Some(new_id);
-      self.id
+        self.id = Some(new_id);
+        self.id
     }
 
     fn clone_record(&self) -> PaymentReceived {
@@ -69,13 +69,13 @@ impl<'a, 'b: 'a> PaymentReceived {
 
     #[allow(unused)]
     pub fn ids_by_account_id(account_id: usize, store: &mut PaymentReceivedStore) -> Vec<usize> {
-      let mut payment_rec_ids: Vec<usize> = vec![];
-      for (id, payment_rec) in store.iter() {
-        if payment_rec.account_id == account_id {
-          payment_rec_ids.push(*id);
+        let mut payment_rec_ids: Vec<usize> = vec![];
+        for (id, payment_rec) in store.iter() {
+            if payment_rec.account_id == account_id {
+                payment_rec_ids.push(*id);
+            }
         }
-      }
-      payment_rec_ids
+        payment_rec_ids
     }
 }
 

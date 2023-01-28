@@ -1,10 +1,10 @@
 use crate::schema::account_balance::{AccountBalance, AccountBalanceStore};
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use serde::{Deserialize, Serialize};
 use rust_decimal::Decimal;
-use std::collections::BTreeMap;
+use serde::{Deserialize, Serialize};
 use std::collections::btree_map::Entry;
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Account {
@@ -18,8 +18,8 @@ impl CsvRecord<Account> for Account {
     }
 
     fn set_id(&mut self, new_id: usize) -> Option<usize> {
-      self.id = Some(new_id);
-      self.id
+        self.id = Some(new_id);
+        self.id
     }
 
     fn clone_record(&self) -> Account {
@@ -48,37 +48,39 @@ impl Account {
     }
 
     pub fn account_balance_ids(&self, store: &mut AccountBalanceStore) -> Vec<usize> {
-      let mut balance_ids: Vec<usize> = vec![];
-      for (id, acc_bal) in store.iter() {
-        if acc_bal.account_id == self.id.unwrap() {
-          balance_ids.push(*id)
+        let mut balance_ids: Vec<usize> = vec![];
+        for (id, acc_bal) in store.iter() {
+            if acc_bal.account_id == self.id.unwrap() {
+                balance_ids.push(*id)
+            }
         }
-      }
 
-      balance_ids
+        balance_ids
     }
 
     // last_saved_balance
     pub fn current_balance(&self, store: &mut AccountBalanceStore) -> Decimal {
         let mut curr_balance: Option<AccountBalance> = None;
         for id in self.account_balance_ids(store).iter() {
-            if let Entry::Occupied(acc_bal) = store.entry(*id){ // entry exists
-              match curr_balance {
-                None => {// set first
-                  curr_balance = Some(acc_bal.get().clone_record());
-                },
-                Some(last_acc_bal_so_far) => {
-                  if acc_bal.get().reported_at > last_acc_bal_so_far.reported_at {
-                    curr_balance = Some(acc_bal.get().clone_record())
-                  }
+            if let Entry::Occupied(acc_bal) = store.entry(*id) {
+                // entry exists
+                match curr_balance {
+                    None => {
+                        // set first
+                        curr_balance = Some(acc_bal.get().clone_record());
+                    }
+                    Some(last_acc_bal_so_far) => {
+                        if acc_bal.get().reported_at > last_acc_bal_so_far.reported_at {
+                            curr_balance = Some(acc_bal.get().clone_record())
+                        }
+                    }
                 }
-              }
             }
         }
 
         match curr_balance {
-          None => Decimal::new(00, 1),
-          Some(bal) => bal.amount
+            None => Decimal::new(00, 1),
+            Some(bal) => bal.amount,
         }
     }
 }
@@ -116,7 +118,10 @@ mod account_spec {
         Spec::init(&mut store);
 
         let account = Account::by_name("piggybank", &mut store.accounts).unwrap();
-        assert_eq!(Decimal::new(2000, 1), account.current_balance(&mut store.account_balances));
+        assert_eq!(
+            Decimal::new(2000, 1),
+            account.current_balance(&mut store.account_balances)
+        );
     }
 
     #[test]
@@ -127,11 +132,11 @@ mod account_spec {
 
         let account = Account::by_name("piggybank", &mut store.accounts).unwrap();
         let account_balance_ids = account.account_balance_ids(&mut store.account_balances);
-        assert_eq!(vec![1,2], account_balance_ids);
+        assert_eq!(vec![1, 2], account_balance_ids);
 
         for id in account_balance_ids.iter() {
-          let balance = AccountBalance::by_id(*id, &mut store.account_balances).unwrap();
-          assert_eq!(balance.account_id, account.id.unwrap());
+            let balance = AccountBalance::by_id(*id, &mut store.account_balances).unwrap();
+            assert_eq!(balance.account_id, account.id.unwrap());
         }
     }
 }

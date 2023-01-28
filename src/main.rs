@@ -1,7 +1,7 @@
 use crate::error_handler::error_handler::ErrorHandler;
 //temp
-use crate::programs::month_model::MonthModel;
 use crate::calendar::month::MonthKey;
+use crate::programs::month_model::MonthModel;
 
 mod calendar;
 mod composite;
@@ -13,8 +13,7 @@ mod store;
 mod traits;
 
 fn main() {
-  if let Err(err) = MonthModel::new(MonthKey::Feb, None, None).run() {
-    ErrorHandler::log(From::from(err));
-  }
-
+    if let Err(err) = MonthModel::new(MonthKey::Feb, None, None).run() {
+        ErrorHandler::log(From::from(err));
+    }
 }

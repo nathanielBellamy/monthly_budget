@@ -2,12 +2,11 @@ use crate::schema::payment::{Payment, PaymentStore};
 use crate::store::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use serde::{Deserialize, Serialize};
 use rust_decimal::Decimal;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-#[derive(Serialize, Deserialize, Debug)]
-#[derive(Default)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Expense {
     pub id: Option<usize>,
     pub active: bool,
@@ -20,8 +19,8 @@ impl CsvRecord<Expense> for Expense {
     }
 
     fn set_id(&mut self, new_id: usize) -> Option<usize> {
-      self.id = Some(new_id);
-      self.id
+        self.id = Some(new_id);
+        self.id
     }
 
     fn clone_record(&self) -> Expense {
@@ -48,23 +47,23 @@ impl<'a, 'b: 'a> Expense {
     }
 
     pub fn name_by_id(id: usize, store: &mut Store) -> String {
-      match Expense::by_id(id, &mut store.expenses){
-        None => format!("No Name Found for Expense Id: {:?}", id),
-        Some(expense) => {
-          let name = expense.name.clone();
-          name
-        },
-      }
+        match Expense::by_id(id, &mut store.expenses) {
+            None => format!("No Name Found for Expense Id: {:?}", id),
+            Some(expense) => {
+                let name = expense.name.clone();
+                name
+            }
+        }
     }
 
     pub fn total_by_id(id: usize, store: &mut Store) -> Decimal {
-      match Expense::by_id(id, &mut store.expenses){
-        None => Decimal::new(00, 1),
-        Some(expense) => {
-          let payments = expense.payments(&mut store.payments);
-          Payment::total(payments, &store.amounts)
+        match Expense::by_id(id, &mut store.expenses) {
+            None => Decimal::new(00, 1),
+            Some(expense) => {
+                let payments = expense.payments(&mut store.payments);
+                Payment::total(payments, &store.amounts)
+            }
         }
-      }
     }
 
     pub fn payments(&'a self, store: &'b mut PaymentStore) -> PaymentStore {
@@ -133,7 +132,8 @@ mod expense_spec {
         assert_eq!(first_payment.id.unwrap(), 1);
         assert_eq!(
             first_payment.completed_at,
-            NaiveDateTime::parse_from_str("2023-01-01 11:11:11-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
+            NaiveDateTime::parse_from_str("2023-01-01 11:11:11-08:00", "%Y-%m-%d %H:%M:%S %z")
+                .unwrap()
         );
         assert_eq!(first_payment.expense_id, expense.id.unwrap());
         assert_eq!(first_payment.amount_id, 1);
@@ -142,7 +142,8 @@ mod expense_spec {
         assert_eq!(second_payment.expense_id, expense.id.unwrap());
         assert_eq!(
             second_payment.completed_at,
-            NaiveDateTime::parse_from_str("2023-01-04 14:14:14-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
+            NaiveDateTime::parse_from_str("2023-01-04 14:14:14-08:00", "%Y-%m-%d %H:%M:%S %z")
+                .unwrap()
         );
         assert_eq!(second_payment.amount_id, 1);
     }
@@ -159,7 +160,8 @@ mod expense_spec {
         assert_eq!(res.id.unwrap(), 4);
         assert_eq!(
             res.completed_at,
-            NaiveDateTime::parse_from_str("2023-01-04 14:14:14-08:00", "%Y-%m-%d %H:%M:%S %z").unwrap()
+            NaiveDateTime::parse_from_str("2023-01-04 14:14:14-08:00", "%Y-%m-%d %H:%M:%S %z")
+                .unwrap()
         );
     }
 }

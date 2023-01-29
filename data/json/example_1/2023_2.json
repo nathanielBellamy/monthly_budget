@@ -1,0 +1,23 @@
+[
+  {
+    "event_type": "payment",
+    "name":  "Natural Gas",
+    "account_name": "Credit Union",
+    "amount": 125.0,
+    "completed_at": "2023-02-20T12:00:00"
+  },
+  {
+    "event_type": "payment",
+    "name":  "Mortgage",
+    "account_name": "Credit Union",
+    "amount": 2500.0,
+    "completed_at": "2023-02-15T12:00:00"
+  },
+  {
+    "event_type": "payment_received",
+    "name":  "cowboy",
+    "account_name": "Credit Union",
+    "amount": 2200.0,
+    "completed_at": "2023-02-18T12:00:00"
+  }
+]

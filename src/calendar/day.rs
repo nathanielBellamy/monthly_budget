@@ -125,16 +125,16 @@ mod day_spec {
         Spec::init(&mut store);
 
         let mut day = Day::new(2023, 6, 6);
-        let payment_event = PaymentEvent(
-            "payment",
-            "My Payment".to_string(),
-            "Big Bank".to_string(),
-            Decimal::new(12345, 2),
-            NaiveDate::from_ymd_opt(2023, 6, 6)
+        let payment_event = PaymentEvent {
+            event_type: "payment".to_string(),
+            name: "My Payment".to_string(),
+            account_name: "Big Bank".to_string(),
+            amount: Decimal::new(12345, 2),
+            completed_at: NaiveDate::from_ymd_opt(2023, 6, 6)
                 .unwrap()
                 .and_hms_opt(12, 00, 00)
                 .unwrap(),
-        );
+        };
 
         assert_eq!(0, day.payments.len());
         day.add_payment_event(payment_event);
@@ -148,16 +148,16 @@ mod day_spec {
         Spec::init(&mut store);
 
         let mut day = Day::new(2023, 6, 6);
-        let payment_event = PaymentEvent(
-            "payment_received",
-            "My Payment Received".to_string(),
-            "Big Bank".to_string(),
-            Decimal::new(12345, 2),
-            NaiveDate::from_ymd_opt(2023, 6, 6)
+        let payment_event = PaymentEvent {
+            event_type: "payment_received".to_string(),
+            name: "My Payment Received".to_string(),
+            account_name: "Big Bank".to_string(),
+            amount: Decimal::new(12345, 2),
+            completed_at: NaiveDate::from_ymd_opt(2023, 6, 6)
                 .unwrap()
                 .and_hms_opt(12, 00, 00)
                 .unwrap(),
-        );
+        };
 
         assert_eq!(0, day.payments_received.len());
         day.add_payment_event(payment_event);
@@ -171,46 +171,46 @@ mod day_spec {
         Spec::init(&mut store);
 
         let mut day = Day::new(2023, 6, 6);
-        day.add_payment_event(PaymentEvent(
-            "payment",
-            "My Payment".to_string(),
-            "New Bank".to_string(),
-            Decimal::new(001, 2),
-            NaiveDate::from_ymd_opt(2023, 6, 6)
+        day.add_payment_event(PaymentEvent {
+            event_type: "payment".to_string(),
+            name: "My Payment".to_string(),
+            account_name: "New Bank".to_string(),
+            amount: Decimal::new(001, 2),
+            completed_at: NaiveDate::from_ymd_opt(2023, 6, 6)
                 .unwrap()
                 .and_hms_opt(12, 00, 01)
                 .unwrap(),
-        ));
-        day.add_payment_event(PaymentEvent(
-            "payment_received",
-            "My Payment Received".to_string(),
-            "New Bank".to_string(),
-            Decimal::new(010, 2),
-            NaiveDate::from_ymd_opt(2023, 6, 6)
+        });
+        day.add_payment_event(PaymentEvent {
+            event_type: "payment_received".to_string(),
+            name: "My Payment Received".to_string(),
+            account_name: "New Bank".to_string(),
+            amount: Decimal::new(010, 2),
+            completed_at: NaiveDate::from_ymd_opt(2023, 6, 6)
                 .unwrap()
                 .and_hms_opt(12, 00, 02)
                 .unwrap(),
-        ));
-        day.add_payment_event(PaymentEvent(
-            "payment",
-            "My Payment".to_string(),
-            "New Bank".to_string(),
-            Decimal::new(100, 2),
-            NaiveDate::from_ymd_opt(2023, 6, 6)
+        });
+        day.add_payment_event(PaymentEvent {
+            event_type: "payment".to_string(),
+            name: "My Payment".to_string(),
+            account_name: "New Bank".to_string(),
+            amount: Decimal::new(100, 2),
+            completed_at: NaiveDate::from_ymd_opt(2023, 6, 6)
                 .unwrap()
                 .and_hms_opt(12, 00, 03)
                 .unwrap(),
-        ));
-        day.add_payment_event(PaymentEvent(
-            "payment_received",
-            "My Payment Received".to_string(),
-            "New Bank".to_string(),
-            Decimal::new(1000, 2),
-            NaiveDate::from_ymd_opt(2023, 6, 6)
+        });
+        day.add_payment_event(PaymentEvent {
+            event_type: "payment_received".to_string(),
+            name: "My Payment Received".to_string(),
+            account_name: "New Bank".to_string(),
+            amount: Decimal::new(1000, 2),
+            completed_at: NaiveDate::from_ymd_opt(2023, 6, 6)
                 .unwrap()
                 .and_hms_opt(12, 00, 04)
                 .unwrap(),
-        ));
+        });
 
         assert_eq!(2, day.payments.len());
         assert_eq!(2, day.payments_received.len());

@@ -2,20 +2,25 @@ use crate::composite::payment_composite::PaymentComposite;
 use crate::composite::payment_received_composite::PaymentReceivedComposite;
 use chrono::NaiveDateTime;
 use rust_decimal::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
-pub struct PaymentEvent(
-    // tuple struct used for generality
-    pub &'static str,  // type 0
-    pub String,        // name 1
-    pub String,        // acc_name 2
-    pub Decimal,       // amount 3
-    pub NaiveDateTime, // completed_at 4
-);
+#[derive(Deserialize, Serialize, Debug)]
+pub struct PaymentEvent {
+    pub event_type: String,
+    pub name: String,
+    pub account_name: String,
+    pub amount: Decimal,
+    pub completed_at: NaiveDateTime,
+}
 
 impl PaymentEvent {
     pub fn clone(&self) -> PaymentEvent {
-        PaymentEvent(self.0, self.1.clone(), self.2.clone(), self.3, self.4)
+        PaymentEvent {
+            event_type: self.event_type.clone(),
+            name: self.name.clone(),
+            account_name: self.account_name.clone(),
+            ..*self
+        }
     }
 }
 
@@ -27,34 +32,34 @@ pub enum PaymentEventComposite {
 
 impl PaymentEvent {
     pub fn to_composite(&self) -> PaymentEventComposite {
-        match self.0 {
+        match self.event_type.as_str() {
             "payment" => PaymentEventComposite::P(PaymentComposite {
                 id: None,
                 account_id: None,
-                account_name: self.2.clone(),
+                account_name: self.account_name.clone(),
                 account_balance_id: None,
                 prev_balance: None,
                 ending_balance: None,
                 amount_id: None,
-                amount_standard: self.3,
+                amount_standard: self.amount,
                 payment_id: None,
-                payment_completed_at: self.4,
+                payment_completed_at: self.completed_at,
                 expense_id: None,
-                expense_name: self.1.clone(),
+                expense_name: self.name.clone(),
             }),
             "payment_received" => PaymentEventComposite::PR(PaymentReceivedComposite {
                 id: None,
                 account_id: None,
-                account_name: self.2.clone(),
+                account_name: self.account_name.clone(),
                 account_balance_id: None,
                 prev_balance: None,
                 ending_balance: None,
                 amount_id: None,
-                amount_standard: self.3,
+                amount_standard: self.amount,
                 payment_received_id: None,
-                payment_received_completed_at: self.4,
+                payment_received_completed_at: self.completed_at,
                 income_id: None,
-                income_name: self.1.clone(),
+                income_name: self.name.clone(),
             }),
             _ => PaymentEventComposite::None,
         }
@@ -74,16 +79,16 @@ mod expense_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        match PaymentEvent(
-            "payment",
-            "My Payment".to_string(),
-            "My Bank Account".to_string(),
-            Decimal::new(123456, 2),
-            NaiveDate::from_ymd_opt(2023, 1, 2)
+        match (PaymentEvent {
+            event_type: "payment".to_string(),
+            name: "My Payment".to_string(),
+            account_name: "My Bank Account".to_string(),
+            amount: Decimal::new(123456, 2),
+            completed_at: NaiveDate::from_ymd_opt(2023, 1, 2)
                 .unwrap()
                 .and_hms_opt(12, 00, 00)
                 .unwrap(),
-        )
+        })
         .to_composite()
         {
             PaymentEventComposite::P(payment) => {
@@ -99,16 +104,16 @@ mod expense_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        match PaymentEvent(
-            "payment_received",
-            "My Payment Received".to_string(),
-            "My Bank Account".to_string(),
-            Decimal::new(123456, 2),
-            NaiveDate::from_ymd_opt(2023, 1, 2)
+        match (PaymentEvent {
+            event_type: "payment_received".to_string(),
+            name: "My Payment Received".to_string(),
+            account_name: "My Bank Account".to_string(),
+            amount: Decimal::new(123456, 2),
+            completed_at: NaiveDate::from_ymd_opt(2023, 1, 2)
                 .unwrap()
                 .and_hms_opt(12, 00, 00)
                 .unwrap(),
-        )
+        })
         .to_composite()
         {
             PaymentEventComposite::PR(payment) => {

@@ -14,7 +14,7 @@ mod traits;
 
 fn main() {
     if let Err(err) =
-        CalendarSliceModel::new(2023, MonthKey::Feb, 2024, MonthKey::Jun, true, "", "").run()
+        CalendarSliceModel::new(2023, MonthKey::Feb, 2023, MonthKey::Mar, true, "", "").run()
     {
         ErrorHandler::log(err);
     }

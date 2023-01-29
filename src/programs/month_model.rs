@@ -11,9 +11,9 @@ use crate::schema::expense::Expense;
 use crate::storage::store::Store;
 use crate::traits::csv_store::CsvStore;
 use chrono::NaiveDate;
-use rust_decimal::Decimal;
 use std::collections::BTreeMap;
 use std::error::Error;
+use std::fs;
 
 pub struct MonthModel {
     year: i32,
@@ -55,12 +55,11 @@ impl MonthModel {
     }
 
     // Model Payments and PaymentsReceived occuring at specific times throughout the specified month
-    // TODO: still early testing
     pub fn run(
         &mut self,
         store_ext: Option<&mut Store>,
         dir: Option<&'static str>,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> core::result::Result<(), Box<dyn Error>> {
         let path: Option<&str> = match dir {
             None => Some("data/init/"),
             Some(directory) => Some(directory),
@@ -147,141 +146,30 @@ impl MonthModel {
         days
     }
 
-    // TODO: PaymentEvent as JSONRecord
     pub fn record_payment_events_in_month(&mut self) {
-        let payment_events = self.payment_events();
+        let payment_events = self.payment_events("example_1").unwrap();
         for payment_event in payment_events.iter() {
             for (_id, day) in self.month.days.iter_mut() {
-                if payment_event.4.date() == day.date {
+                if payment_event.completed_at.date() == day.date {
                     day.add_payment_event(payment_event.clone());
                 }
             }
         }
     }
 
-    pub fn payment_events(&self) -> Vec<PaymentEvent> {
-        // TODO: enum for payment, payment_received
-        vec![
-            PaymentEvent(
-                "payment_received",
-                "Spaceman".to_string(),
-                "Big Bank".to_string(),
-                Decimal::new(10000, 0),
-                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 6)
-                    .unwrap()
-                    .and_hms_opt(12, 00, 00)
-                    .unwrap(),
-            ),
-            PaymentEvent(
-                "payment_received",
-                "Cowboy".to_string(),
-                "Credit Union".to_string(),
-                Decimal::new(10000, 0),
-                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 20)
-                    .unwrap()
-                    .and_hms_opt(12, 00, 00)
-                    .unwrap(),
-            ),
-            PaymentEvent(
-                "payment",
-                "Mortgage".to_string(),
-                "Big Bank".to_string(),
-                Decimal::new(3100, 0),
-                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 10)
-                    .unwrap()
-                    .and_hms_opt(15, 00, 00)
-                    .unwrap(),
-            ),
-            PaymentEvent(
-                "payment",
-                "Natural Gas".to_string(),
-                "Credit Union".to_string(),
-                Decimal::new(125, 0),
-                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 6)
-                    .unwrap()
-                    .and_hms_opt(15, 00, 00)
-                    .unwrap(),
-            ),
-            PaymentEvent(
-                "payment",
-                "Natural Gas".to_string(),
-                "Credit Union".to_string(),
-                Decimal::new(125, 0),
-                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 6)
-                    .unwrap()
-                    .and_hms_opt(15, 00, 00)
-                    .unwrap(),
-            ),
-            PaymentEvent(
-                "payment",
-                "Cable".to_string(),
-                "Big Bank".to_string(),
-                Decimal::new(80, 0),
-                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 10)
-                    .unwrap()
-                    .and_hms_opt(15, 00, 00)
-                    .unwrap(),
-            ),
-            PaymentEvent(
-                "payment",
-                "Garbage/Recycling".to_string(),
-                "Credit Union".to_string(),
-                Decimal::new(60, 0),
-                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 2)
-                    .unwrap()
-                    .and_hms_opt(15, 00, 00)
-                    .unwrap(),
-            ),
-            PaymentEvent(
-                "payment",
-                "Groceries".to_string(),
-                "Big Bank".to_string(),
-                Decimal::new(250, 0),
-                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 7)
-                    .unwrap()
-                    .and_hms_opt(15, 00, 00)
-                    .unwrap(),
-            ),
-            PaymentEvent(
-                "payment",
-                "Groceries".to_string(),
-                "Big Bank".to_string(),
-                Decimal::new(250, 0),
-                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 14)
-                    .unwrap()
-                    .and_hms_opt(15, 00, 00)
-                    .unwrap(),
-            ),
-            PaymentEvent(
-                "payment",
-                "Groceries".to_string(),
-                "Credit Union".to_string(),
-                Decimal::new(250, 0),
-                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 21)
-                    .unwrap()
-                    .and_hms_opt(15, 00, 00)
-                    .unwrap(),
-            ),
-            PaymentEvent(
-                "payment",
-                "Groceries".to_string(),
-                "Big Bank".to_string(),
-                Decimal::new(250, 0),
-                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 28)
-                    .unwrap()
-                    .and_hms_opt(15, 00, 00)
-                    .unwrap(),
-            ),
-            PaymentEvent(
-                "payment",
-                "Dog Food".to_string(),
-                "Big Bank".to_string(),
-                Decimal::new(4699, 2),
-                NaiveDate::from_ymd_opt(self.year, Month::id(self.key), 17)
-                    .unwrap()
-                    .and_hms_opt(13, 00, 00)
-                    .unwrap(),
-            ),
-        ]
+    // Parse Payment Events from JSON
+    // TODO: implement JS front end that passes the JSONs
+    pub fn payment_events(
+        &self,
+        root: &'static str,
+    ) -> core::result::Result<Vec<PaymentEvent>, Box<dyn Error>> {
+        let path = format!(
+            "data/json/{root}/{:?}_{:?}.json",
+            self.year,
+            Month::id(self.key)
+        );
+        let data: String = fs::read_to_string(path)?.parse()?;
+        let payment_events: Vec<PaymentEvent> = serde_json::from_str(&data)?;
+        Ok(payment_events)
     }
 }

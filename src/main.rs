@@ -13,8 +13,16 @@ mod test;
 mod traits;
 
 fn main() {
-    if let Err(err) =
-        CalendarSliceModel::new(2023, MonthKey::Feb, 2023, MonthKey::Mar, true, "", "").run()
+    if let Err(err) = CalendarSliceModel::new(
+        2023,
+        MonthKey::Feb,
+        2023,
+        MonthKey::Mar,
+        true,
+        "data/init/",
+        "data/",
+    )
+    .run("example_1")
     {
         ErrorHandler::log(err);
     }

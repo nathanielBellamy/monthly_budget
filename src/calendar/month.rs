@@ -1,4 +1,5 @@
 use crate::calendar::day::DayStore;
+use crate::calendar::year_month::YearMonth;
 use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
@@ -12,11 +13,11 @@ pub struct Month {
 
 impl Month {
     #[allow(unused)]
-    pub fn new(year: i32, key: MonthKey) -> Month {
+    pub fn new(year_month: YearMonth) -> Month {
         Month {
-            key,
+            key: year_month.1,
             days: DayStore::new(),
-            year,
+            year: year_month.0,
         }
     }
 
@@ -73,6 +74,26 @@ impl Month {
             MonthKey::Oct => 10,
             MonthKey::Nov => 11,
             MonthKey::Dec => 12,
+            MonthKey::None => 0,
+        }
+    }
+
+    pub fn key_from_id(id: u32) -> MonthKey {
+        // u32 expected by NaiveDate
+        match id {
+            1 => MonthKey::Jan,
+            2 => MonthKey::Feb,
+            3 => MonthKey::Mar,
+            4 => MonthKey::Apr,
+            5 => MonthKey::May,
+            6 => MonthKey::Jun,
+            7 => MonthKey::Jul,
+            8 => MonthKey::Aug,
+            9 => MonthKey::Sep,
+            10 => MonthKey::Oct,
+            11 => MonthKey::Nov,
+            12 => MonthKey::Dec,
+            _ => MonthKey::None,
         }
     }
 
@@ -91,6 +112,7 @@ impl Month {
             MonthKey::Oct => 31,
             MonthKey::Nov => 30,
             MonthKey::Dec => 31,
+            MonthKey::None => 0,
         }
     }
 
@@ -109,6 +131,7 @@ impl Month {
             MonthKey::Oct => MonthKey::Nov,
             MonthKey::Nov => MonthKey::Dec,
             MonthKey::Dec => MonthKey::Jan,
+            MonthKey::None => MonthKey::None,
         }
     }
 
@@ -132,6 +155,7 @@ impl Month {
             MonthKey::Oct => "October",
             MonthKey::Nov => "November",
             MonthKey::Dec => "December",
+            MonthKey::None => "Invalid MonthKey",
         }
     }
 
@@ -150,11 +174,12 @@ impl Month {
             MonthKey::Oct => "10",
             MonthKey::Nov => "11",
             MonthKey::Dec => "12",
+            MonthKey::None => "Invalid MonthKey",
         }
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Eq, PartialOrd, Ord, Clone, Copy, Debug, PartialEq)]
 #[allow(unused)]
 pub enum MonthKey {
     Jan,
@@ -169,6 +194,7 @@ pub enum MonthKey {
     Oct,
     Nov,
     Dec,
+    None,
 }
 
 #[cfg(test)]
@@ -183,7 +209,7 @@ mod tests {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let res = Month::new(2023, MonthKey::Jan);
+        let res = Month::new(YearMonth(2023, MonthKey::Jan));
         assert_eq!("January", res.name());
     }
 }

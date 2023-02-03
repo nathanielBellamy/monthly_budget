@@ -1,9 +1,10 @@
 use crate::calendar::day::{Day, DayStore};
 use crate::calendar::month::{Month, MonthKey};
+use crate::calendar::year_month::YearMonth;
 use crate::composite::account_summary::AccountSummary;
 use crate::composite::payment_composite::PaymentCompositeStore;
 use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
-use crate::composite::payment_event::PaymentEvent;
+use crate::composite::payment_event::PaymentEventStore;
 use crate::composite::payment_received_composite::PaymentReceivedCompositeStore;
 use crate::composite::payment_summary::PaymentSummary;
 use crate::composite::payment_summary::PaymentSummaryStore;
@@ -13,7 +14,6 @@ use crate::traits::csv_store::CsvStore;
 use chrono::NaiveDate;
 use std::collections::BTreeMap;
 use std::error::Error;
-use std::fs;
 
 pub struct MonthModel {
     year: i32,
@@ -28,8 +28,7 @@ pub struct MonthModel {
 
 impl MonthModel {
     pub fn new(
-        year: i32,
-        month_key: MonthKey,
+        year_month: YearMonth,
         output_results: bool,
         path_in: Option<&'static str>,
         path_out: Option<&'static str>,
@@ -45,9 +44,9 @@ impl MonthModel {
         };
 
         MonthModel {
-            key: month_key,
-            year,
-            month: Month::new(year, month_key),
+            key: year_month.1,
+            year: year_month.0,
+            month: Month::new(year_month),
             output_results,
             path_in: data_in,
             path_out: data_out,
@@ -57,9 +56,10 @@ impl MonthModel {
     // Model Payments and PaymentsReceived occuring at specific times throughout the specified month
     pub fn run(
         &mut self,
+        payment_events: &PaymentEventStore,
         store_ext: Option<&mut Store>,
         dir: Option<&'static str>,
-    ) -> core::result::Result<(), Box<dyn Error>> {
+    ) -> Result<(), Box<dyn Error>> {
         let path: Option<&str> = match dir {
             None => Some("data/init/"),
             Some(directory) => Some(directory),
@@ -80,7 +80,7 @@ impl MonthModel {
             year: self.year,
         };
 
-        self.record_payment_events_in_month();
+        self.record_payment_events_in_month(payment_events);
 
         // iterate through the days and execute payments in order
         // each payment event mutates store
@@ -128,6 +128,7 @@ impl MonthModel {
         payment_summary_store
     }
 
+    // TODO: leap years
     pub fn construct_days(year: i32, month: MonthKey) -> DayStore {
         let length: u32 = Month::length(month);
         let month_id: u32 = Month::id(month);
@@ -146,30 +147,66 @@ impl MonthModel {
         days
     }
 
-    pub fn record_payment_events_in_month(&mut self) {
-        let payment_events = self.payment_events("example_1").unwrap();
-        for payment_event in payment_events.iter() {
+    pub fn record_payment_events_in_month(&mut self, payment_events: &PaymentEventStore) {
+        for (_id, payment_event) in payment_events.iter() {
             for (_id, day) in self.month.days.iter_mut() {
+                // inner loop is O(1)
                 if payment_event.completed_at.date() == day.date {
-                    day.add_payment_event(payment_event.clone());
+                    day.add_payment_event(payment_event);
                 }
             }
         }
     }
+}
 
-    // Parse Payment Events from JSON
-    // TODO: implement JS front end that passes the JSONs
-    pub fn payment_events(
-        &self,
-        root: &'static str,
-    ) -> core::result::Result<Vec<PaymentEvent>, Box<dyn Error>> {
-        let path = format!(
-            "data/json/{root}/{:?}_{:?}.json",
-            self.year,
-            Month::id(self.key)
-        );
-        let data: String = fs::read_to_string(path)?.parse()?;
-        let payment_events: Vec<PaymentEvent> = serde_json::from_str(&data)?;
-        Ok(payment_events)
+#[cfg(test)]
+mod month_model_spec {
+    use super::*;
+    // use crate::test::spec::Spec;
+    // use chrono::NaiveDate;
+
+    pub fn model() -> MonthModel {
+        MonthModel::new(
+            YearMonth(2023, MonthKey::Feb),
+            false,
+            Some("src/test/data/init"),
+            None,
+        )
+    }
+
+    //TODO: specs
+    #[test]
+    #[allow(non_snake_case)]
+    fn record_payment_events_in_month__adds_payment_composites_to_days() {
+        let _model = model();
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn construct_days__returns_daystore_of_length_equal_to_days_in_month() {
+        let jan_days = MonthModel::construct_days(2023, MonthKey::Jan);
+        assert_eq!(31, jan_days.len());
+        let feb_days = MonthModel::construct_days(2023, MonthKey::Feb);
+        assert_eq!(28, feb_days.len());
+        let mar_days = MonthModel::construct_days(2023, MonthKey::Mar);
+        assert_eq!(31, mar_days.len());
+        let apr_days = MonthModel::construct_days(2023, MonthKey::Apr);
+        assert_eq!(30, apr_days.len());
+        let may_days = MonthModel::construct_days(2023, MonthKey::May);
+        assert_eq!(31, may_days.len());
+        let jun_days = MonthModel::construct_days(2023, MonthKey::Jun);
+        assert_eq!(30, jun_days.len());
+        let jul_days = MonthModel::construct_days(2023, MonthKey::Jul);
+        assert_eq!(31, jul_days.len());
+        let aug_days = MonthModel::construct_days(2023, MonthKey::Aug);
+        assert_eq!(31, aug_days.len());
+        let sep_days = MonthModel::construct_days(2023, MonthKey::Sep);
+        assert_eq!(30, sep_days.len());
+        let oct_days = MonthModel::construct_days(2023, MonthKey::Oct);
+        assert_eq!(31, oct_days.len());
+        let nov_days = MonthModel::construct_days(2023, MonthKey::Nov);
+        assert_eq!(30, nov_days.len());
+        let dec_days = MonthModel::construct_days(2023, MonthKey::Dec);
+        assert_eq!(31, dec_days.len());
     }
 }

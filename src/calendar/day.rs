@@ -50,7 +50,7 @@ impl Day {
             date: NaiveDate::from_ymd_opt(year, month, day).unwrap(),
         }
     }
-    pub fn add_payment_event(&mut self, payment_event: PaymentEvent) {
+    pub fn add_payment_event(&mut self, payment_event: &PaymentEvent) {
         match payment_event.to_composite() {
             PaymentEventComposite::P(pymnt_composite) => self.add_payment(pymnt_composite),
             PaymentEventComposite::PR(pymnt_rec_composite) => {
@@ -126,6 +126,7 @@ mod day_spec {
 
         let mut day = Day::new(2023, 6, 6);
         let payment_event = PaymentEvent {
+            id: None,
             event_type: "payment".to_string(),
             name: "My Payment".to_string(),
             account_name: "Big Bank".to_string(),
@@ -137,7 +138,7 @@ mod day_spec {
         };
 
         assert_eq!(0, day.payments.len());
-        day.add_payment_event(payment_event);
+        day.add_payment_event(&payment_event);
         assert_eq!(1, day.payments.len());
     }
 
@@ -149,6 +150,7 @@ mod day_spec {
 
         let mut day = Day::new(2023, 6, 6);
         let payment_event = PaymentEvent {
+            id: None,
             event_type: "payment_received".to_string(),
             name: "My Payment Received".to_string(),
             account_name: "Big Bank".to_string(),
@@ -160,7 +162,7 @@ mod day_spec {
         };
 
         assert_eq!(0, day.payments_received.len());
-        day.add_payment_event(payment_event);
+        day.add_payment_event(&payment_event);
         assert_eq!(1, day.payments_received.len());
     }
 
@@ -171,7 +173,8 @@ mod day_spec {
         Spec::init(&mut store);
 
         let mut day = Day::new(2023, 6, 6);
-        day.add_payment_event(PaymentEvent {
+        day.add_payment_event(&PaymentEvent {
+            id: None,
             event_type: "payment".to_string(),
             name: "My Payment".to_string(),
             account_name: "New Bank".to_string(),
@@ -181,7 +184,8 @@ mod day_spec {
                 .and_hms_opt(12, 00, 01)
                 .unwrap(),
         });
-        day.add_payment_event(PaymentEvent {
+        day.add_payment_event(&PaymentEvent {
+            id: None,
             event_type: "payment_received".to_string(),
             name: "My Payment Received".to_string(),
             account_name: "New Bank".to_string(),
@@ -191,7 +195,8 @@ mod day_spec {
                 .and_hms_opt(12, 00, 02)
                 .unwrap(),
         });
-        day.add_payment_event(PaymentEvent {
+        day.add_payment_event(&PaymentEvent {
+            id: None,
             event_type: "payment".to_string(),
             name: "My Payment".to_string(),
             account_name: "New Bank".to_string(),
@@ -201,7 +206,8 @@ mod day_spec {
                 .and_hms_opt(12, 00, 03)
                 .unwrap(),
         });
-        day.add_payment_event(PaymentEvent {
+        day.add_payment_event(&PaymentEvent {
+            id: None,
             event_type: "payment_received".to_string(),
             name: "My Payment Received".to_string(),
             account_name: "New Bank".to_string(),

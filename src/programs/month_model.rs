@@ -1,6 +1,7 @@
 use crate::calendar::day::{Day, DayStore};
-use crate::calendar::month::{Month, MonthKey};
-use crate::calendar::year_month::YearMonth;
+use crate::calendar::month::Month;
+use crate::calendar::month_key::MonthKey as MK;
+use crate::calendar::year_month::YearMonth as YM;
 use crate::composite::account_summary::AccountSummary;
 use crate::composite::payment_composite::PaymentCompositeStore;
 use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
@@ -17,7 +18,7 @@ use std::error::Error;
 
 pub struct MonthModel {
     year: i32,
-    key: MonthKey,
+    key: MK,
     month: Month,
     output_results: bool,
     #[allow(unused)]
@@ -28,7 +29,7 @@ pub struct MonthModel {
 
 impl MonthModel {
     pub fn new(
-        year_month: YearMonth,
+        year_month: YM,
         output_results: bool,
         path_in: Option<&'static str>,
         path_out: Option<&'static str>,
@@ -44,8 +45,8 @@ impl MonthModel {
         };
 
         MonthModel {
-            key: year_month.1,
-            year: year_month.0,
+            key: year_month.month,
+            year: year_month.year,
             month: Month::new(year_month),
             output_results,
             path_in: data_in,
@@ -129,7 +130,7 @@ impl MonthModel {
     }
 
     // TODO: leap years
-    pub fn construct_days(year: i32, month: MonthKey) -> DayStore {
+    pub fn construct_days(year: i32, month: MK) -> DayStore {
         let length: u32 = Month::length(month);
         let month_id: u32 = Month::id(month);
         let mut days: DayStore = BTreeMap::new();
@@ -167,7 +168,7 @@ mod month_model_spec {
 
     pub fn model() -> MonthModel {
         MonthModel::new(
-            YearMonth(2023, MonthKey::Feb),
+            YM::new(2023, MK::Feb),
             false,
             Some("src/test/data/init"),
             None,
@@ -184,29 +185,29 @@ mod month_model_spec {
     #[test]
     #[allow(non_snake_case)]
     fn construct_days__returns_daystore_of_length_equal_to_days_in_month() {
-        let jan_days = MonthModel::construct_days(2023, MonthKey::Jan);
+        let jan_days = MonthModel::construct_days(2023, MK::Jan);
         assert_eq!(31, jan_days.len());
-        let feb_days = MonthModel::construct_days(2023, MonthKey::Feb);
+        let feb_days = MonthModel::construct_days(2023, MK::Feb);
         assert_eq!(28, feb_days.len());
-        let mar_days = MonthModel::construct_days(2023, MonthKey::Mar);
+        let mar_days = MonthModel::construct_days(2023, MK::Mar);
         assert_eq!(31, mar_days.len());
-        let apr_days = MonthModel::construct_days(2023, MonthKey::Apr);
+        let apr_days = MonthModel::construct_days(2023, MK::Apr);
         assert_eq!(30, apr_days.len());
-        let may_days = MonthModel::construct_days(2023, MonthKey::May);
+        let may_days = MonthModel::construct_days(2023, MK::May);
         assert_eq!(31, may_days.len());
-        let jun_days = MonthModel::construct_days(2023, MonthKey::Jun);
+        let jun_days = MonthModel::construct_days(2023, MK::Jun);
         assert_eq!(30, jun_days.len());
-        let jul_days = MonthModel::construct_days(2023, MonthKey::Jul);
+        let jul_days = MonthModel::construct_days(2023, MK::Jul);
         assert_eq!(31, jul_days.len());
-        let aug_days = MonthModel::construct_days(2023, MonthKey::Aug);
+        let aug_days = MonthModel::construct_days(2023, MK::Aug);
         assert_eq!(31, aug_days.len());
-        let sep_days = MonthModel::construct_days(2023, MonthKey::Sep);
+        let sep_days = MonthModel::construct_days(2023, MK::Sep);
         assert_eq!(30, sep_days.len());
-        let oct_days = MonthModel::construct_days(2023, MonthKey::Oct);
+        let oct_days = MonthModel::construct_days(2023, MK::Oct);
         assert_eq!(31, oct_days.len());
-        let nov_days = MonthModel::construct_days(2023, MonthKey::Nov);
+        let nov_days = MonthModel::construct_days(2023, MK::Nov);
         assert_eq!(30, nov_days.len());
-        let dec_days = MonthModel::construct_days(2023, MonthKey::Dec);
+        let dec_days = MonthModel::construct_days(2023, MK::Dec);
         assert_eq!(31, dec_days.len());
     }
 }

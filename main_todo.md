@@ -52,20 +52,28 @@
 
 - impliment csv_index
   - provide index data stores
-  - `BTreeMap<my_searchable_column_type: any, record_id: usize>`
+  - `BTreeMap<my_searchable_column: T, record_id: usize>`
 
 - understand why serde doesn't like deserializing into `&str`
   - you may notice that structs use `String` for name values: this is why
+  - maybe because it would just be deserializing into a string and then returning a slice of the whole string and by nature serde cannot know the size of the strings it will deserialize at compile time
 
 - originally, I was thinking that this would start as a Rust repo and transform into a TS/RustWasm repo
   - but it looks like it maybe makes more sense to fork
     - either way, this repo will continue as a CSV/JSON command-line tool
     - and then it will be forked/copied and adapted to exist in a web environment using RustWasm
   - in the RustWasm environment, we won't be storing payment events in JS, we'll be storing them in Rust
-  - so really want we want is to store events in month bins in Rust and expose an "add payment_event(year: number, month: string)" function to JS
+  - so really we want to store events in month bins in Rust and expose an "add payment_event(year: number, month: string)" function to JS
   - storage is `PaymentEventMonthBins = BTreeMap<YearMonth, PaymentEventStore>`
   - the ux flow is:
     - User adds an event through the UI
     - Event is stored in `PaymentEventMonthBins`
     - User hits `RunSim`
       - this function accesses the data and performs the mutations to store
+
+- waiting to see a good use of TupleStructs
+  - it's happened 2-3 times now that I've implimented a tuple struct, built things around/with it, and then went on to turn it into a regular struct
+  - nice to be able to instantiate things with just `TupleStruct(val1, val2, val3)`
+  - but not worth the readability cost of trading `.field_name` for `.0`
+  - especially when all you need is `::new()`
+  - maybe they take up less memory?

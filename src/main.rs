@@ -1,7 +1,8 @@
+use crate::calendar::year_month::YearMonth as YM;
 use crate::error::error_handler::ErrorHandler;
 use crate::programs::calendar_slice_model::CalendarSliceModel;
 // temp
-use crate::calendar::month::MonthKey;
+use crate::calendar::month_key::MonthKey as MK;
 
 mod calendar;
 mod composite;
@@ -14,10 +15,8 @@ mod traits;
 
 fn main() {
     if let Err(err) = CalendarSliceModel::new(
-        2023,
-        MonthKey::Feb,
-        2023,
-        MonthKey::Mar,
+        YM::new(2023, MK::Feb),
+        YM::new(2023, MK::Mar),
         true,
         "data/init/",
         "data/",

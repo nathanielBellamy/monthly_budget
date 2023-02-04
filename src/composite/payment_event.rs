@@ -1,5 +1,5 @@
 use crate::calendar::month::Month;
-use crate::calendar::year_month::YearMonth;
+use crate::calendar::year_month::YearMonth as YM;
 use crate::composite::payment_composite::PaymentComposite;
 use crate::composite::payment_received_composite::PaymentReceivedComposite;
 use crate::traits::csv_record::CsvRecord;
@@ -30,7 +30,7 @@ pub enum PaymentEventComposite {
 type PaymentEventFetchResult = Result<Vec<PaymentEvent>, Box<dyn Error>>;
 type PaymentEventBinResult = Result<PaymentEventBinStore, Box<dyn Error>>;
 
-pub type PaymentEventBinStore = BTreeMap<YearMonth, PaymentEventStore>;
+pub type PaymentEventBinStore = BTreeMap<YM, PaymentEventStore>;
 pub type PaymentEventStore = BTreeMap<usize, PaymentEvent>;
 
 impl CsvRecord<PaymentEvent> for PaymentEvent {
@@ -69,7 +69,7 @@ impl PaymentEvent {
             let year = payment_event.completed_at.year();
             let month = payment_event.completed_at.month();
             let store = bin_store
-                .entry(YearMonth(year, Month::key_from_id(month)))
+                .entry(YM::new(year, Month::key_from_id(month)))
                 .or_default();
             PaymentEvent::save_to_store(payment_event, store);
         }
@@ -114,7 +114,7 @@ impl PaymentEvent {
 #[cfg(test)]
 mod expense_spec {
     use super::*;
-    use crate::calendar::month::MonthKey;
+    use crate::calendar::month_key::MonthKey as MK;
     use crate::storage::store::Store;
     use crate::test::spec::Spec;
     use chrono::NaiveDate;
@@ -149,7 +149,7 @@ mod expense_spec {
         assert_eq!(bin_store.len(), 2);
 
         let feb_store = bin_store
-            .entry(YearMonth(2023_i32, MonthKey::Feb))
+            .entry(YM::new(2023_i32, MK::Feb))
             .or_insert(PaymentEventStore::new());
         assert_eq!(feb_store.len(), 3);
 

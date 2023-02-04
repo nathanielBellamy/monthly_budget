@@ -1,23 +1,23 @@
 use crate::calendar::day::DayStore;
-use crate::calendar::year_month::YearMonth;
+use crate::calendar::month_key::MonthKey as MK;
+use crate::calendar::year_month::YearMonth as YM;
 use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 
 #[derive(Debug)]
 pub struct Month {
-    pub key: MonthKey,
+    pub key: MK,
     pub days: DayStore,
     pub year: i32,
 }
 
 impl Month {
-    #[allow(unused)]
-    pub fn new(year_month: YearMonth) -> Month {
+    pub fn new(year_month: YM) -> Month {
         Month {
-            key: year_month.1,
+            key: year_month.month,
             days: DayStore::new(),
-            year: year_month.0,
+            year: year_month.year,
         }
     }
 
@@ -59,79 +59,79 @@ impl Month {
         store
     }
 
-    pub fn id(month: MonthKey) -> u32 {
+    pub fn id(month: MK) -> u32 {
         // u32 expected by NaiveDate
         match month {
-            MonthKey::Jan => 1,
-            MonthKey::Feb => 2,
-            MonthKey::Mar => 3,
-            MonthKey::Apr => 4,
-            MonthKey::May => 5,
-            MonthKey::Jun => 6,
-            MonthKey::Jul => 7,
-            MonthKey::Aug => 8,
-            MonthKey::Sep => 9,
-            MonthKey::Oct => 10,
-            MonthKey::Nov => 11,
-            MonthKey::Dec => 12,
-            MonthKey::None => 0,
+            MK::Jan => 1,
+            MK::Feb => 2,
+            MK::Mar => 3,
+            MK::Apr => 4,
+            MK::May => 5,
+            MK::Jun => 6,
+            MK::Jul => 7,
+            MK::Aug => 8,
+            MK::Sep => 9,
+            MK::Oct => 10,
+            MK::Nov => 11,
+            MK::Dec => 12,
+            MK::None => 0,
         }
     }
 
-    pub fn key_from_id(id: u32) -> MonthKey {
+    pub fn key_from_id(id: u32) -> MK {
         // u32 expected by NaiveDate
         match id {
-            1 => MonthKey::Jan,
-            2 => MonthKey::Feb,
-            3 => MonthKey::Mar,
-            4 => MonthKey::Apr,
-            5 => MonthKey::May,
-            6 => MonthKey::Jun,
-            7 => MonthKey::Jul,
-            8 => MonthKey::Aug,
-            9 => MonthKey::Sep,
-            10 => MonthKey::Oct,
-            11 => MonthKey::Nov,
-            12 => MonthKey::Dec,
-            _ => MonthKey::None,
+            1 => MK::Jan,
+            2 => MK::Feb,
+            3 => MK::Mar,
+            4 => MK::Apr,
+            5 => MK::May,
+            6 => MK::Jun,
+            7 => MK::Jul,
+            8 => MK::Aug,
+            9 => MK::Sep,
+            10 => MK::Oct,
+            11 => MK::Nov,
+            12 => MK::Dec,
+            _ => MK::None,
         }
     }
 
-    pub fn length(month: MonthKey) -> u32 {
+    pub fn length(month: MK) -> u32 {
         // u32 expected by NaiveDate
         match month {
-            MonthKey::Jan => 31,
-            MonthKey::Feb => 28,
-            MonthKey::Mar => 31,
-            MonthKey::Apr => 30,
-            MonthKey::May => 31,
-            MonthKey::Jun => 30,
-            MonthKey::Jul => 31,
-            MonthKey::Aug => 31,
-            MonthKey::Sep => 30,
-            MonthKey::Oct => 31,
-            MonthKey::Nov => 30,
-            MonthKey::Dec => 31,
-            MonthKey::None => 0,
+            MK::Jan => 31,
+            MK::Feb => 28,
+            MK::Mar => 31,
+            MK::Apr => 30,
+            MK::May => 31,
+            MK::Jun => 30,
+            MK::Jul => 31,
+            MK::Aug => 31,
+            MK::Sep => 30,
+            MK::Oct => 31,
+            MK::Nov => 30,
+            MK::Dec => 31,
+            MK::None => 0,
         }
     }
 
-    pub fn next_month(month: MonthKey) -> MonthKey {
+    pub fn next_month(month: MK) -> MK {
         // u32 expected by NaiveDate
         match month {
-            MonthKey::Jan => MonthKey::Feb,
-            MonthKey::Feb => MonthKey::Mar,
-            MonthKey::Mar => MonthKey::Apr,
-            MonthKey::Apr => MonthKey::May,
-            MonthKey::May => MonthKey::Jun,
-            MonthKey::Jun => MonthKey::Jul,
-            MonthKey::Jul => MonthKey::Aug,
-            MonthKey::Aug => MonthKey::Sep,
-            MonthKey::Sep => MonthKey::Oct,
-            MonthKey::Oct => MonthKey::Nov,
-            MonthKey::Nov => MonthKey::Dec,
-            MonthKey::Dec => MonthKey::Jan,
-            MonthKey::None => MonthKey::None,
+            MK::Jan => MK::Feb,
+            MK::Feb => MK::Mar,
+            MK::Mar => MK::Apr,
+            MK::Apr => MK::May,
+            MK::May => MK::Jun,
+            MK::Jun => MK::Jul,
+            MK::Jul => MK::Aug,
+            MK::Aug => MK::Sep,
+            MK::Sep => MK::Oct,
+            MK::Oct => MK::Nov,
+            MK::Nov => MK::Dec,
+            MK::Dec => MK::Jan,
+            MK::None => MK::None,
         }
     }
 
@@ -141,60 +141,42 @@ impl Month {
     }
 
     #[allow(unused)]
-    pub fn display_name(month: MonthKey) -> &'static str {
+    pub fn display_name(month: MK) -> &'static str {
         match month {
-            MonthKey::Jan => "January",
-            MonthKey::Feb => "February",
-            MonthKey::Mar => "March",
-            MonthKey::Apr => "April",
-            MonthKey::May => "May",
-            MonthKey::Jun => "June",
-            MonthKey::Jul => "July",
-            MonthKey::Aug => "August",
-            MonthKey::Sep => "September",
-            MonthKey::Oct => "October",
-            MonthKey::Nov => "November",
-            MonthKey::Dec => "December",
-            MonthKey::None => "Invalid MonthKey",
+            MK::Jan => "January",
+            MK::Feb => "February",
+            MK::Mar => "March",
+            MK::Apr => "April",
+            MK::May => "May",
+            MK::Jun => "June",
+            MK::Jul => "July",
+            MK::Aug => "August",
+            MK::Sep => "September",
+            MK::Oct => "October",
+            MK::Nov => "November",
+            MK::Dec => "December",
+            MK::None => "Invalid MonthKey",
         }
     }
 
     #[allow(unused)]
     pub fn display_number(&self) -> &str {
         match self.key {
-            MonthKey::Jan => "01",
-            MonthKey::Feb => "02",
-            MonthKey::Mar => "03",
-            MonthKey::Apr => "04",
-            MonthKey::May => "05",
-            MonthKey::Jun => "06",
-            MonthKey::Jul => "07",
-            MonthKey::Aug => "08",
-            MonthKey::Sep => "09",
-            MonthKey::Oct => "10",
-            MonthKey::Nov => "11",
-            MonthKey::Dec => "12",
-            MonthKey::None => "Invalid MonthKey",
+            MK::Jan => "01",
+            MK::Feb => "02",
+            MK::Mar => "03",
+            MK::Apr => "04",
+            MK::May => "05",
+            MK::Jun => "06",
+            MK::Jul => "07",
+            MK::Aug => "08",
+            MK::Sep => "09",
+            MK::Oct => "10",
+            MK::Nov => "11",
+            MK::Dec => "12",
+            MK::None => "Invalid MonthKey",
         }
     }
-}
-
-#[derive(Eq, PartialOrd, Ord, Clone, Copy, Debug, PartialEq)]
-#[allow(unused)]
-pub enum MonthKey {
-    Jan,
-    Feb,
-    Mar,
-    Apr,
-    May,
-    Jun,
-    Jul,
-    Aug,
-    Sep,
-    Oct,
-    Nov,
-    Dec,
-    None,
 }
 
 #[cfg(test)]
@@ -209,7 +191,7 @@ mod tests {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let res = Month::new(YearMonth(2023, MonthKey::Jan));
+        let res = Month::new(YM::new(2023, MK::Jan));
         assert_eq!("January", res.name());
     }
 }

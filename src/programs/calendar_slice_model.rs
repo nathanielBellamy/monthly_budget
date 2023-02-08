@@ -9,8 +9,8 @@ pub struct CalendarSliceModel {
     start: YM,
     end: YM,
     output_results: bool,
-    path_in: Option<&'static str>,
-    path_out: Option<&'static str>,
+    path_in: String,
+    path_out: String,
 }
 
 type CalendarSliceModelResult = Result<(), Box<dyn Error>>;
@@ -20,21 +20,21 @@ impl CalendarSliceModel {
         start: YM,
         end: YM,
         output_results: bool,
-        path_in: &'static str,
-        path_out: &'static str,
+        path_in: String,
+        path_out: String,
     ) -> CalendarSliceModel {
         CalendarSliceModel {
             start,
             end,
             output_results,
-            path_in: Some(path_in),
-            path_out: Some(path_out),
+            path_in,
+            path_out,
         }
     }
 
-    pub fn run(&self, dir: &'static str) -> CalendarSliceModelResult {
+    pub fn run(&self, dir: String) -> CalendarSliceModelResult {
         let mut store = Store::new();
-        store.init(self.path_in)?;
+        store.init(Some(self.path_in.clone()))?;
 
         let year_slice = CalendarSlice::new(self.start, self.end)?;
         // TODO: accept JSON or CSV
@@ -53,7 +53,7 @@ impl CalendarSliceModel {
         }
 
         if self.output_results {
-            store.write_to_csv(self.path_out)?;
+            store.write_to_csv(Some(self.path_out.clone()))?;
         }
 
         Ok(())

@@ -19,8 +19,9 @@ mod traits;
 fn main() {
     let cli = Cli::parse();
 
-    println!("Value for input: {}", cli.input);
-    println!("Value for out: {}", cli.output);
+    println!("Inputs from: {:?}", cli.input);
+    println!("Outputs to: {:?}", cli.output);
+    println!("Reads PaymentEvent JSON from: {:?}", cli.example);
 
     if let Err(err) = CalendarSliceModel::new(
         YM::new(2023, MK::Feb),
@@ -29,22 +30,8 @@ fn main() {
         cli.input,
         cli.output,
     )
-    .run("example_1".to_string())
+    .run(cli.example)
     {
         ErrorHandler::log(err);
     }
 }
-
-//    let matches = Command::new("Monthly Budget")
-//     .version("0.1")
-//     .author("Nathan S <nbschieber@gmail.com>")
-//     .about("Budgetary CSV & JSON Processing in Rust")
-//     .arg(arg!(--input <VALUE>).required(true))
-//     .arg(arg!(--output <VALUE>).required(true))
-//     .get_matches();
-
-// panic!(
-//     "input: {:?}, output: {:?}",
-//     matches.get_one::<String>("input").expect("required"),
-//     matches.get_one::<String>("output").expect("required"),
-// );

@@ -23,7 +23,9 @@ fn main() {
     println!("Inputs from: {:?}", cli.input);
     println!("Outputs to: {:?}", cli.output);
 
-    if let Err(err) = CalendarSliceModel::new(start, end, true, cli.input, cli.output).run() {
+    if let Err(err) =
+        CalendarSliceModel::new(start, end, true, cli.input, cli.output).run(cli.payment_events)
+    {
         ErrorHandler::log(err);
     }
 }

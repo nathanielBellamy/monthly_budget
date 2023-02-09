@@ -7,8 +7,8 @@ pub struct Cli {
     pub input: String,
     #[arg(short, long, default_value_t = String::from("data/"))]
     pub output: String,
-    #[arg(short, long, default_value_t = String::from("example_1/"))]
-    pub transactions: String,
+    #[arg(short, long, default_value_t = String::from("example_1"))]
+    pub payment_events: String,
 
     #[arg(short, long)]
     pub endym: String,

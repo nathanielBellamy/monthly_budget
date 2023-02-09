@@ -1,7 +1,6 @@
 use crate::calendar::calendar_slice::CalendarSlice;
 use crate::calendar::year_month::YearMonth as YM;
-use crate::composite::payment_event::PaymentEventBinStore;
-use crate::composite::payment_event::PaymentEventStore;
+use crate::composite::payment_event::PaymentEvent;
 use crate::programs::month_model::MonthModel;
 use crate::storage::store::Store;
 use std::error::Error;
@@ -33,24 +32,28 @@ impl CalendarSliceModel {
         }
     }
 
-    pub fn run(&self) -> CalendarSliceModelResult {
+    pub fn run(&self, dir: String) -> CalendarSliceModelResult {
         let mut store = Store::new();
         store.init(Some(self.path_in.clone()))?;
 
         let year_slice = CalendarSlice::new(self.start, self.end)?;
-        let mut payment_event_month_bins = PaymentEventBinStore::new();
+        let payment_events_path = format!("data/json/{dir}/payment_events.json");
+        let mut payment_event_month_bins =
+            PaymentEvent::fetch_and_bin_events_by_month(payment_events_path)?;
+
         for month in year_slice.months().iter() {
-            let bin_store = payment_event_month_bins
-                .entry(*month)
-                .or_insert(PaymentEventStore::new());
-            MonthModel::new(*month, false, None, None).run(&bin_store, Some(&mut store), None)?;
+            // year_months in chrono order thx to Eq, PartialEq, PartialOrd, Ord Traits and BTreeMap
+            let pe_bin_store = payment_event_month_bins.entry(*month).or_default();
+            MonthModel::new(*month, false, None, None).run(pe_bin_store, Some(&mut store), None)?;
         }
 
         if self.output_results {
             store.write_to_csv(Some(self.path_out.clone()))?;
         }
 
-        println!("Payment Event Bins: {:?}", payment_event_month_bins);
+        println!("Payment Event Bins: {:#?}", payment_event_month_bins);
+        println!("===============================================");
+        println!("Final Store: {:#?}", store);
 
         Ok(())
     }

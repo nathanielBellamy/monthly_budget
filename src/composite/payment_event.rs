@@ -27,11 +27,13 @@ pub enum PaymentEventComposite {
     None,
 }
 
+// fetch
 type PaymentEventFetchResult = Result<Vec<PaymentEvent>, Box<dyn Error>>;
-type PaymentEventBinResult = Result<PaymentEventBinStore, Box<dyn Error>>;
-
-pub type PaymentEventBinStore = BTreeMap<YM, PaymentEventStore>;
+// store
 pub type PaymentEventStore = BTreeMap<usize, PaymentEvent>;
+// bin
+pub type PaymentEventBinStore = BTreeMap<YM, PaymentEventStore>;
+type PaymentEventBinResult = Result<PaymentEventBinStore, Box<dyn Error>>;
 
 impl CsvRecord<PaymentEvent> for PaymentEvent {
     fn id(&self) -> Option<usize> {

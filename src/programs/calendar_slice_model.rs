@@ -33,6 +33,11 @@ impl CalendarSliceModel {
     }
 
     pub fn run(&self, dir: String) -> CalendarSliceModelResult {
+        println!(
+            "Running Calendar Slice Model From: {:#?} to {:#?}",
+            self.start, self.end
+        );
+
         let mut store = Store::new();
         store.init(Some(self.path_in.clone()))?;
 
@@ -52,9 +57,9 @@ impl CalendarSliceModel {
             store.write_to_csv(Some(self.path_out.clone()))?;
         }
 
-        println!("Payment Event Bins: {:#?}", payment_event_month_bins);
+        println!("Payment Event Bins: {payment_event_month_bins:#?}");
         println!("===============================================");
-        println!("Final Store: {:#?}", store);
+        println!("Final Store: {store:#?}");
 
         Ok(())
     }

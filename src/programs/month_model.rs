@@ -59,10 +59,10 @@ impl MonthModel {
         &mut self,
         payment_events: &PaymentEventStore,
         store_ext: Option<&mut Store>,
-        dir: Option<&'static str>,
+        dir: Option<String>,
     ) -> Result<(), Box<dyn Error>> {
-        let path: Option<&str> = match dir {
-            None => Some("data/init/"),
+        let path: Option<String> = match dir {
+            None => Some("data/init/".to_string()),
             Some(directory) => Some(directory),
         };
 

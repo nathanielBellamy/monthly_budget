@@ -9,8 +9,8 @@ pub struct CalendarSliceModel {
     start: YM,
     end: YM,
     output_results: bool,
-    path_in: Option<&'static str>,
-    path_out: Option<&'static str>,
+    path_in: String,
+    path_out: String,
 }
 
 type CalendarSliceModelResult = Result<(), Box<dyn Error>>;
@@ -20,41 +20,46 @@ impl CalendarSliceModel {
         start: YM,
         end: YM,
         output_results: bool,
-        path_in: &'static str,
-        path_out: &'static str,
+        path_in: String,
+        path_out: String,
     ) -> CalendarSliceModel {
         CalendarSliceModel {
             start,
             end,
             output_results,
-            path_in: Some(path_in),
-            path_out: Some(path_out),
+            path_in,
+            path_out,
         }
     }
 
-    pub fn run(&self, dir: &'static str) -> CalendarSliceModelResult {
-        let mut store = Store::new();
-        store.init(self.path_in)?;
+    pub fn run(&self, dir: String) -> CalendarSliceModelResult {
+        println!(
+            "Running Calendar Slice Model From: {:#?} to {:#?}",
+            self.start, self.end
+        );
 
-        let year_slice = CalendarSlice::new(self.start, self.end)?;
-        // TODO: accept JSON or CSV
-        // TODO: handle recurring events, maybe in a separate recurring_events.xxx file
-        // TODO: generate payment_events from Expenses and Incomes
-        //        - allow set recurrence or random
+        let mut store = Store::new();
+        store.init(Some(self.path_in.clone()))?;
+
+        let cal_slice = CalendarSlice::new(self.start, self.end)?;
         let payment_events_path = format!("data/json/{dir}/payment_events.json");
-        let payment_event_month_bins =
-            PaymentEvent::fetch_and_bin_events_by_month(payment_events_path)?;
-        for month in year_slice.months().iter() {
-            MonthModel::new(*month, false, None, None).run(
-                &payment_event_month_bins[month],
-                Some(&mut store),
-                None,
-            )?;
+        let mut payment_event_month_bins =
+            PaymentEvent::fetch_and_bin_events_by_month(payment_events_path, &cal_slice)?;
+
+        for month in cal_slice.months().iter() {
+            // year_months in chrono order thx to Eq, PartialEq, PartialOrd, Ord Traits and BTreeMap
+            let pe_bin_store = payment_event_month_bins.entry(*month).or_default();
+            // TODO: add recurring events to bin store
+            MonthModel::new(*month, false, None, None).run(pe_bin_store, Some(&mut store), None)?;
         }
 
         if self.output_results {
-            store.write_to_csv(self.path_out)?;
+            store.write_to_csv(Some(self.path_out.clone()))?;
         }
+
+        println!("Payment Event Bins: {payment_event_month_bins:#?}");
+        println!("===============================================");
+        println!("Final Store: {store:#?}");
 
         Ok(())
     }

@@ -5,8 +5,8 @@ use std::error::Error;
 
 #[derive(Debug, PartialEq)]
 pub struct CalendarSlice {
-    start: YM,
-    end: YM,
+    pub start: YM,
+    pub end: YM,
 }
 
 type CalendarSliceResult = Result<CalendarSlice, Box<dyn Error>>;

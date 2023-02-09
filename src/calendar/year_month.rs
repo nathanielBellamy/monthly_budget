@@ -1,3 +1,4 @@
+use crate::calendar::month::Month;
 use crate::calendar::month_key::MonthKey as MK;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
@@ -10,6 +11,23 @@ pub struct YearMonth {
 impl YearMonth {
     pub fn new(year: i32, month: MK) -> YearMonth {
         YearMonth { year, month }
+    }
+
+    pub fn parse(ym: String) -> YearMonth {
+        let mut ym_split = ym.split('-');
+        let year: i32 = ym_split
+            .next()
+            .unwrap()
+            .parse::<i32>()
+            .expect("Invalid Year Entered");
+        let month: MK = Month::key_from_id(
+            ym_split
+                .next()
+                .unwrap()
+                .parse::<u32>()
+                .expect("Invalid Month Entered"),
+        );
+        YearMonth::new(year, month)
     }
 }
 

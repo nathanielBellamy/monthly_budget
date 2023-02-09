@@ -35,9 +35,9 @@ impl Store {
         }
     }
 
-    pub fn init(&mut self, dir: Option<&'static str>) -> StoreInitResult {
-        let path: &str = match dir {
-            None => "data/",
+    pub fn init(&mut self, dir: Option<String>) -> StoreInitResult {
+        let path: String = match dir {
+            None => "data/".to_string(),
             Some(root) => root,
         };
         let import_res: [CsvReadResult; 7] = [
@@ -79,8 +79,8 @@ impl Store {
         Ok(self)
     }
 
-    pub fn write_to_csv(&self, dir: Option<&'static str>) -> StoreWriteResult {
-        let path = dir.unwrap_or("data/");
+    pub fn write_to_csv(&self, dir: Option<String>) -> StoreWriteResult {
+        let path = dir.unwrap_or_else(|| "data/".to_string());
         let write_res: [CsvWriteResult; 7] = [
             Account::write_to_csv(&self.accounts, format!("{path}{}", "accounts.csv").as_str()),
             AccountBalance::write_to_csv(

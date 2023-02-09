@@ -4,7 +4,11 @@
 #### serde -> BTreeMap -> serde
 
 ## to run
-- `cargo run -- --start YYYY-MM --end YYYY-MM`
+- `cargo run -- --startym YYYY-MM --endym YYYY-MM`
+- or `cargo run -- -s YYYY-MM -e YYYY-MM`
+- can pass in `--transactions -t` folder for different payment events
+  - add `{my_payment_events}.json` to folder `/data/json/{my_payment_events_directory}/`
+  - by default uses payment events in `/data/json/example_1/payment_events.json`
 
 ### /schema
 Core `Structs`

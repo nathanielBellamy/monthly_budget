@@ -1,3 +1,4 @@
+use crate::calendar::calendar_slice::CalendarSlice;
 use crate::calendar::month::Month;
 use crate::calendar::year_month::YearMonth as YM;
 use crate::composite::payment_composite::PaymentComposite;
@@ -64,17 +65,22 @@ impl PaymentEvent {
         Ok(payment_events)
     }
 
-    #[allow(unused)]
-    pub fn fetch_and_bin_events_by_month(path: String) -> PaymentEventBinResult {
+    pub fn fetch_and_bin_events_by_month(
+        path: String,
+        cal_slice: &CalendarSlice,
+    ) -> PaymentEventBinResult {
         let mut bin_store = PaymentEventBinStore::new();
         let payment_events = PaymentEvent::fetch_events(path)?;
         for payment_event in payment_events.into_iter() {
-            let year = payment_event.completed_at.year();
-            let month = payment_event.completed_at.month();
-            let store = bin_store
-                .entry(YM::new(year, Month::key_from_id(month)))
-                .or_default();
-            PaymentEvent::save_to_store(payment_event, store);
+            let ym = YM::new(
+                payment_event.completed_at.year(),
+                Month::key_from_id(payment_event.completed_at.month()),
+            );
+            // YearMonth impl Eq, PartialEq, PartialOrd, Ord
+            if cal_slice.start <= ym && ym <= cal_slice.end {
+                let store = bin_store.entry(ym).or_default();
+                PaymentEvent::save_to_store(payment_event, store);
+            }
         }
         Ok(bin_store)
     }
@@ -148,7 +154,9 @@ mod expense_spec {
     #[test]
     #[allow(non_snake_case)]
     fn fetch_and_bin_events_by_month__returns_PaymentEventBinStore_populated_by_payment_events() {
-        let mut bin_store = PaymentEvent::fetch_and_bin_events_by_month(json_path()).unwrap();
+        let cal_slice = CalendarSlice::new(YM::new(2023, MK::Feb), YM::new(2024, MK::Mar)).unwrap();
+        let mut bin_store =
+            PaymentEvent::fetch_and_bin_events_by_month(json_path(), &cal_slice).unwrap();
         assert_eq!(bin_store.len(), 2);
 
         let feb_store = bin_store
@@ -168,6 +176,20 @@ mod expense_spec {
                 .and_hms_opt(12, 00, 00)
                 .unwrap()
         );
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn fetch_and_bin_events_by_month__adds_only_those_payment_events_between_start_and_end() {
+        let cal_slice = CalendarSlice::new(YM::new(2023, MK::Feb), YM::new(2023, MK::Feb)).unwrap();
+        let mut bin_store =
+            PaymentEvent::fetch_and_bin_events_by_month(json_path(), &cal_slice).unwrap();
+        assert_eq!(bin_store.len(), 1);
+
+        let feb_store = bin_store
+            .entry(YM::new(2023_i32, MK::Feb))
+            .or_insert(PaymentEventStore::new());
+        assert_eq!(feb_store.len(), 3);
     }
 
     #[test]

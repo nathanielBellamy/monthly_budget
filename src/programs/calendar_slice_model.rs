@@ -39,11 +39,12 @@ impl CalendarSliceModel {
         let year_slice = CalendarSlice::new(self.start, self.end)?;
         let payment_events_path = format!("data/json/{dir}/payment_events.json");
         let mut payment_event_month_bins =
-            PaymentEvent::fetch_and_bin_events_by_month(payment_events_path)?;
+            PaymentEvent::fetch_and_bin_events_by_month(payment_events_path, &year_slice)?;
 
         for month in year_slice.months().iter() {
             // year_months in chrono order thx to Eq, PartialEq, PartialOrd, Ord Traits and BTreeMap
             let pe_bin_store = payment_event_month_bins.entry(*month).or_default();
+            // TODO: add recurring events to bin store
             MonthModel::new(*month, false, None, None).run(pe_bin_store, Some(&mut store), None)?;
         }
 

@@ -62,6 +62,7 @@ impl PaymentEvent {
         Ok(payment_events)
     }
 
+    #[allow(unused)]
     pub fn fetch_and_bin_events_by_month(path: String) -> PaymentEventBinResult {
         let mut bin_store = PaymentEventBinStore::new();
         let payment_events = PaymentEvent::fetch_events(path)?;

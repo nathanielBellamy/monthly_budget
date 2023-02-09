@@ -3,6 +3,9 @@
 ## intake budgetary CSV/JSON -> manipulate data in memory -> export report CSV/JSON
 #### serde -> BTreeMap -> serde
 
+## to run
+- `cargo run -- --start YYYY-MM --end YYYY-MM`
+
 ### /schema
 Core `Structs`
   - `Account`

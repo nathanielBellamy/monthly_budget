@@ -1,6 +1,7 @@
 use crate::calendar::calendar_slice::CalendarSlice;
 use crate::calendar::year_month::YearMonth as YM;
-use crate::composite::payment_event::PaymentEvent;
+use crate::composite::payment_event::PaymentEventBinStore;
+use crate::composite::payment_event::PaymentEventStore;
 use crate::programs::month_model::MonthModel;
 use crate::storage::store::Store;
 use std::error::Error;
@@ -32,29 +33,24 @@ impl CalendarSliceModel {
         }
     }
 
-    pub fn run(&self, dir: String) -> CalendarSliceModelResult {
+    pub fn run(&self) -> CalendarSliceModelResult {
         let mut store = Store::new();
         store.init(Some(self.path_in.clone()))?;
 
         let year_slice = CalendarSlice::new(self.start, self.end)?;
-        // TODO: accept JSON or CSV
-        // TODO: handle recurring events, maybe in a separate recurring_events.xxx file
-        // TODO: generate payment_events from Expenses and Incomes
-        //        - allow set recurrence or random
-        let payment_events_path = format!("data/json/{dir}/payment_events.json");
-        let payment_event_month_bins =
-            PaymentEvent::fetch_and_bin_events_by_month(payment_events_path)?;
+        let mut payment_event_month_bins = PaymentEventBinStore::new();
         for month in year_slice.months().iter() {
-            MonthModel::new(*month, false, None, None).run(
-                &payment_event_month_bins[month],
-                Some(&mut store),
-                None,
-            )?;
+            let bin_store = payment_event_month_bins
+                .entry(*month)
+                .or_insert(PaymentEventStore::new());
+            MonthModel::new(*month, false, None, None).run(&bin_store, Some(&mut store), None)?;
         }
 
         if self.output_results {
             store.write_to_csv(Some(self.path_out.clone()))?;
         }
+
+        println!("Payment Event Bins: {:?}", payment_event_month_bins);
 
         Ok(())
     }

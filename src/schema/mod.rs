@@ -5,4 +5,5 @@ pub mod expense;
 pub mod income;
 pub mod payment;
 pub mod payment_received;
+pub mod recurrance;
 pub mod tag;

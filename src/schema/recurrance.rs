@@ -9,11 +9,12 @@ pub struct Recurrence {
     pub frequency: Every,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
 pub enum Every {
-    Days(u8),   // Every::Days(2) = every other day
-    Weeks(u8),  // Every::Weeks(2) = every other week
-    Months(u8), // Every::Months(6) = twice a year
-    Years(u8),  // Every::Years(10) = once per decade
+    Days(u64),   // Every::Days(2) = every other day
+    Weeks(u64),  // Every::Weeks(2) = every other week
+    Months(u32), // Every::Months(6) = twice a year
+    Years(u32),  // Every::Years(10) = once per decade
 }
 
 #[allow(unused)]
@@ -30,10 +31,7 @@ impl CsvRecord<Recurrence> for Recurrence {
     }
 
     fn clone_record(&self) -> Recurrence {
-        Recurrence {
-            id: self.id,
-            content: self.content.clone(),
-        }
+        unimplemented!()
     }
 }
 impl CsvStore<Recurrence> for Recurrence {}

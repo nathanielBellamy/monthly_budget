@@ -1,3 +1,4 @@
+use crate::composite::payment_event::PaymentEvent;
 use crate::schema::recurrance::Every;
 use chrono::{Days, Months, NaiveDate};
 use rust_decimal::prelude::*;
@@ -16,6 +17,26 @@ pub struct RecurringPaymentEvent {
 }
 
 impl RecurringPaymentEvent {
+    #[allow(unused)]
+    pub fn payment_events(&self) -> Vec<PaymentEvent> {
+        self.payment_dates()
+            .into_iter()
+            .map(|date| self.to_payment_event(&date))
+            .collect()
+    }
+
+    #[allow(unused)]
+    pub fn to_payment_event(&self, date: &NaiveDate) -> PaymentEvent {
+        PaymentEvent {
+            id: None,
+            event_type: self.event_type.clone(),
+            name: self.name.clone(),
+            account_name: self.account_name.clone(),
+            amount: self.amount,
+            completed_at: date.and_hms_opt(12, 0, 0).unwrap(), // TODO: consider how to handle time
+        }
+    }
+
     #[allow(unused)]
     pub fn payment_dates(&self) -> Vec<NaiveDate> {
         let mut payment_dates: Vec<NaiveDate> = vec![self.start];
@@ -75,6 +96,94 @@ mod payment_composite_spec {
             end: end,
             recurrence: recurrence,
         }
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn payment_events__returns_vector_of_payment_events_according_to_recurrence() {
+        // start end chosen so that both are payment_event_dates
+        let start = NaiveDate::from_ymd_opt(2023, 02, 10).unwrap();
+        let end = NaiveDate::from_ymd_opt(2023, 06, 16).unwrap();
+        let reccurring_payment_event = reccurring_payment_event(start, end, Every::Weeks(2));
+        let payment_events: Vec<PaymentEvent> = reccurring_payment_event.payment_events();
+
+        assert_eq!(payment_events.len(), 10);
+        for payment_event in payment_events.iter() {
+            assert_eq!(payment_event.event_type, "payment".to_string());
+            assert_eq!(payment_event.name, "dog food".to_string());
+            assert_eq!(payment_event.account_name, "piggybank".to_string());
+            assert_eq!(payment_event.amount, Decimal::new(50, 0));
+        }
+        assert_eq!(
+            payment_events[0].completed_at,
+            NaiveDate::from_ymd_opt(2023, 02, 10)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap()
+        );
+        assert_eq!(
+            payment_events[1].completed_at,
+            NaiveDate::from_ymd_opt(2023, 02, 24)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap()
+        );
+        assert_eq!(
+            payment_events[2].completed_at,
+            NaiveDate::from_ymd_opt(2023, 03, 10)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap()
+        );
+        assert_eq!(
+            payment_events[3].completed_at,
+            NaiveDate::from_ymd_opt(2023, 03, 24)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap()
+        );
+        assert_eq!(
+            payment_events[4].completed_at,
+            NaiveDate::from_ymd_opt(2023, 04, 07)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap()
+        );
+        assert_eq!(
+            payment_events[5].completed_at,
+            NaiveDate::from_ymd_opt(2023, 04, 21)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap()
+        );
+        assert_eq!(
+            payment_events[6].completed_at,
+            NaiveDate::from_ymd_opt(2023, 05, 05)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap()
+        );
+        assert_eq!(
+            payment_events[7].completed_at,
+            NaiveDate::from_ymd_opt(2023, 05, 19)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap()
+        );
+        assert_eq!(
+            payment_events[8].completed_at,
+            NaiveDate::from_ymd_opt(2023, 06, 02)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap()
+        );
+        assert_eq!(
+            payment_events[9].completed_at,
+            NaiveDate::from_ymd_opt(2023, 06, 16)
+                .unwrap()
+                .and_hms_opt(12, 0, 0)
+                .unwrap()
+        );
     }
 
     #[test]

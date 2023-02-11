@@ -1,8 +1,16 @@
+use crate::calendar::calendar_slice::CalendarSlice;
+use crate::calendar::month::Month;
+use crate::calendar::year_month::YearMonth as YM;
 use crate::composite::payment_event::PaymentEvent;
+use crate::composite::payment_event::PaymentEventBinStore;
 use crate::schema::recurrance::Every;
+use crate::traits::csv_store::CsvStore;
+use chrono::Datelike;
 use chrono::{Days, Months, NaiveDate};
 use rust_decimal::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
+use std::fs;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct RecurringPaymentEvent {
@@ -12,11 +20,43 @@ pub struct RecurringPaymentEvent {
     pub account_name: String,
     pub amount: Decimal,
     pub start: NaiveDate,
-    pub end: NaiveDate,
+    pub end: NaiveDate, // TODO: turn into Option<NaiveDate>
     pub recurrence: Every,
 }
 
+pub type RecurringPaymentEventBinResult = Result<(), Box<dyn Error>>;
+pub type RecurringPaymentEventFetchResult = Result<Vec<RecurringPaymentEvent>, Box<dyn Error>>;
+
 impl RecurringPaymentEvent {
+    pub fn fetch_events(path: String) -> RecurringPaymentEventFetchResult {
+        let data: String = fs::read_to_string(path)?.parse()?;
+        let recc_payment_events: Vec<RecurringPaymentEvent> = serde_json::from_str(&data)?;
+        Ok(recc_payment_events)
+    }
+
+    pub fn fetch_and_bin_recurring_events(
+        path: String,
+        cal_slice: &CalendarSlice,
+        bin_store: &mut PaymentEventBinStore,
+    ) -> RecurringPaymentEventBinResult {
+        let recc_payment_events = RecurringPaymentEvent::fetch_events(path)?;
+        for recc_payment_event in recc_payment_events.into_iter() {
+            let payment_events = recc_payment_event.payment_events();
+            for payment_event in payment_events.into_iter() {
+                let ym = YM::new(
+                    payment_event.completed_at.year(),
+                    Month::key_from_id(payment_event.completed_at.month()),
+                );
+                // YearMonth impl Eq, PartialEq, PartialOrd, Ord
+                if cal_slice.start <= ym && ym <= cal_slice.end {
+                    let store = bin_store.entry(ym).or_default();
+                    PaymentEvent::save_to_store(payment_event, store);
+                }
+            }
+        }
+        Ok(())
+    }
+
     #[allow(unused)]
     pub fn payment_events(&self) -> Vec<PaymentEvent> {
         self.payment_dates()

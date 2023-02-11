@@ -10,6 +10,7 @@ pub struct Recurrence {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(tag = "t", content = "c")]
 pub enum Every {
     Days(u64),   // Every::Days(2) = every other day
     Weeks(u64),  // Every::Weeks(2) = every other week

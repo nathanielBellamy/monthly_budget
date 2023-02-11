@@ -1,6 +1,8 @@
 use crate::calendar::calendar_slice::CalendarSlice;
 use crate::calendar::year_month::YearMonth as YM;
 use crate::composite::payment_event::PaymentEvent;
+use crate::composite::payment_event::PaymentEventBinStore;
+use crate::composite::recurring_payment_event::RecurringPaymentEvent;
 use crate::programs::month_model::MonthModel;
 use crate::storage::store::Store;
 use std::error::Error;
@@ -42,9 +44,22 @@ impl CalendarSliceModel {
         store.init(Some(self.path_in.clone()))?;
 
         let cal_slice = CalendarSlice::new(self.start, self.end)?;
-        let payment_events_path = format!("data/json/{dir}/payment_events.json");
-        let mut payment_event_month_bins =
-            PaymentEvent::fetch_and_bin_events_by_month(payment_events_path, &cal_slice)?;
+        let mut payment_event_month_bins = PaymentEventBinStore::new();
+
+        let recurring_events_path = format!("data/json/{dir}/reccurring_events.json");
+        println!("{recurring_events_path}");
+        RecurringPaymentEvent::fetch_and_bin_recurring_events(
+            recurring_events_path,
+            &cal_slice,
+            &mut payment_event_month_bins,
+        )?;
+
+        let one_off_events_path = format!("data/json/{dir}/one_off_events.json");
+        PaymentEvent::fetch_and_bin_one_off_events(
+            one_off_events_path,
+            &cal_slice,
+            &mut payment_event_month_bins,
+        )?;
 
         for month in cal_slice.months().iter() {
             // year_months in chrono order thx to Eq, PartialEq, PartialOrd, Ord Traits and BTreeMap

@@ -34,7 +34,7 @@ type PaymentEventFetchResult = Result<Vec<PaymentEvent>, Box<dyn Error>>;
 pub type PaymentEventStore = BTreeMap<usize, PaymentEvent>;
 // bin
 pub type PaymentEventBinStore = BTreeMap<YM, PaymentEventStore>;
-type PaymentEventBinResult = Result<PaymentEventBinStore, Box<dyn Error>>;
+type PaymentEventBinResult = Result<(), Box<dyn Error>>;
 
 impl CsvRecord<PaymentEvent> for PaymentEvent {
     fn id(&self) -> Option<usize> {
@@ -65,11 +65,11 @@ impl PaymentEvent {
         Ok(payment_events)
     }
 
-    pub fn fetch_and_bin_events_by_month(
+    pub fn fetch_and_bin_one_off_events(
         path: String,
         cal_slice: &CalendarSlice,
+        bin_store: &mut PaymentEventBinStore,
     ) -> PaymentEventBinResult {
-        let mut bin_store = PaymentEventBinStore::new();
         let payment_events = PaymentEvent::fetch_events(path)?;
         for payment_event in payment_events.into_iter() {
             let ym = YM::new(
@@ -82,7 +82,7 @@ impl PaymentEvent {
                 PaymentEvent::save_to_store(payment_event, store);
             }
         }
-        Ok(bin_store)
+        Ok(())
     }
 
     pub fn to_composite(&self) -> PaymentEventComposite {
@@ -155,8 +155,9 @@ mod expense_spec {
     #[allow(non_snake_case)]
     fn fetch_and_bin_events_by_month__returns_PaymentEventBinStore_populated_by_payment_events() {
         let cal_slice = CalendarSlice::new(YM::new(2023, MK::Feb), YM::new(2024, MK::Mar)).unwrap();
-        let mut bin_store =
-            PaymentEvent::fetch_and_bin_events_by_month(json_path(), &cal_slice).unwrap();
+        let mut bin_store = PaymentEventBinStore::new();
+        PaymentEvent::fetch_and_bin_one_off_events(json_path(), &cal_slice, &mut bin_store)
+            .unwrap();
         assert_eq!(bin_store.len(), 2);
 
         let feb_store = bin_store
@@ -182,8 +183,9 @@ mod expense_spec {
     #[allow(non_snake_case)]
     fn fetch_and_bin_events_by_month__adds_only_those_payment_events_between_start_and_end() {
         let cal_slice = CalendarSlice::new(YM::new(2023, MK::Feb), YM::new(2023, MK::Feb)).unwrap();
-        let mut bin_store =
-            PaymentEvent::fetch_and_bin_events_by_month(json_path(), &cal_slice).unwrap();
+        let mut bin_store = PaymentEventBinStore::new();
+        PaymentEvent::fetch_and_bin_one_off_events(json_path(), &cal_slice, &mut bin_store)
+            .unwrap();
         assert_eq!(bin_store.len(), 1);
 
         let feb_store = bin_store

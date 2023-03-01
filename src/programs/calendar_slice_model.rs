@@ -17,7 +17,7 @@ pub struct CalendarSliceModel {
     path_out: String,
 }
 
-type CalendarSliceModelResult = Result<(), Box<dyn Error>>;
+pub type CalendarSliceModelResult = Result<(), Box<dyn Error>>;
 
 impl CalendarSliceModel {
     pub fn new(

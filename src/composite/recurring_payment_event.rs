@@ -57,7 +57,6 @@ impl RecurringPaymentEvent {
         Ok(())
     }
 
-    #[allow(unused)]
     pub fn payment_events(&self) -> Vec<PaymentEvent> {
         self.payment_dates()
             .into_iter()
@@ -65,7 +64,6 @@ impl RecurringPaymentEvent {
             .collect()
     }
 
-    #[allow(unused)]
     pub fn to_payment_event(&self, date: &NaiveDate) -> PaymentEvent {
         PaymentEvent {
             id: None,
@@ -77,7 +75,6 @@ impl RecurringPaymentEvent {
         }
     }
 
-    #[allow(unused)]
     pub fn payment_dates(&self) -> Vec<NaiveDate> {
         let mut payment_dates: Vec<NaiveDate> = vec![self.start];
 
@@ -95,7 +92,6 @@ impl RecurringPaymentEvent {
         payment_dates
     }
 
-    #[allow(unused)]
     pub fn next_payment_date(&self, last_payment_date: NaiveDate) -> NaiveDate {
         match self.recurrence {
             Every::Days(n) => last_payment_date

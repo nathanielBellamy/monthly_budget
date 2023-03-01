@@ -5,6 +5,8 @@ use crate::composite::payment_event::PaymentEventBinStore;
 use crate::composite::recurring_payment_event::RecurringPaymentEvent;
 use crate::programs::month_model::MonthModel;
 use crate::storage::store::Store;
+use crate::app::cli::Cli;
+use crate::error::error_handler::ErrorHandler;
 use std::error::Error;
 
 pub struct CalendarSliceModel {
@@ -33,7 +35,18 @@ impl CalendarSliceModel {
             path_out,
         }
     }
+ 
+    pub fn run_cli(cli: &Cli) ->  CalendarSliceModelResult {
+        let start = YM::parse(cli.startym);
+        let end = YM::parse(cli.endym);
+        println!("Start from: {:?} - {:?}", start.year, start.month);
+        println!("End at: {:?} - {:?}", end.year, end.month);
+        println!("Inputs from: {:?}", cli.input);
+        println!("Outputs to: {:?}", cli.output);
 
+        CalendarSliceModel::new(start, end, true, cli.input, cli.output).run(cli.payment_events)
+    }
+    
     pub fn run(&self, dir: String) -> CalendarSliceModelResult {
         println!(
             "Running Calendar Slice Model From: {:#?} to {:#?}",
@@ -78,4 +91,6 @@ impl CalendarSliceModel {
 
         Ok(())
     }
+
+
 }

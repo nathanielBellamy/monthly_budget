@@ -15,3 +15,21 @@ pub struct Cli {
     #[arg(short, long)]
     pub startym: String,
 }
+
+impl Cli {
+    pub fn new(
+        input: String,
+        output: String,
+        payment_events: String,
+        endym: String,
+        startym: String
+    ) -> Cli {
+        Cli {
+            input,
+            output,
+            payment_events,
+            endym,
+            startym
+        }
+    }
+}

@@ -21,8 +21,8 @@ impl Cli {
         input: String,
         output: String,
         payment_events: String,
+        startym: String,
         endym: String,
-        startym: String
     ) -> Cli {
         Cli {
             input,

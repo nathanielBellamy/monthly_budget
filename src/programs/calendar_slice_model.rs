@@ -6,7 +6,6 @@ use crate::composite::recurring_payment_event::RecurringPaymentEvent;
 use crate::programs::month_model::MonthModel;
 use crate::storage::store::Store;
 use crate::app::cli::Cli;
-use crate::error::error_handler::ErrorHandler;
 use std::error::Error;
 
 pub struct CalendarSliceModel {
@@ -15,6 +14,7 @@ pub struct CalendarSliceModel {
     output_results: bool,
     path_in: String,
     path_out: String,
+    events_path: String,
 }
 
 pub type CalendarSliceModelResult = Result<(), Box<dyn Error>>;
@@ -26,6 +26,7 @@ impl CalendarSliceModel {
         output_results: bool,
         path_in: String,
         path_out: String,
+        events_path: String,
     ) -> CalendarSliceModel {
         CalendarSliceModel {
             start,
@@ -33,33 +34,46 @@ impl CalendarSliceModel {
             output_results,
             path_in,
             path_out,
+            events_path
         }
     }
  
-    pub fn run_cli(cli: &Cli) ->  CalendarSliceModelResult {
+    pub fn run_cli(cli: Cli) ->  CalendarSliceModelResult {
         let start = YM::parse(cli.startym);
         let end = YM::parse(cli.endym);
+        println!("Running from Cli...");
         println!("Start from: {:?} - {:?}", start.year, start.month);
         println!("End at: {:?} - {:?}", end.year, end.month);
         println!("Inputs from: {:?}", cli.input);
         println!("Outputs to: {:?}", cli.output);
 
-        CalendarSliceModel::new(start, end, true, cli.input, cli.output).run(cli.payment_events)
+        CalendarSliceModel::new(
+            start, 
+            end, 
+            true, 
+            cli.input, 
+            cli.output, 
+            cli.payment_events
+        ).run()
     }
     
-    pub fn run(&self, dir: String) -> CalendarSliceModelResult {
+    pub fn run(&self) -> CalendarSliceModelResult {
         println!(
-            "Running Calendar Slice Model From: {:#?} to {:#?}",
-            self.start, self.end
+            "Running Calendar Slice Model From: {:#?}-{:#?} to {:#?}-{:#?}",
+            self.start.year, self.start.month,
+            self.end.year, self.end.month
         );
 
         let mut store = Store::new();
+        println!("{}", self.path_in);
         store.init(Some(self.path_in.clone()))?;
+    
+        println!("HERE");
 
         let cal_slice = CalendarSlice::new(self.start, self.end)?;
         let mut payment_event_month_bins = PaymentEventBinStore::new();
 
-        let recurring_events_path = format!("data/json/{dir}/reccurring_events.json");
+        let recurring_events_path = format!("{}/{}", self.events_path, "reccurring.json");
         println!("{recurring_events_path}");
         RecurringPaymentEvent::fetch_and_bin_recurring_events(
             recurring_events_path,
@@ -67,7 +81,8 @@ impl CalendarSliceModel {
             &mut payment_event_month_bins,
         )?;
 
-        let one_off_events_path = format!("data/json/{dir}/one_off_events.json");
+        let one_off_events_path = format!("{}/{}", self.events_path, "one_off.json");
+        println!("{one_off_events_path}");
         PaymentEvent::fetch_and_bin_one_off_events(
             one_off_events_path,
             &cal_slice,

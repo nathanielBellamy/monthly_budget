@@ -1,7 +1,5 @@
 use crate::storage::store::Store;
 
-mod end_to_end;
-
 pub struct Spec;
 
 impl Spec {

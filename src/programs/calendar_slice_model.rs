@@ -60,8 +60,6 @@ impl CalendarSliceModel {
         println!("{}", self.path_in);
         store.init(Some(self.path_in.clone()))?;
 
-        println!("HERE");
-
         let cal_slice = CalendarSlice::new(self.start, self.end)?;
         let mut payment_event_month_bins = PaymentEventBinStore::new();
 

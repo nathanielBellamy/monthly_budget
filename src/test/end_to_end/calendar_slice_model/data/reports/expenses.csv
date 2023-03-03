@@ -1,6 +1,5 @@
 id,active,name
-1,true,Mortgage
-2,true,Groceries
-3,true,Dog Food
-4,true,Car Repair
-5,true,Co-pay
+1,true,Groceries
+2,true,Mortgage
+3,true,Car Repair
+4,true,Co-pay

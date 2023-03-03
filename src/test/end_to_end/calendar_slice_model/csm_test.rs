@@ -10,8 +10,8 @@ impl CsmTest {
             CsmTest::format_path("init/"), // input
             CsmTest::format_path("reports/"),      // output
             CsmTest::format_path("events"),        // payment_events
-            "2023-02".to_string(),                 // start
-            "2023-05".to_string(),                 // end
+            "2023-03".to_string(),                 // start
+            "2023-03".to_string(),                 // end
         );
         println!("CSMTEST RUN");
         match CalendarSliceModel::run_cli(cli) {
@@ -31,7 +31,7 @@ mod calendar_slice_model_e2e {
     use super::*;
     use std::fs;
     use crate::storage::store::Store;
-    // use rust_decimal::Decimal;
+    use rust_decimal::Decimal;
     use std::sync::Once;
 
     // call test once
@@ -59,7 +59,10 @@ mod calendar_slice_model_e2e {
         run_test();
         let mut store = Store::new();
         store.init(Some(STORE_INIT.to_string())).unwrap();
-        assert_eq!(44, store.account_balances.len());
+        assert_eq!(12, store.account_balances.len());
+        let final_balance = store.account_balances[&12];
+        assert_eq!(2, final_balance.account_id);
+        assert_eq!(Decimal::new(20,0), final_balance.amount);
     }
 
     #[test]

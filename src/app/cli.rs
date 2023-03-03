@@ -29,7 +29,7 @@ impl Cli {
             output,
             payment_events,
             endym,
-            startym
+            startym,
         }
     }
 }

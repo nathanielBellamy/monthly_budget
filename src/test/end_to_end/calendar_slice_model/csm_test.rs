@@ -9,20 +9,20 @@ impl CsmTest {
         let base = "src/test/end_to_end/calendar_slice_model/data";
         let cli = Cli::new(
             CsmTest::format_path(base, "structs/init/"), // input
-            CsmTest::format_path(base, "reports/"), // output
-            CsmTest::format_path(base, "events/"), // payment_events
-            "2023-02".to_string(), // start
-            "2023-05".to_string() // end
+            CsmTest::format_path(base, "reports/"),      // output
+            CsmTest::format_path(base, "events/"),       // payment_events
+            "2023-02".to_string(),                       // start
+            "2023-05".to_string(),                       // end
         );
         println!("CSMTEST RUN");
         match CalendarSliceModel::run_cli(cli) {
             Ok(_) => 0,
-            Err(_) => 1
+            Err(_) => 1,
         }
     }
 
     pub fn format_path(base: &'static str, path: &'static str) -> String {
-        format!("{}/{}", base, path) 
+        format!("{}/{}", base, path)
     }
 }
 
@@ -34,7 +34,7 @@ mod calendar_slice_model_e2e {
     // call test once
     // test resulting data multiple ways
     static mut RES: u8 = 1;
-    static INIT: Once = Once::new();   
+    static INIT: Once = Once::new();
 
     fn run_test() -> u8 {
         unsafe {

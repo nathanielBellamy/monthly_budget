@@ -1,3 +1,4 @@
+use crate::app::cli::Cli;
 use crate::calendar::calendar_slice::CalendarSlice;
 use crate::calendar::year_month::YearMonth as YM;
 use crate::composite::payment_event::PaymentEvent;
@@ -5,7 +6,6 @@ use crate::composite::payment_event::PaymentEventBinStore;
 use crate::composite::recurring_payment_event::RecurringPaymentEvent;
 use crate::programs::month_model::MonthModel;
 use crate::storage::store::Store;
-use crate::app::cli::Cli;
 use std::error::Error;
 
 pub struct CalendarSliceModel {
@@ -34,11 +34,11 @@ impl CalendarSliceModel {
             output_results,
             path_in,
             path_out,
-            events_path
+            events_path,
         }
     }
- 
-    pub fn run_cli(cli: Cli) ->  CalendarSliceModelResult {
+
+    pub fn run_cli(cli: Cli) -> CalendarSliceModelResult {
         let start = YM::parse(cli.startym);
         let end = YM::parse(cli.endym);
         println!("Running from Cli...");
@@ -47,27 +47,19 @@ impl CalendarSliceModel {
         println!("Inputs from: {:?}", cli.input);
         println!("Outputs to: {:?}", cli.output);
 
-        CalendarSliceModel::new(
-            start, 
-            end, 
-            true, 
-            cli.input, 
-            cli.output, 
-            cli.payment_events
-        ).run()
+        CalendarSliceModel::new(start, end, true, cli.input, cli.output, cli.payment_events).run()
     }
-    
+
     pub fn run(&self) -> CalendarSliceModelResult {
         println!(
             "Running Calendar Slice Model From: {:#?}-{:#?} to {:#?}-{:#?}",
-            self.start.year, self.start.month,
-            self.end.year, self.end.month
+            self.start.year, self.start.month, self.end.year, self.end.month
         );
 
         let mut store = Store::new();
         println!("{}", self.path_in);
         store.init(Some(self.path_in.clone()))?;
-    
+
         println!("HERE");
 
         let cal_slice = CalendarSlice::new(self.start, self.end)?;
@@ -106,6 +98,4 @@ impl CalendarSliceModel {
 
         Ok(())
     }
-
-
 }

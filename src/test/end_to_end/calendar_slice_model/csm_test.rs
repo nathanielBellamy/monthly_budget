@@ -7,7 +7,7 @@ impl CsmTest {
     #[allow(unused)] // used in tests below
     pub fn run() -> u8 {
         let cli = Cli::new(
-            CsmTest::format_path("structs/init/"), // input
+            CsmTest::format_path("init/"), // input
             CsmTest::format_path("reports/"),      // output
             CsmTest::format_path("events"),        // payment_events
             "2023-02".to_string(),                 // start
@@ -29,7 +29,9 @@ impl CsmTest {
 #[cfg(test)]
 mod calendar_slice_model_e2e {
     use super::*;
+    use std::fs;
     use crate::storage::store::Store;
+    // use rust_decimal::Decimal;
     use std::sync::Once;
 
     // call test once
@@ -40,11 +42,16 @@ mod calendar_slice_model_e2e {
     fn run_test() -> u8 {
         unsafe {
             INIT.call_once(|| {
-                // TODO: clear previously created data
+                clean_up_previous_data();
                 RES = CsmTest::run();
             });
             RES
         }
+    }
+
+    fn clean_up_previous_data() {
+        fs::remove_dir_all(STORE_INIT).unwrap();
+        fs::create_dir(STORE_INIT).unwrap();
     }
 
     #[test]

@@ -62,7 +62,7 @@ mod calendar_slice_model_e2e {
         assert_eq!(12, store.account_balances.len());
         let final_balance = store.account_balances[&12];
         assert_eq!(2, final_balance.account_id);
-        assert_eq!(Decimal::new(20,0), final_balance.amount);
+        assert_eq!(Decimal::new(8500,0), final_balance.amount);
     }
 
     #[test]

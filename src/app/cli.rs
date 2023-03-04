@@ -11,9 +11,12 @@ pub struct Cli {
     pub payment_events: String,
 
     #[arg(short, long)]
-    pub endym: String,
+    pub end_yyyy_mm: String,
     #[arg(short, long)]
-    pub startym: String,
+    pub start_yyyy_mm: String,
+    
+    #[arg(short, long, default_value_t = String::from("f"))]
+    pub x_test: String // avoid cli name collision
 }
 
 impl Cli {
@@ -21,15 +24,17 @@ impl Cli {
         input: String,
         output: String,
         payment_events: String,
-        startym: String,
-        endym: String,
+        start_yyyy_mm: String,
+        end_yyyy_mm: String,
+        x_test: String
     ) -> Cli {
         Cli {
             input,
             output,
             payment_events,
-            endym,
-            startym,
+            end_yyyy_mm,
+            start_yyyy_mm,
+            x_test
         }
     }
 }

@@ -39,8 +39,8 @@ impl CalendarSliceModel {
     }
 
     pub fn run_cli(cli: Cli) -> CalendarSliceModelResult {
-        let start = YM::parse(cli.startym);
-        let end = YM::parse(cli.endym);
+        let start = YM::parse(cli.start_yyyy_mm);
+        let end = YM::parse(cli.end_yyyy_mm);
         println!("Running from Cli...");
         println!("Start from: {:?} - {:?}", start.year, start.month);
         println!("End at: {:?} - {:?}", end.year, end.month);

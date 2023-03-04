@@ -40,7 +40,6 @@ impl Store {
             None => "data/".to_string(),
             Some(root) => root,
         };
-        println!("XXX: {path}");
         let import_res: [CsvReadResult; 7] = [
             Account::init_store(
                 &mut self.accounts,

@@ -5,13 +5,14 @@ pub struct CsmTest;
 
 impl CsmTest {
     #[allow(unused)] // used in tests below
-    pub fn run() -> u8 {
+    pub fn run(start: String, end: String) -> u8 {
         let cli = Cli::new(
             CsmTest::format_path("init/"),    // input
             CsmTest::format_path("reports/"), // output
             CsmTest::format_path("events"),   // payment_events
-            "2023-03".to_string(),            // start
-            "2023-06".to_string(),            // end
+            start,                            // start
+            end,                              // end
+            "f".to_string(),                  // test t/f - used to call this test from main
         );
         println!("CSMTEST RUN");
         match CalendarSliceModel::run_cli(cli) {
@@ -43,7 +44,7 @@ mod calendar_slice_model_e2e {
         unsafe {
             INIT.call_once(|| {
                 clean_up_previous_data();
-                RES = CsmTest::run();
+                RES = CsmTest::run("2023-03".to_string(), "2023-06".to_string());
             });
             RES
         }

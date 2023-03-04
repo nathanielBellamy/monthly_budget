@@ -14,9 +14,9 @@ pub struct Cli {
     pub end_yyyy_mm: String,
     #[arg(short, long)]
     pub start_yyyy_mm: String,
-    
+
     #[arg(short, long, default_value_t = String::from("f"))]
-    pub x_test: String // avoid cli name collision
+    pub x_test: String, // avoid cli name collision
 }
 
 impl Cli {
@@ -26,7 +26,7 @@ impl Cli {
         payment_events: String,
         start_yyyy_mm: String,
         end_yyyy_mm: String,
-        x_test: String
+        x_test: String,
     ) -> Cli {
         Cli {
             input,
@@ -34,7 +34,7 @@ impl Cli {
             payment_events,
             end_yyyy_mm,
             start_yyyy_mm,
-            x_test
+            x_test,
         }
     }
 }

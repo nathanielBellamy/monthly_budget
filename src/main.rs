@@ -14,12 +14,11 @@ mod storage;
 mod test;
 mod traits;
 
-fn main() {   
+fn main() {
     let cli = Cli::parse();
     if cli.x_test == "t" {
         println!("Running test...");
-        // the test is designed to 
-        if CsmTest::run(cli.start_yyyy_mm, cli.end_yyyy_mm)== 1 {
+        if CsmTest::run(cli.start_yyyy_mm, cli.end_yyyy_mm) == 1 {
             panic!("Oh NO!");
         };
         println!("Test Complete")
@@ -27,6 +26,6 @@ fn main() {
         // main
         if let Err(err) = CalendarSliceModel::run_cli(cli) {
             ErrorHandler::log(err);
-        }    
+        }
     }
 }

@@ -57,14 +57,12 @@ impl CalendarSliceModel {
         );
 
         let mut store = Store::new();
-        println!("{}", self.path_in);
         store.init(Some(self.path_in.clone()))?;
 
         let cal_slice = CalendarSlice::new(self.start, self.end)?;
         let mut payment_event_month_bins = PaymentEventBinStore::new();
 
         let recurring_events_path = format!("{}/{}", self.events_path, "reccurring.json");
-        println!("{recurring_events_path}");
         RecurringPaymentEvent::fetch_and_bin_recurring_events(
             recurring_events_path,
             &cal_slice,
@@ -72,7 +70,6 @@ impl CalendarSliceModel {
         )?;
 
         let one_off_events_path = format!("{}/{}", self.events_path, "one_off.json");
-        println!("{one_off_events_path}");
         PaymentEvent::fetch_and_bin_one_off_events(
             one_off_events_path,
             &cal_slice,
@@ -83,7 +80,7 @@ impl CalendarSliceModel {
             // year_months in chrono order thx to Eq, PartialEq, PartialOrd, Ord Traits and BTreeMap
             let pe_bin_store = payment_event_month_bins.entry(*month).or_default();
             // TODO: add recurring events to bin store
-            MonthModel::new(*month, false, None, None).run(pe_bin_store, Some(&mut store), None)?;
+            MonthModel::new(*month, true, None, None).run(pe_bin_store, Some(&mut store), None)?;
         }
 
         if self.output_results {

@@ -68,36 +68,61 @@ mod calendar_slice_model_e2e {
     #[test]
     fn check_payments() {
         run_test();
-        //TODO
+        let mut store = Store::new();
+        store.init(Some(STORE_INIT.to_string())).unwrap();
+        assert_eq!(8, store.payments.len());
+        let final_payment = store.payments[&8];
+        assert_eq!(Decimal::new(200,0), final_payment.amount(&mut store.amounts).unwrap().standard);
     }
 
     #[test]
     fn check_payments_received() {
         run_test();
-        //TODO
+        let mut store = Store::new();
+        store.init(Some(STORE_INIT.to_string())).unwrap();
+        assert_eq!(3, store.payments_received.len());
+        let final_payment_received = store.payments_received[&3];
+        assert_eq!(
+            Decimal::new(5000,0), 
+            final_payment_received.amount(&mut store.amounts).unwrap().standard
+        );
     }
 
     #[test]
     fn check_accounts() {
         run_test();
-        //TODO
+        let mut store = Store::new();
+        store.init(Some(STORE_INIT.to_string())).unwrap();
+        assert_eq!(2, store.accounts.len());
     }
 
     #[test]
     fn check_expenses() {
         run_test();
-        //TODO
+        let mut store = Store::new();
+        store.init(Some(STORE_INIT.to_string())).unwrap();
+        assert_eq!(4, store.expenses.len());
+        assert_eq!("Groceries".to_string(), store.expenses[&1].name);
+        assert_eq!("Mortgage".to_string(), store.expenses[&2].name);
+        assert_eq!("Car Repair".to_string(), store.expenses[&3].name);
+        assert_eq!("Co-pay".to_string(), store.expenses[&4].name);
     }
 
     #[test]
     fn check_incomes() {
         run_test();
-        //TODO
+        let mut store = Store::new();
+        store.init(Some(STORE_INIT.to_string())).unwrap();
+        assert_eq!(2, store.incomes.len());
+        assert_eq!("Space Man".to_string(), store.incomes[&1].name);
+        assert_eq!("Cowboy".to_string(), store.incomes[&2].name);
     }
 
     #[test]
     fn check_amounts() {
         run_test();
-        //TODO
+        let mut store = Store::new();
+        store.init(Some(STORE_INIT.to_string())).unwrap();
+        assert_eq!(11, store.amounts.len());
     }
 }

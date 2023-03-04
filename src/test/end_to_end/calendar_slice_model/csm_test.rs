@@ -11,7 +11,7 @@ impl CsmTest {
             CsmTest::format_path("reports/"),      // output
             CsmTest::format_path("events"),        // payment_events
             "2023-03".to_string(),                 // start
-            "2023-03".to_string(),                 // end
+            "2023-06".to_string(),                 // end
         );
         println!("CSMTEST RUN");
         match CalendarSliceModel::run_cli(cli) {
@@ -59,10 +59,15 @@ mod calendar_slice_model_e2e {
         run_test();
         let mut store = Store::new();
         store.init(Some(STORE_INIT.to_string())).unwrap();
-        assert_eq!(12, store.account_balances.len());
-        let final_balance = store.account_balances[&12];
+        assert_eq!(37, store.account_balances.len());
+       
+        let mid_balance = store.account_balances[&12];
+        assert_eq!(2, mid_balance.account_id);
+        assert_eq!(Decimal::new(8500,0), mid_balance.amount);
+        
+        let final_balance = store.account_balances[&37];
         assert_eq!(2, final_balance.account_id);
-        assert_eq!(Decimal::new(8500,0), final_balance.amount);
+        assert_eq!(Decimal::new(31_900,0), final_balance.amount);
     }
 
     #[test]
@@ -70,7 +75,8 @@ mod calendar_slice_model_e2e {
         run_test();
         let mut store = Store::new();
         store.init(Some(STORE_INIT.to_string())).unwrap();
-        assert_eq!(8, store.payments.len());
+        
+        assert_eq!(24, store.payments.len());
         let final_payment = store.payments[&8];
         assert_eq!(Decimal::new(200,0), final_payment.amount(&mut store.amounts).unwrap().standard);
     }
@@ -80,7 +86,8 @@ mod calendar_slice_model_e2e {
         run_test();
         let mut store = Store::new();
         store.init(Some(STORE_INIT.to_string())).unwrap();
-        assert_eq!(3, store.payments_received.len());
+        
+        assert_eq!(12, store.payments_received.len());
         let final_payment_received = store.payments_received[&3];
         assert_eq!(
             Decimal::new(5000,0), 
@@ -93,6 +100,7 @@ mod calendar_slice_model_e2e {
         run_test();
         let mut store = Store::new();
         store.init(Some(STORE_INIT.to_string())).unwrap();
+        
         assert_eq!(2, store.accounts.len());
     }
 
@@ -101,6 +109,7 @@ mod calendar_slice_model_e2e {
         run_test();
         let mut store = Store::new();
         store.init(Some(STORE_INIT.to_string())).unwrap();
+        
         assert_eq!(4, store.expenses.len());
         assert_eq!("Groceries".to_string(), store.expenses[&1].name);
         assert_eq!("Mortgage".to_string(), store.expenses[&2].name);
@@ -113,6 +122,7 @@ mod calendar_slice_model_e2e {
         run_test();
         let mut store = Store::new();
         store.init(Some(STORE_INIT.to_string())).unwrap();
+        
         assert_eq!(2, store.incomes.len());
         assert_eq!("Space Man".to_string(), store.incomes[&1].name);
         assert_eq!("Cowboy".to_string(), store.incomes[&2].name);
@@ -123,6 +133,6 @@ mod calendar_slice_model_e2e {
         run_test();
         let mut store = Store::new();
         store.init(Some(STORE_INIT.to_string())).unwrap();
-        assert_eq!(11, store.amounts.len());
+        assert_eq!(36, store.amounts.len());
     }
 }

@@ -5,9 +5,9 @@ use clap::Parser;
 pub struct Cli {
     #[arg(short, long, default_value_t = String::from("data/init/"))]
     pub input: String,
-    #[arg(short, long, default_value_t = String::from("data/"))]
+    #[arg(short, long, default_value_t = String::from("data/reports/"))]
     pub output: String,
-    #[arg(short, long, default_value_t = String::from("example_1"))]
+    #[arg(short, long, default_value_t = String::from("data/events/"))]
     pub payment_events: String,
 
     #[arg(short, long)]

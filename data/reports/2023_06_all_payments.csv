@@ -1,0 +1,7 @@
+id,name,amount,account_name,completed_at,prev_balance,ending_balance
+1,Groceries,200.0,Credit Union,2023-06-01T12:00:00,24900.0,24700.0
+2,Mortgage,2000.0,Credit Union,2023-06-05T12:00:00,24700.0,22700.0
+3,Groceries,200.0,Credit Union,2023-06-08T12:00:00,27700.0,27500.0
+4,Groceries,200.0,Credit Union,2023-06-15T12:00:00,27500.0,27300.0
+5,Groceries,200.0,Credit Union,2023-06-22T12:00:00,32300.0,32100.0
+6,Groceries,200.0,Credit Union,2023-06-29T12:00:00,32100.0,31900.0

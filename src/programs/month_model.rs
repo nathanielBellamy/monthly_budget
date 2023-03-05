@@ -93,27 +93,27 @@ impl MonthModel {
         if self.output_results {
             let account_summary_store = AccountSummary::by_id(2, store);
             AccountSummary::write_to_csv(
-                &account_summary_store, 
-                self.format_path("account_2_summary").as_str()
+                &account_summary_store,
+                self.format_path("account_2_summary").as_str(),
             )?;
 
             let expense_summary = MonthModel::construct_payment_summary(store);
             PaymentSummary::write_to_csv(
-                &expense_summary, 
-                self.format_path("expense_summary").as_str()
+                &expense_summary,
+                self.format_path("expense_summary").as_str(),
             )?;
 
             let all_payment_disp_store: PaymentDisplayStore = self.month.all_payments_display();
             PaymentDisplay::write_to_csv(
                 &all_payment_disp_store,
-                self.format_path("all_payments").as_str()
+                self.format_path("all_payments").as_str(),
             )?;
 
             let all_payment_rec_disp_store: PaymentDisplayStore =
                 self.month.all_payments_received_display();
             PaymentDisplay::write_to_csv(
                 &all_payment_rec_disp_store,
-                self.format_path("all_payments_received").as_str()
+                self.format_path("all_payments_received").as_str(),
             )?;
 
             store.write_to_csv(None)?;
@@ -122,8 +122,13 @@ impl MonthModel {
         Ok(())
     }
 
-    pub fn format_path(&self, path: &'static str) ->  String {
-        format!("data/reports/{}_{}_{}.csv", self.month.year, self.month.display_number(), path)
+    pub fn format_path(&self, path: &'static str) -> String {
+        format!(
+            "data/reports/{}_{}_{}.csv",
+            self.month.year,
+            self.month.display_number(),
+            path
+        )
     }
 
     pub fn construct_payment_summary(store: &mut Store) -> PaymentSummaryStore {

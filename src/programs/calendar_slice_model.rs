@@ -85,7 +85,7 @@ impl CalendarSliceModel {
                 Some(self.path_in.clone()),
                 Some(self.path_out.clone()),
             )
-            .run(pe_bin_store, Some(&mut store), None)?;
+            .run(pe_bin_store, Some(&mut store))?;
         }
 
         if self.output_results {

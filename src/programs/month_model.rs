@@ -58,18 +58,12 @@ impl MonthModel {
         &mut self,
         payment_events: &PaymentEventStore,
         store_ext: Option<&mut Store>,
-        dir: Option<String>,
     ) -> Result<(), Box<dyn Error>> {
-        let path: Option<String> = match dir {
-            None => Some("data/init/".to_string()),
-            Some(directory) => Some(directory),
-        };
-
         let mut self_store = Store::new();
         let store = match store_ext {
             Some(passed_in) => passed_in,
             None => {
-                self_store.init(path)?;
+                self_store.init(Some(self.path_in.clone()))?;
                 &mut self_store
             }
         };
@@ -115,7 +109,7 @@ impl MonthModel {
                 self.format_path("all_payments_received").as_str(),
             )?;
 
-            store.write_to_csv(None)?;
+            store.write_to_csv(Some(self.path_out.clone()))?;
         }
 
         Ok(())

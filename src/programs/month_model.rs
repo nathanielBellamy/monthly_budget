@@ -22,25 +22,24 @@ pub struct MonthModel {
     month: Month,
     output_results: bool,
     #[allow(unused)]
-    path_in: &'static str,
-    #[allow(unused)]
-    path_out: &'static str,
+    path_in: String,
+    path_out: String,
 }
 
 impl MonthModel {
     pub fn new(
         year_month: YM,
         output_results: bool,
-        path_in: Option<&'static str>,
-        path_out: Option<&'static str>,
+        path_in: Option<String>,
+        path_out: Option<String>,
     ) -> MonthModel {
         let data_in = match path_in {
-            None => "data/init/",
+            None => "data/init/".to_string(),
             Some(path) => path,
         };
 
         let data_out = match path_out {
-            None => "data/",
+            None => "data/reports/".to_string(),
             Some(path) => path,
         };
 
@@ -124,7 +123,8 @@ impl MonthModel {
 
     pub fn format_path(&self, path: &'static str) -> String {
         format!(
-            "data/reports/{}_{}_{}.csv",
+            "{}/{}_{}_{}.csv",
+            self.path_out,
             self.month.year,
             self.month.display_number(),
             path
@@ -188,7 +188,7 @@ mod month_model_spec {
         MonthModel::new(
             YM::new(2023, MK::Feb),
             false,
-            Some("src/test/data/init"),
+            Some("src/test/data/init".to_string()),
             None,
         )
     }

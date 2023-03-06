@@ -79,8 +79,13 @@ impl CalendarSliceModel {
         for month in cal_slice.months().iter() {
             // year_months in chrono order thx to Eq, PartialEq, PartialOrd, Ord Traits and BTreeMap
             let pe_bin_store = payment_event_month_bins.entry(*month).or_default();
-            // TODO: add recurring events to bin store
-            MonthModel::new(*month, true, None, None).run(pe_bin_store, Some(&mut store), None)?;
+            MonthModel::new(
+                *month,
+                true,
+                Some(self.path_in.clone()),
+                Some(self.path_out.clone()),
+            )
+            .run(pe_bin_store, Some(&mut store), None)?;
         }
 
         if self.output_results {

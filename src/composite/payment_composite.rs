@@ -144,7 +144,6 @@ impl PaymentComposite {
             _ => (),
         }
 
-
         self.payment_completed_at = match complete_at {
             None => Utc::now().naive_local(),
             Some(ndt) => ndt,

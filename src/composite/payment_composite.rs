@@ -14,6 +14,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::error::Error;
 
+use super::payment_event::RecurrenceState;
+
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct PaymentComposite {
     pub id: Option<usize>,
@@ -31,6 +33,7 @@ pub struct PaymentComposite {
     pub payment_completed_at: NaiveDateTime,
     pub expense_id: Option<usize>,
     pub expense_name: String,
+    pub recurrence_state: RecurrenceState,
 }
 
 impl CsvRecord<PaymentComposite> for PaymentComposite {
@@ -126,6 +129,22 @@ impl PaymentComposite {
             }
         }
 
+        // update Income state based on recurrence
+        let mut update_expense_active = {
+            |b: bool| {
+                if let Some(expense) = store.expenses.get_mut(&self.expense_id.unwrap()) {
+                    (*expense).active = b;
+                }
+            }
+        };
+        match self.recurrence_state {
+            RecurrenceState::First => update_expense_active(true), // TODO: non-redundant on recurring event re-start, but
+            // redundant when Income is first made
+            RecurrenceState::Last => update_expense_active(false),
+            _ => (),
+        }
+
+
         self.payment_completed_at = match complete_at {
             None => Utc::now().naive_local(),
             Some(ndt) => ndt,
@@ -189,6 +208,7 @@ mod payment_composite_spec {
                 .unwrap(),
             expense_id: None,
             expense_name: "dog food".to_string(),
+            recurrence_state: RecurrenceState::None,
         }
     }
 
@@ -270,6 +290,55 @@ mod payment_composite_spec {
                 .id
                 .unwrap()
         )
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn create_payment__updates_expense_active_based_on_recurrence_state() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let mut payment_comp_first = payment_comp();
+        payment_comp_first.recurrence_state = RecurrenceState::First;
+        payment_comp_first.create_payment(&mut store, None).unwrap();
+        assert_eq!(
+            true,
+            Expense::by_name("dog food", &mut store.expenses)
+                .unwrap()
+                .active
+        );
+
+        let mut payment_comp_active = payment_comp();
+        payment_comp_active.recurrence_state = RecurrenceState::Active;
+        payment_comp_active
+            .create_payment(&mut store, None)
+            .unwrap();
+        assert_eq!(
+            true,
+            Expense::by_name("dog food", &mut store.expenses)
+                .unwrap()
+                .active
+        );
+
+        let mut payment_comp_none = payment_comp();
+        payment_comp_none.recurrence_state = RecurrenceState::None;
+        payment_comp_none.create_payment(&mut store, None).unwrap();
+        assert_eq!(
+            true,
+            Expense::by_name("dog food", &mut store.expenses)
+                .unwrap()
+                .active
+        );
+
+        let mut payment_comp_last = payment_comp();
+        payment_comp_last.recurrence_state = RecurrenceState::Last;
+        payment_comp_last.create_payment(&mut store, None).unwrap();
+        assert_eq!(
+            false,
+            Expense::by_name("dog food", &mut store.expenses)
+                .unwrap()
+                .active
+        );
     }
 
     #[test]

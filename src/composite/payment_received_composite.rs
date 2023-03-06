@@ -14,6 +14,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::error::Error;
 
+use super::payment_event::RecurrenceState;
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PaymentReceivedComposite {
     pub id: Option<usize>,
@@ -31,6 +33,7 @@ pub struct PaymentReceivedComposite {
     pub payment_received_completed_at: NaiveDateTime,
     pub income_id: Option<usize>,
     pub income_name: String,
+    pub recurrence_state: RecurrenceState,
 }
 
 impl CsvRecord<PaymentReceivedComposite> for PaymentReceivedComposite {
@@ -126,6 +129,21 @@ impl PaymentReceivedComposite {
             }
         }
 
+        // update Income state based on recurrence
+        let mut update_income_active = {
+            |b: bool| {
+                if let Some(income) = store.incomes.get_mut(&self.income_id.unwrap()) {
+                    (*income).active = b;
+                }
+            }
+        };
+        match self.recurrence_state {
+            RecurrenceState::First => update_income_active(true), // TODO: non-redundant on recurring event re-start, but
+            // redundant when Income is first made
+            RecurrenceState::Last => update_income_active(false),
+            _ => (),
+        }
+
         self.payment_received_completed_at = match complete_at {
             None => Utc::now().naive_local(),
             Some(ndt) => ndt,
@@ -190,6 +208,7 @@ mod payment_composite_spec {
                 .unwrap(),
             income_id: None,
             income_name: "cowboy".to_string(),
+            recurrence_state: RecurrenceState::None,
         }
     }
 
@@ -280,6 +299,66 @@ mod payment_composite_spec {
                 .id
                 .unwrap()
         )
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn create_payment_received__updates_income_active_based_on_recurrence_state() {
+        let mut store = Store::new();
+        Spec::init(&mut store);
+
+        let mut payment_comp_first = payment_rec_comp();
+        payment_comp_first.recurrence_state = RecurrenceState::First;
+        payment_comp_first
+            .create_payment_received(&mut store, None)
+            .unwrap();
+        assert_eq!(
+            true,
+            Income::by_name("cowboy", &mut store.incomes)
+                .unwrap()
+                .active
+        );
+
+        let mut payment_comp_active = payment_rec_comp();
+        payment_comp_active.recurrence_state = RecurrenceState::Active;
+        payment_comp_active
+            .create_payment_received(&mut store, None)
+            .unwrap();
+        assert_eq!(
+            true,
+            Income::by_name("cowboy", &mut store.incomes)
+                .unwrap()
+                .active
+        );
+
+        let mut payment_comp_none = payment_rec_comp();
+        payment_comp_none.recurrence_state = RecurrenceState::None;
+        payment_comp_none
+            .create_payment_received(&mut store, None)
+            .unwrap();
+        assert_eq!(
+            true,
+            Income::by_name("cowboy", &mut store.incomes)
+                .unwrap()
+                .active
+        );
+
+        let mut payment_comp_last = payment_rec_comp();
+        payment_comp_last.recurrence_state = RecurrenceState::Last;
+        match payment_comp_last.recurrence_state {
+            RecurrenceState::Last => (),
+            _ => panic!("wrong recurrence state"),
+        }
+        payment_comp_last
+            .create_payment_received(&mut store, None)
+            .unwrap();
+
+        assert_eq!(
+            false,
+            Income::by_name("cowboy", &mut store.incomes)
+                .unwrap()
+                .active
+        );
     }
 
     #[test]

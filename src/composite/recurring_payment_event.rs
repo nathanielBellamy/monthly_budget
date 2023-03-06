@@ -12,6 +12,8 @@ use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fs;
 
+use super::payment_event::RecurrenceState;
+
 #[derive(Deserialize, Serialize, Debug)]
 pub struct RecurringPaymentEvent {
     pub id: Option<usize>,
@@ -58,10 +60,16 @@ impl RecurringPaymentEvent {
     }
 
     pub fn payment_events(&self) -> Vec<PaymentEvent> {
-        self.payment_dates()
+        let mut payment_events: Vec<PaymentEvent> = self
+            .payment_dates()
             .into_iter()
             .map(|date| self.to_payment_event(&date))
-            .collect()
+            .collect();
+        payment_events[0].recurrence_state = RecurrenceState::First;
+        if let Some(payment_event) = payment_events.last_mut() {
+            payment_event.recurrence_state = RecurrenceState::Last;
+        }
+        payment_events
     }
 
     pub fn to_payment_event(&self, date: &NaiveDate) -> PaymentEvent {
@@ -72,6 +80,7 @@ impl RecurringPaymentEvent {
             account_name: self.account_name.clone(),
             amount: self.amount,
             completed_at: date.and_hms_opt(12, 0, 0).unwrap(), // TODO: consider how to handle time
+            recurrence_state: RecurrenceState::Active,
         }
     }
 
@@ -128,9 +137,9 @@ mod payment_composite_spec {
             name: "dog food".to_string(),
             account_name: "piggybank".to_string(),
             amount: Decimal::new(50, 0),
-            start: start,
-            end: end,
-            recurrence: recurrence,
+            start,
+            end,
+            recurrence,
         }
     }
 

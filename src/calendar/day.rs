@@ -112,6 +112,7 @@ impl Day {
 mod day_spec {
 
     use super::*;
+    use crate::composite::payment_event::RecurrenceState;
     use crate::schema::account::Account;
     use crate::schema::account_balance::AccountBalance;
     use crate::schema::account_balance::AccountBalanceStore;
@@ -135,6 +136,7 @@ mod day_spec {
                 .unwrap()
                 .and_hms_opt(12, 00, 00)
                 .unwrap(),
+            recurrence_state: RecurrenceState::None,
         };
 
         assert_eq!(0, day.payments.len());
@@ -159,6 +161,7 @@ mod day_spec {
                 .unwrap()
                 .and_hms_opt(12, 00, 00)
                 .unwrap(),
+            recurrence_state: RecurrenceState::None,
         };
 
         assert_eq!(0, day.payments_received.len());
@@ -183,6 +186,7 @@ mod day_spec {
                 .unwrap()
                 .and_hms_opt(12, 00, 01)
                 .unwrap(),
+            recurrence_state: RecurrenceState::None,
         });
         day.add_payment_event(&PaymentEvent {
             id: None,
@@ -194,6 +198,7 @@ mod day_spec {
                 .unwrap()
                 .and_hms_opt(12, 00, 02)
                 .unwrap(),
+            recurrence_state: RecurrenceState::None,
         });
         day.add_payment_event(&PaymentEvent {
             id: None,
@@ -205,6 +210,7 @@ mod day_spec {
                 .unwrap()
                 .and_hms_opt(12, 00, 03)
                 .unwrap(),
+            recurrence_state: RecurrenceState::None,
         });
         day.add_payment_event(&PaymentEvent {
             id: None,
@@ -216,6 +222,7 @@ mod day_spec {
                 .unwrap()
                 .and_hms_opt(12, 00, 04)
                 .unwrap(),
+            recurrence_state: RecurrenceState::None,
         });
 
         assert_eq!(2, day.payments.len());

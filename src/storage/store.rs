@@ -80,7 +80,7 @@ impl Store {
     }
 
     pub fn write_to_csv(&self, dir: Option<String>) -> StoreWriteResult {
-        let path = dir.unwrap_or_else(|| "data/".to_string());
+        let path = dir.unwrap_or_else(|| "data/reports/".to_string());
         let write_res: [CsvWriteResult; 7] = [
             Account::write_to_csv(&self.accounts, format!("{path}{}", "accounts.csv").as_str()),
             AccountBalance::write_to_csv(

@@ -92,9 +92,9 @@ impl CalendarSliceModel {
             store.write_to_csv(Some(self.path_out.clone()))?;
         }
 
-        println!("Payment Event Bins: {payment_event_month_bins:#?}");
+        // println!("Payment Event Bins: {payment_event_month_bins:#?}");
         println!("===============================================");
-        println!("Final Store: {store:#?}");
+        // println!("Final Store: {store:#?}");
 
         Ok(())
     }

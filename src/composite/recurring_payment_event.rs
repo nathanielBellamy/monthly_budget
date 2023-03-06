@@ -43,7 +43,7 @@ impl RecurringPaymentEvent {
     ) -> RecurringPaymentEventBinResult {
         let recc_payment_events = RecurringPaymentEvent::fetch_events(path)?;
         for recc_payment_event in recc_payment_events.into_iter() {
-            let payment_events = recc_payment_event.payment_events();
+            let payment_events = recc_payment_event.payment_events(cal_slice);
             for payment_event in payment_events.into_iter() {
                 let ym = YM::new(
                     payment_event.completed_at.year(),
@@ -59,9 +59,9 @@ impl RecurringPaymentEvent {
         Ok(())
     }
 
-    pub fn payment_events(&self) -> Vec<PaymentEvent> {
+    pub fn payment_events(&self, cal_slice: &CalendarSlice) -> Vec<PaymentEvent> {
         let mut payment_events: Vec<PaymentEvent> = self
-            .payment_dates()
+            .payment_dates(cal_slice)
             .into_iter()
             .map(|date| self.to_payment_event(&date))
             .collect();
@@ -69,7 +69,9 @@ impl RecurringPaymentEvent {
         if let Some(payment_event) = payment_events.last_mut() {
             payment_event.recurrence_state = RecurrenceState::Last;
         }
+        // println!("{payment_events:#?}");
         payment_events
+
     }
 
     pub fn to_payment_event(&self, date: &NaiveDate) -> PaymentEvent {
@@ -84,7 +86,7 @@ impl RecurringPaymentEvent {
         }
     }
 
-    pub fn payment_dates(&self) -> Vec<NaiveDate> {
+    pub fn payment_dates(&self, cal_slice: &CalendarSlice) -> Vec<NaiveDate> {
         let mut payment_dates: Vec<NaiveDate> = vec![self.start];
 
         if self.start == self.end {
@@ -92,7 +94,8 @@ impl RecurringPaymentEvent {
         }
 
         let mut curr_date = self.next_payment_date(self.start);
-        while curr_date <= self.end {
+        while curr_date <= self.end && curr_date < cal_slice.end.start_of_next_month() {
+            println!("{curr_date}");
             payment_dates.push(curr_date);
             let next_date = self.next_payment_date(curr_date);
             curr_date = next_date;

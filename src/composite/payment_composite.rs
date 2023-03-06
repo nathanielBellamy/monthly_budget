@@ -137,12 +137,9 @@ impl PaymentComposite {
                 }
             }
         };
-        match self.recurrence_state {
-            RecurrenceState::First => update_expense_active(true), // TODO: non-redundant on recurring event re-start, but
-            // redundant when Income is first made
-            RecurrenceState::Last => update_expense_active(false),
-            _ => (),
-        }
+        update_expense_active(true);
+
+        // println!("{:#?}: {}", self.recurrence_state, store.expenses[&self.expense_id.unwrap()].active);
 
         self.payment_completed_at = match complete_at {
             None => Utc::now().naive_local(),

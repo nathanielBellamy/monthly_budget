@@ -10,11 +10,13 @@ use crate::composite::payment_received_composite::PaymentReceivedCompositeStore;
 use crate::composite::payment_summary::PaymentSummary;
 use crate::composite::payment_summary::PaymentSummaryStore;
 use crate::schema::expense::Expense;
+use crate::schema::income::Income;
 use crate::storage::store::Store;
 use crate::traits::csv_store::CsvStore;
 use chrono::NaiveDate;
 use std::collections::BTreeMap;
 use std::error::Error;
+use std::collections::btree_map::Entry;
 
 pub struct MonthModel {
     year: i32,
@@ -67,6 +69,11 @@ impl MonthModel {
                 &mut self_store
             }
         };
+    
+        // mark all Expense/Income as inactive to begin month
+        // will be marked as active when payment event recorded
+        Expense::mark_all_inactive(&mut store.expenses);
+        Income::mark_all_inactive(&mut store.incomes);
 
         self.month = Month {
             key: self.key,
@@ -129,14 +136,17 @@ impl MonthModel {
         let mut payment_summary_store = PaymentSummaryStore::new();
         let expense_ids: Vec<usize> = store.expenses.keys().cloned().collect();
         for expense_id in expense_ids {
-            // sorted expense ids
-            payment_summary_store
-                .entry(expense_id)
-                .or_insert(PaymentSummary {
-                    id: Some(expense_id),
-                    name: Expense::name_by_id(expense_id, store).to_string(),
-                    total: Expense::total_by_id(expense_id, store),
-                });
+            if let Entry::Occupied(expense) = store.expenses.entry(expense_id) {
+                if expense.get().active {
+                    payment_summary_store
+                        .entry(expense_id)
+                        .or_insert(PaymentSummary {
+                            id: Some(expense_id),
+                            name: Expense::name_by_id(expense_id, store).to_string(),
+                        total: Expense::total_by_id(expense_id, store),
+                    });
+                }
+            }
         }
         payment_summary_store
     }

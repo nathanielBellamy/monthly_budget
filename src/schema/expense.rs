@@ -46,6 +46,12 @@ impl<'a, 'b: 'a> Expense {
         expense
     }
 
+    pub fn mark_all_inactive(store: &mut ExpenseStore) {
+        for (_id, expense) in store.iter_mut() {
+            (*expense).active = false;
+        }
+    }
+
     pub fn name_by_id(id: usize, store: &mut Store) -> String {
         match Expense::by_id(id, &mut store.expenses) {
             None => format!("No Name Found for Expense Id: {id}"),

@@ -45,6 +45,12 @@ impl<'a, 'b: 'a> Income {
         income
     }
 
+    pub fn mark_all_inactive(store: &mut IncomeStore) {
+        for (_id, income) in store.iter_mut() {
+            (*income).active = false;
+        }
+    }
+
     pub fn payments_received(&'a self, store: &'b PaymentReceivedStore) -> PaymentReceivedStore {
         if self.id.is_none() {
             ErrorHandler::log(From::from(format!(

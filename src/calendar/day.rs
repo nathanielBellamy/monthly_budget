@@ -68,6 +68,26 @@ impl Day {
         PaymentReceivedComposite::save_to_store(payment_rec_comp, &mut self.payments_received);
     }
 
+    pub fn payment_event_ids_chrono(&self) -> Vec<(usize, NaiveDateTime, &str)> {
+        // TODO: refactor to use this method at the start of execute_payments_in_order 
+        // temporarily avoided due to mut/immut references to .self
+        let mut payment_times: Vec<(usize, NaiveDateTime, &str)> = vec![];
+        for (id, pymnt) in self.payments.iter() {
+            payment_times.push((*id, pymnt.payment_completed_at, "payment"));
+        }
+
+        for (id, pymnt_rec) in self.payments_received.iter() {
+            payment_times.push((
+                *id,
+                pymnt_rec.payment_received_completed_at,
+                "payment_received",
+            ))
+        }
+
+        payment_times.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        payment_times
+    }
+
     pub fn execute_payments_in_order(&mut self, store: &mut Store) -> Result<(), Box<dyn Error>> {
         let mut payment_times: Vec<(usize, NaiveDateTime, &str)> = vec![];
         for (id, pymnt) in self.payments.iter() {
@@ -83,7 +103,7 @@ impl Day {
         }
 
         payment_times.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-
+       
         for pymnt_event in payment_times.iter() {
             match pymnt_event.2 {
                 "payment" => {

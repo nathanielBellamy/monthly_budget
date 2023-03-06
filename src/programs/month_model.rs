@@ -2,7 +2,7 @@ use crate::calendar::day::{Day, DayStore};
 use crate::calendar::month::Month;
 use crate::calendar::month_key::MonthKey as MK;
 use crate::calendar::year_month::YearMonth as YM;
-use crate::composite::account_summary::AccountSummary;
+use crate::composite::account_summary::{AccountSummary, AccountSummaryStore};
 use crate::composite::payment_composite::PaymentCompositeStore;
 use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
 use crate::composite::payment_event::PaymentEventStore;
@@ -91,7 +91,7 @@ impl MonthModel {
         }
 
         if self.output_results {
-            let account_summary_store = AccountSummary::by_id(2, store);
+            let account_summary_store = self.account_summary_by_id(2);
             AccountSummary::write_to_csv(
                 &account_summary_store,
                 self.format_path("account_2_summary").as_str(),
@@ -122,9 +122,51 @@ impl MonthModel {
         Ok(())
     }
 
+    pub fn account_summary_by_id(&mut self, account_id: usize) -> AccountSummaryStore {
+        // TODO  
+        let mut account_summary_store = AccountSummaryStore::new();
+        for (_id, day) in self.month.days.iter_mut() {
+            for (id, _completed_at, event_type) in day.payment_event_ids_chrono().iter() {
+                match *event_type {
+                    "payment" => {
+                        let ec = day.payments.get(id).unwrap();
+                        if ec.account_id.unwrap() == account_id {
+                            AccountSummary::save_to_store(
+                                AccountSummary {
+                                   id: ec.account_id,
+                                   name: ec.account_name.clone(),
+                                   balance: ec.ending_balance.unwrap(),
+                                   reported_at: ec.payment_completed_at,
+                                },
+                                &mut account_summary_store
+                            );
+                        }
+                    },
+                    "payments_received" => {
+                        let ec = day.payments_received.get(id).unwrap();
+                        if ec.account_id.unwrap() == account_id {
+                            AccountSummary::save_to_store(
+                                AccountSummary {
+                                    id: ec.account_id,
+                                    name: ec.account_name.clone(),
+                                    balance: ec.ending_balance.unwrap(),
+                                    reported_at: ec.payment_received_completed_at,
+                                },
+                                &mut account_summary_store
+                            );
+                        }
+                    },
+                    _ => (),
+                };
+            }
+        }
+
+        account_summary_store
+    }
+
     pub fn format_path(&self, path: &'static str) -> String {
         format!(
-            "{}/{}_{}_{}.csv",
+            "{}{}_{}_{}.csv",
             self.path_out,
             self.month.year,
             self.month.display_number(),

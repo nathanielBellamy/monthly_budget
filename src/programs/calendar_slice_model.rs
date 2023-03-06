@@ -1,11 +1,13 @@
 use crate::app::cli::Cli;
 use crate::calendar::calendar_slice::CalendarSlice;
 use crate::calendar::year_month::YearMonth as YM;
+use crate::composite::account_summary::AccountSummary;
 use crate::composite::payment_event::PaymentEvent;
 use crate::composite::payment_event::PaymentEventBinStore;
 use crate::composite::recurring_payment_event::RecurringPaymentEvent;
 use crate::programs::month_model::MonthModel;
 use crate::storage::store::Store;
+use crate::traits::csv_store::CsvStore;
 use std::error::Error;
 
 pub struct CalendarSliceModel {
@@ -89,6 +91,10 @@ impl CalendarSliceModel {
         }
 
         if self.output_results {
+            let account_summary_store = AccountSummary::by_id(2, &mut store);
+            AccountSummary::write_to_csv(&account_summary_store, format!("{}{}", self.path_out, "account_2_summary").as_str())?;
+            
+            // write main store
             store.write_to_csv(Some(self.path_out.clone()))?;
         }
 

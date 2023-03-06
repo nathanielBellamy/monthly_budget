@@ -71,7 +71,6 @@ impl RecurringPaymentEvent {
         }
         // println!("{payment_events:#?}");
         payment_events
-
     }
 
     pub fn to_payment_event(&self, date: &NaiveDate) -> PaymentEvent {
@@ -95,7 +94,6 @@ impl RecurringPaymentEvent {
 
         let mut curr_date = self.next_payment_date(self.start);
         while curr_date <= self.end && curr_date < cal_slice.end.start_of_next_month() {
-            println!("{curr_date}");
             payment_dates.push(curr_date);
             let next_date = self.next_payment_date(curr_date);
             curr_date = next_date;
@@ -125,6 +123,7 @@ impl RecurringPaymentEvent {
 #[cfg(test)]
 mod payment_composite_spec {
     use super::*;
+    use crate::calendar::month_key::MonthKey as MK;
     use chrono::NaiveDate;
 
     // TODO: move to spec::factory MB-10
@@ -152,8 +151,9 @@ mod payment_composite_spec {
         // start end chosen so that both are payment_event_dates
         let start = NaiveDate::from_ymd_opt(2023, 02, 10).unwrap();
         let end = NaiveDate::from_ymd_opt(2023, 06, 16).unwrap();
+        let cal_slice = CalendarSlice::new(YM::new(2023, MK::Feb), YM::new(2023, MK::Jun)).unwrap();
         let reccurring_payment_event = reccurring_payment_event(start, end, Every::Weeks(2));
-        let payment_events: Vec<PaymentEvent> = reccurring_payment_event.payment_events();
+        let payment_events: Vec<PaymentEvent> = reccurring_payment_event.payment_events(&cal_slice);
 
         assert_eq!(payment_events.len(), 10);
         for payment_event in payment_events.iter() {
@@ -240,8 +240,9 @@ mod payment_composite_spec {
         // start end chosen so that both are payment_event_dates
         let start = NaiveDate::from_ymd_opt(2023, 02, 10).unwrap();
         let end = NaiveDate::from_ymd_opt(2023, 06, 16).unwrap();
+        let cal_slice = CalendarSlice::new(YM::new(2023, MK::Feb), YM::new(2023, MK::Jun)).unwrap();
         let reccurring_payment_event = reccurring_payment_event(start, end, Every::Weeks(2));
-        let payment_dates: Vec<NaiveDate> = reccurring_payment_event.payment_dates();
+        let payment_dates: Vec<NaiveDate> = reccurring_payment_event.payment_dates(&cal_slice);
 
         assert_eq!(payment_dates.len(), 10);
         assert_eq!(payment_dates[0], reccurring_payment_event.start);
@@ -287,7 +288,8 @@ mod payment_composite_spec {
         let start = NaiveDate::from_ymd_opt(2023, 02, 10).unwrap();
         let end = NaiveDate::from_ymd_opt(2023, 06, 15).unwrap();
         let reccurring_payment_event = reccurring_payment_event(start, end, Every::Weeks(2));
-        let payment_dates: Vec<NaiveDate> = reccurring_payment_event.payment_dates();
+        let cal_slice = CalendarSlice::new(YM::new(2023, MK::Feb), YM::new(2023, MK::Jun)).unwrap();
+        let payment_dates: Vec<NaiveDate> = reccurring_payment_event.payment_dates(&cal_slice);
 
         assert_eq!(payment_dates.len(), 9);
         assert_eq!(payment_dates[0], reccurring_payment_event.start);

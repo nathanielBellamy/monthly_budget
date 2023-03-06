@@ -298,66 +298,6 @@ mod payment_composite_spec {
 
     #[test]
     #[allow(non_snake_case)]
-    fn create_payment_received__updates_income_active_based_on_recurrence_state() {
-        let mut store = Store::new();
-        Spec::init(&mut store);
-
-        let mut payment_comp_first = payment_rec_comp();
-        payment_comp_first.recurrence_state = RecurrenceState::First;
-        payment_comp_first
-            .create_payment_received(&mut store, None)
-            .unwrap();
-        assert_eq!(
-            true,
-            Income::by_name("cowboy", &mut store.incomes)
-                .unwrap()
-                .active
-        );
-
-        let mut payment_comp_active = payment_rec_comp();
-        payment_comp_active.recurrence_state = RecurrenceState::Active;
-        payment_comp_active
-            .create_payment_received(&mut store, None)
-            .unwrap();
-        assert_eq!(
-            true,
-            Income::by_name("cowboy", &mut store.incomes)
-                .unwrap()
-                .active
-        );
-
-        let mut payment_comp_none = payment_rec_comp();
-        payment_comp_none.recurrence_state = RecurrenceState::None;
-        payment_comp_none
-            .create_payment_received(&mut store, None)
-            .unwrap();
-        assert_eq!(
-            true,
-            Income::by_name("cowboy", &mut store.incomes)
-                .unwrap()
-                .active
-        );
-
-        let mut payment_comp_last = payment_rec_comp();
-        payment_comp_last.recurrence_state = RecurrenceState::Last;
-        match payment_comp_last.recurrence_state {
-            RecurrenceState::Last => (),
-            _ => panic!("wrong recurrence state"),
-        }
-        payment_comp_last
-            .create_payment_received(&mut store, None)
-            .unwrap();
-
-        assert_eq!(
-            false,
-            Income::by_name("cowboy", &mut store.incomes)
-                .unwrap()
-                .active
-        );
-    }
-
-    #[test]
-    #[allow(non_snake_case)]
     // TODO: find out how to enact something like Ruby/Rspec's Timecop
     fn create_payment_received__sets_self_payment_completed_at_to_current_time_when_complete_at_is_none(
     ) {

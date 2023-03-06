@@ -36,6 +36,7 @@ impl CsvStore<Payment> for Payment {}
 pub type PaymentStore = BTreeMap<usize, Payment>;
 
 impl<'a, 'b: 'a> Payment {
+    #[allow(unused)]
     pub fn amount(&'a self, store: &'b AmountStore) -> Option<Amount> {
         let mut amount: Option<Amount> = None;
         for (id, amt) in store.iter() {
@@ -70,10 +71,12 @@ impl<'a, 'b: 'a> Payment {
         account
     }
 
+    #[allow(unused)]
     pub fn standard_amount(&self, store: &AmountStore) -> Option<Decimal> {
         self.amount(store).map(|amt| amt.standard)
     }
 
+    #[allow(unused)]
     pub fn total(payment_store: PaymentStore, amount_store: &AmountStore) -> Decimal {
         let mut total = Decimal::new(00, 1);
         for (_id, payment) in payment_store.iter() {

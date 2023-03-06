@@ -1,5 +1,5 @@
+use crate::calendar::month::Month;
 use crate::schema::payment::{Payment, PaymentStore};
-use crate::storage::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use rust_decimal::Decimal;
@@ -52,21 +52,23 @@ impl<'a, 'b: 'a> Expense {
         }
     }
 
-    pub fn name_by_id(id: usize, store: &mut Store) -> String {
-        match Expense::by_id(id, &mut store.expenses) {
+    pub fn name_by_id(id: usize, store: &mut ExpenseStore) -> String {
+        match Expense::by_id(id, store) {
             None => format!("No Name Found for Expense Id: {id}"),
             Some(expense) => expense.name,
         }
     }
 
-    pub fn total_by_id(id: usize, store: &mut Store) -> Decimal {
-        match Expense::by_id(id, &mut store.expenses) {
-            None => Decimal::new(00, 1),
-            Some(expense) => {
-                let payments = expense.payments(&mut store.payments);
-                Payment::total(payments, &store.amounts)
+    pub fn month_total_by_id(expense_id: usize, month: &Month) -> Decimal {
+        let mut total = Decimal::new(0, 0);
+        for (_id, day) in month.days.iter() {
+            for (_id, payment) in day.payments.iter() {
+                if payment.expense_id.unwrap() == expense_id {
+                    total += payment.amount_standard;
+                }
             }
         }
+        total
     }
 
     pub fn payments(&'a self, store: &'b mut PaymentStore) -> PaymentStore {
@@ -101,6 +103,7 @@ impl<'a, 'b: 'a> Expense {
 #[cfg(test)]
 mod expense_spec {
     use super::*;
+    use crate::storage::store::Store;
     use crate::test::spec::Spec;
     use chrono::NaiveDateTime;
 
@@ -120,7 +123,7 @@ mod expense_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let name = Expense::name_by_id(1, &mut store);
+        let name = Expense::name_by_id(1, &mut store.expenses);
         assert_eq!("mortgage".to_string(), name);
     }
 

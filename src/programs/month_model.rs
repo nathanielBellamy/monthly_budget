@@ -9,14 +9,14 @@ use crate::composite::payment_event::PaymentEventStore;
 use crate::composite::payment_received_composite::PaymentReceivedCompositeStore;
 use crate::composite::payment_summary::PaymentSummary;
 use crate::composite::payment_summary::PaymentSummaryStore;
-use crate::schema::expense::Expense;
+use crate::schema::expense::{Expense, ExpenseStore};
 use crate::schema::income::Income;
 use crate::storage::store::Store;
 use crate::traits::csv_store::CsvStore;
 use chrono::NaiveDate;
+use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::error::Error;
-use std::collections::btree_map::Entry;
 
 pub struct MonthModel {
     year: i32,
@@ -69,7 +69,7 @@ impl MonthModel {
                 &mut self_store
             }
         };
-    
+
         // mark all Expense/Income as inactive to begin month
         // will be marked as active when payment event recorded
         Expense::mark_all_inactive(&mut store.expenses);
@@ -97,7 +97,7 @@ impl MonthModel {
                 self.format_path("account_2_summary").as_str(),
             )?;
 
-            let expense_summary = MonthModel::construct_payment_summary(store);
+            let expense_summary = self.construct_payment_summary(&mut store.expenses);
             PaymentSummary::write_to_csv(
                 &expense_summary,
                 self.format_path("expense_summary").as_str(),
@@ -132,19 +132,18 @@ impl MonthModel {
         )
     }
 
-    pub fn construct_payment_summary(store: &mut Store) -> PaymentSummaryStore {
+    pub fn construct_payment_summary(&self, store: &mut ExpenseStore) -> PaymentSummaryStore {
         let mut payment_summary_store = PaymentSummaryStore::new();
-        let expense_ids: Vec<usize> = store.expenses.keys().cloned().collect();
-        for expense_id in expense_ids {
-            if let Entry::Occupied(expense) = store.expenses.entry(expense_id) {
+        for expense_id in self.month.expense_ids().iter() {
+            if let Entry::Occupied(expense) = store.entry(*expense_id) {
                 if expense.get().active {
                     payment_summary_store
-                        .entry(expense_id)
+                        .entry(*expense_id)
                         .or_insert(PaymentSummary {
-                            id: Some(expense_id),
-                            name: Expense::name_by_id(expense_id, store).to_string(),
-                        total: Expense::total_by_id(expense_id, store),
-                    });
+                            id: Some(*expense_id),
+                            name: Expense::name_by_id(*expense_id, store).to_string(),
+                            total: Expense::month_total_by_id(*expense_id, &self.month),
+                        });
                 }
             }
         }

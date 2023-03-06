@@ -18,8 +18,12 @@ impl YearMonth {
     pub fn start_of_next_month(&self) -> NaiveDate {
         let next_month = Month::next_month(self.month);
         let next_month_id = Month::id(next_month);
-        let year = if next_month == MK::Jan { self.year + 1 } else { self.year };
-        NaiveDate::from_ymd_opt(year, next_month_id, 01).unwrap()
+        let year = if next_month == MK::Jan {
+            self.year + 1
+        } else {
+            self.year
+        };
+        NaiveDate::from_ymd_opt(year, next_month_id, 1).unwrap()
     }
 
     pub fn parse(ym: String) -> YearMonth {

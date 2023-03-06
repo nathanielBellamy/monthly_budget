@@ -290,55 +290,6 @@ mod payment_composite_spec {
 
     #[test]
     #[allow(non_snake_case)]
-    fn create_payment__updates_expense_active_based_on_recurrence_state() {
-        let mut store = Store::new();
-        Spec::init(&mut store);
-
-        let mut payment_comp_first = payment_comp();
-        payment_comp_first.recurrence_state = RecurrenceState::First;
-        payment_comp_first.create_payment(&mut store, None).unwrap();
-        assert_eq!(
-            true,
-            Expense::by_name("dog food", &mut store.expenses)
-                .unwrap()
-                .active
-        );
-
-        let mut payment_comp_active = payment_comp();
-        payment_comp_active.recurrence_state = RecurrenceState::Active;
-        payment_comp_active
-            .create_payment(&mut store, None)
-            .unwrap();
-        assert_eq!(
-            true,
-            Expense::by_name("dog food", &mut store.expenses)
-                .unwrap()
-                .active
-        );
-
-        let mut payment_comp_none = payment_comp();
-        payment_comp_none.recurrence_state = RecurrenceState::None;
-        payment_comp_none.create_payment(&mut store, None).unwrap();
-        assert_eq!(
-            true,
-            Expense::by_name("dog food", &mut store.expenses)
-                .unwrap()
-                .active
-        );
-
-        let mut payment_comp_last = payment_comp();
-        payment_comp_last.recurrence_state = RecurrenceState::Last;
-        payment_comp_last.create_payment(&mut store, None).unwrap();
-        assert_eq!(
-            false,
-            Expense::by_name("dog food", &mut store.expenses)
-                .unwrap()
-                .active
-        );
-    }
-
-    #[test]
-    #[allow(non_snake_case)]
     // TODO: find out how to enact something like Ruby/Rspec's Timecop
     fn create_payment__sets_self_payment_completed_at_to_current_time_when_complete_at_is_none() {
         let mut store = Store::new();

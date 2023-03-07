@@ -1,4 +1,5 @@
 use crate::error::error_handler::ErrorHandler;
+use crate::calendar::month::Month;
 use crate::storage::store::Store;
 use crate::schema::payment_received::{PaymentReceived, PaymentReceivedStore};
 use crate::traits::csv_record::CsvRecord;
@@ -62,6 +63,18 @@ impl<'a, 'b: 'a> Income {
                 PaymentReceived::total(payments_rec, &store.amounts)
             }
         }
+    }
+
+    pub fn month_total_by_id(income_id: usize, month: &Month) -> Decimal {
+        let mut total = Decimal::new(0, 0);
+        for (_id, day) in month.days.iter() {
+            for (_id, payment) in day.payments_received.iter() {
+                if payment.income_id.unwrap() == income_id {
+                    total += payment.amount_standard;
+                }
+            }
+        }
+        total
     }
 
     pub fn mark_all_inactive(store: &mut IncomeStore) {

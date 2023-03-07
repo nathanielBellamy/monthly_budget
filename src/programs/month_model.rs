@@ -10,7 +10,7 @@ use crate::composite::payment_received_composite::PaymentReceivedCompositeStore;
 use crate::composite::payment_summary::PaymentSummary;
 use crate::composite::payment_summary::PaymentSummaryStore;
 use crate::schema::expense::{Expense, ExpenseStore};
-use crate::schema::income::Income;
+use crate::schema::income::{Income, IncomeStore};
 use crate::storage::store::Store;
 use crate::traits::csv_store::CsvStore;
 use chrono::NaiveDate;
@@ -103,6 +103,12 @@ impl MonthModel {
                 self.format_path("expense_summary").as_str(),
             )?;
 
+            let income_summary = self.construct_payment_received_summary(&mut store.incomes);
+            PaymentSummary::write_to_csv(
+                &income_summary, 
+                self.format_path("income_summary").as_str(),
+            )?;
+
             let all_payment_disp_store: PaymentDisplayStore = self.month.all_payments_display();
             PaymentDisplay::write_to_csv(
                 &all_payment_disp_store,
@@ -189,6 +195,24 @@ impl MonthModel {
             }
         }
         payment_summary_store
+    }
+
+    pub fn construct_payment_received_summary(&self, store: &mut IncomeStore) -> PaymentSummaryStore {
+        let mut payment_rec_summary_store = PaymentSummaryStore::new();
+        for income_id in self.month.income_ids().iter() {
+            if let Entry::Occupied(income) = store.entry(*income_id) {
+                if income.get().active {
+                    payment_rec_summary_store
+                        .entry(*income_id)
+                        .or_insert(PaymentSummary {
+                            id: Some(*income_id),
+                            name: Income::name_by_id(*income_id, store).to_string(),
+                            total: Income::month_total_by_id(*income_id, &self.month),
+                        });
+                }
+            }
+        }
+        payment_rec_summary_store
     }
 
     // TODO: leap years

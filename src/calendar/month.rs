@@ -54,6 +54,19 @@ impl Month {
         expense_ids.keys().cloned().collect()
     }
 
+    pub fn income_ids(&self) -> Vec<usize> {
+        let mut income_ids: BTreeMap<usize, bool> = BTreeMap::new();
+        for (_id, day) in self.days.iter() {
+            for (_pr_id, payment_rec) in day.payments_received.iter() {
+                income_ids
+                    .entry(payment_rec.income_id.unwrap())
+                    .or_insert(true);
+            }
+        }
+
+        income_ids.keys().cloned().collect()
+    }
+
     pub fn all_payments_received_display(&mut self) -> PaymentDisplayStore {
         let mut all_pd: Vec<PaymentDisplay> = vec![];
         for (_id, day) in self.days.iter_mut() {

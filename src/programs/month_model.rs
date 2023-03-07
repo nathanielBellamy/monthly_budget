@@ -125,7 +125,7 @@ impl MonthModel {
     pub fn account_summary_by_id(&mut self, account_id: usize) -> AccountSummaryStore {
         // TODO  
         let mut account_summary_store = AccountSummaryStore::new();
-        for (_id, day) in self.month.days.iter_mut() {
+        for (_id, day) in self.month.days.iter() {
             for (id, _completed_at, event_type) in day.payment_event_ids_chrono().iter() {
                 match *event_type {
                     "payment" => {
@@ -133,7 +133,7 @@ impl MonthModel {
                         if ec.account_id.unwrap() == account_id {
                             AccountSummary::save_to_store(
                                 AccountSummary {
-                                   id: ec.account_id,
+                                   id: None,
                                    name: ec.account_name.clone(),
                                    balance: ec.ending_balance.unwrap(),
                                    reported_at: ec.payment_completed_at,
@@ -142,12 +142,12 @@ impl MonthModel {
                             );
                         }
                     },
-                    "payments_received" => {
+                    "payment_received" => {
                         let ec = day.payments_received.get(id).unwrap();
                         if ec.account_id.unwrap() == account_id {
                             AccountSummary::save_to_store(
                                 AccountSummary {
-                                    id: ec.account_id,
+                                    id: None,
                                     name: ec.account_name.clone(),
                                     balance: ec.ending_balance.unwrap(),
                                     reported_at: ec.payment_received_completed_at,
@@ -160,7 +160,7 @@ impl MonthModel {
                 };
             }
         }
-
+        println!("{account_summary_store:#?}");
         account_summary_store
     }
 

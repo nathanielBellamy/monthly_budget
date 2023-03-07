@@ -1,4 +1,6 @@
 use crate::app::cli::Cli;
+use crate::schema::expense::Expense;
+use crate::composite::payment_summary::{PaymentSummary, PaymentSummaryStore};
 use crate::calendar::calendar_slice::CalendarSlice;
 use crate::calendar::year_month::YearMonth as YM;
 use crate::composite::account_summary::AccountSummary;
@@ -91,8 +93,12 @@ impl CalendarSliceModel {
         }
 
         if self.output_results {
+            // TODO: loop thru accounts
             let account_summary_store = AccountSummary::by_id(2, &mut store);
             AccountSummary::write_to_csv(&account_summary_store, format!("{}{}", self.path_out, "account_2_summary").as_str())?;
+
+            let expense_summary = CalendarSliceModel::construct_payment_summary(&mut store);
+            PaymentSummary::write_to_csv(&expense_summary, format!("{}{}", self.path_out, "expense_summary.csv").as_str())?;
             
             // write main store
             store.write_to_csv(Some(self.path_out.clone()))?;
@@ -103,5 +109,21 @@ impl CalendarSliceModel {
         // println!("Final Store: {store:#?}");
 
         Ok(())
+    }
+
+    pub fn construct_payment_summary(store: &mut Store) -> PaymentSummaryStore {
+        let mut payment_summary_store = PaymentSummaryStore::new();
+        let expense_ids: Vec<usize> = store.expenses.keys().cloned().collect();
+        for expense_id in expense_ids {
+            // sorted expense ids
+            payment_summary_store
+                .entry(expense_id)
+                .or_insert(PaymentSummary {
+                    id: Some(expense_id),
+                    name: Expense::name_by_id(expense_id, &mut store.expenses).to_string(),
+                    total: Expense::total_by_id(expense_id, store),
+                });
+        }
+        payment_summary_store
     }
 }

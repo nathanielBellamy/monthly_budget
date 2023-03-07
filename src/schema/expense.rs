@@ -1,4 +1,5 @@
 use crate::calendar::month::Month;
+use crate::storage::store::Store;
 use crate::schema::payment::{Payment, PaymentStore};
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
@@ -56,6 +57,16 @@ impl<'a, 'b: 'a> Expense {
         match Expense::by_id(id, store) {
             None => format!("No Name Found for Expense Id: {id}"),
             Some(expense) => expense.name,
+        }
+    }
+
+    pub fn total_by_id(id: usize, store: &mut Store) -> Decimal {
+        match Expense::by_id(id, &mut store.expenses) {
+            None => Decimal::new(00, 1),
+            Some(expense) => {
+                let payments = expense.payments(&mut store.payments);
+                Payment::total(payments, &store.amounts)
+            }
         }
     }
 

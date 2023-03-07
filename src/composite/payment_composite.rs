@@ -139,8 +139,6 @@ impl PaymentComposite {
         };
         update_expense_active(true);
 
-        // println!("{:#?}: {}", self.recurrence_state, store.expenses[&self.expense_id.unwrap()].active);
-
         self.payment_completed_at = match complete_at {
             None => Utc::now().naive_local(),
             Some(ndt) => ndt,

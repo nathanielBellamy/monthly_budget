@@ -160,7 +160,6 @@ impl MonthModel {
                 };
             }
         }
-        println!("{account_summary_store:#?}");
         account_summary_store
     }
 

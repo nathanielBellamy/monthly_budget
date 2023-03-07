@@ -32,7 +32,6 @@ pub trait CsvStore<
     }
 
     fn write_to_csv(store: &BTreeMap<usize, T>, path: &str) -> Result<(), Box<dyn Error>> {
-        println!("{path}");
         let mut wtr = csv::Writer::from_path(path)?;
 
         for (_id, record) in store.iter() {

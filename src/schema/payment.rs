@@ -76,7 +76,6 @@ impl<'a, 'b: 'a> Payment {
         self.amount(store).map(|amt| amt.standard)
     }
 
-    #[allow(unused)]
     pub fn total(payment_store: PaymentStore, amount_store: &AmountStore) -> Decimal {
         let mut total = Decimal::new(00, 1);
         for (_id, payment) in payment_store.iter() {

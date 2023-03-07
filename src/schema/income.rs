@@ -1,9 +1,11 @@
 use crate::error::error_handler::ErrorHandler;
+use crate::storage::store::Store;
 use crate::schema::payment_received::{PaymentReceived, PaymentReceivedStore};
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use rust_decimal::Decimal;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Income {
@@ -43,6 +45,23 @@ impl<'a, 'b: 'a> Income {
             }
         }
         income
+    }
+
+    pub fn name_by_id(id: usize, store: &mut IncomeStore) -> String {
+        match Income::by_id(id, store) {
+            None => format!("No Name Found for Income Id: {id}"),
+            Some(income) => income.name,
+        }
+    }
+
+    pub fn total_by_id(id: usize, store: &mut Store) -> Decimal {
+        match Income::by_id(id, &mut store.incomes) {
+            None => Decimal::new(00, 1),
+            Some(income) => {
+                let payments_rec = income.payments_received(&mut store.payments_received);
+                PaymentReceived::total(payments_rec, &store.amounts)
+            }
+        }
     }
 
     pub fn mark_all_inactive(store: &mut IncomeStore) {

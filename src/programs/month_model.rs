@@ -91,35 +91,39 @@ impl MonthModel {
         }
 
         if self.output_results {
-            let account_summary_store = self.account_summary_by_id(2);
-            AccountSummary::write_to_csv(
-                &account_summary_store,
-                self.format_path("account_2_summary").as_str(),
-            )?;
+            let account_ids: Vec<usize> = store.accounts.keys().cloned().collect();
+            for id in account_ids.iter() {
+                let account_summary_store = self.account_summary_by_id(*id);
+                let path = format!("account_{}_summary", *id);
+                AccountSummary::write_to_csv(
+                    &account_summary_store,
+                    self.format_path(path).as_str(),
+                )?;
+            }
 
             let expense_summary = self.construct_payment_summary(&mut store.expenses);
             PaymentSummary::write_to_csv(
                 &expense_summary,
-                self.format_path("expense_summary").as_str(),
+                self.format_path("expense_summary".to_string()).as_str(),
             )?;
 
             let income_summary = self.construct_payment_received_summary(&mut store.incomes);
             PaymentSummary::write_to_csv(
                 &income_summary, 
-                self.format_path("income_summary").as_str(),
+                self.format_path("income_summary".to_string()).as_str(),
             )?;
 
             let all_payment_disp_store: PaymentDisplayStore = self.month.all_payments_display();
             PaymentDisplay::write_to_csv(
                 &all_payment_disp_store,
-                self.format_path("all_payments").as_str(),
+                self.format_path("all_payments".to_string()).as_str(),
             )?;
 
             let all_payment_rec_disp_store: PaymentDisplayStore =
                 self.month.all_payments_received_display();
             PaymentDisplay::write_to_csv(
                 &all_payment_rec_disp_store,
-                self.format_path("all_payments_received").as_str(),
+                self.format_path("all_payments_received".to_string()).as_str(),
             )?;
 
             store.write_to_csv(Some(self.path_out.clone()))?;
@@ -169,7 +173,7 @@ impl MonthModel {
         account_summary_store
     }
 
-    pub fn format_path(&self, path: &'static str) -> String {
+    pub fn format_path(&self, path: String) -> String {
         format!(
             "{}{}_{}_{}.csv",
             self.path_out,

@@ -98,6 +98,16 @@ impl CalendarSliceModel {
             let account_summary_store = AccountSummary::by_id(2, &mut store);
             AccountSummary::write_to_csv(&account_summary_store, format!("{}{}", self.path_out, "account_2_summary").as_str())?;
 
+            let account_ids: Vec<usize> = store.accounts.keys().cloned().collect();
+            for id in account_ids.iter() {
+                let account_summary_store = AccountSummary::by_id(*id, &mut store);
+                let path = format!("{}account_{}_summary", self.path_out, *id);
+                AccountSummary::write_to_csv(
+                    &account_summary_store,
+                    path.as_str(),
+                )?;
+            }           
+
             let expense_summary = CalendarSliceModel::construct_payment_summary(&mut store);
             PaymentSummary::write_to_csv(&expense_summary, format!("{}{}", self.path_out, "expense_summary.csv").as_str())?;
 

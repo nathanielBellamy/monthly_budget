@@ -12,10 +12,19 @@
     "event_type": "payment_received",
     "name":  "Space Man",
     "account_name": "Credit Union",
-    "amount": 5000.00,
-    "start": "2023-02-14",
+    "amount": 2500.00,
+    "start": "2023-02-15",
     "end": "2400-01-01",
-    "recurrence": { "t": "Weeks", "c": 2 }
+    "recurrence": { "t": "Months", "c": 1 }
+  },
+  {
+    "event_type": "payment_received",
+    "name":  "Space Man",
+    "account_name": "Big Bank",
+    "amount": 2500.00,
+    "start": "2023-02-01",
+    "end": "2400-01-01",
+    "recurrence": { "t": "Months", "c": 1 }
   },
   {
     "event_type": "payment_received",
@@ -34,5 +43,14 @@
     "start": "2023-02-02",
     "end": "2400-01-01",
     "recurrence": { "t": "Weeks", "c": 1 }
+  },
+  {
+    "event_type": "payment",
+    "name":  "Tuition",
+    "account_name": "Big Bank",
+    "amount": 1500.0,
+    "start": "2023-02-02",
+    "end": "2400-01-01",
+    "recurrence": { "t": "Months", "c": 3 }
   }
 ]

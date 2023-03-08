@@ -1,3 +1,6 @@
+use chrono::NaiveDate;
+
+use crate::calendar::month::Month;
 use crate::calendar::month_key::MonthKey as MK;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
@@ -10,6 +13,34 @@ pub struct YearMonth {
 impl YearMonth {
     pub fn new(year: i32, month: MK) -> YearMonth {
         YearMonth { year, month }
+    }
+
+    pub fn start_of_next_month(&self) -> NaiveDate {
+        let next_month = Month::next_month(self.month);
+        let next_month_id = Month::id(next_month);
+        let year = if next_month == MK::Jan {
+            self.year + 1
+        } else {
+            self.year
+        };
+        NaiveDate::from_ymd_opt(year, next_month_id, 1).unwrap()
+    }
+
+    pub fn parse(ym: String) -> YearMonth {
+        let mut ym_split = ym.split('-');
+        let year: i32 = ym_split
+            .next()
+            .unwrap()
+            .parse::<i32>()
+            .expect("Invalid Year Entered");
+        let month: MK = Month::key_from_id(
+            ym_split
+                .next()
+                .unwrap()
+                .parse::<u32>()
+                .expect("Invalid Month Entered"),
+        );
+        YearMonth::new(year, month)
     }
 }
 

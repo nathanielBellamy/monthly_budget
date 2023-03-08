@@ -1,7 +1,10 @@
+use crate::calendar::month::Month;
 use crate::error::error_handler::ErrorHandler;
 use crate::schema::payment_received::{PaymentReceived, PaymentReceivedStore};
+use crate::storage::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -43,6 +46,41 @@ impl<'a, 'b: 'a> Income {
             }
         }
         income
+    }
+
+    pub fn name_by_id(id: usize, store: &mut IncomeStore) -> String {
+        match Income::by_id(id, store) {
+            None => format!("No Name Found for Income Id: {id}"),
+            Some(income) => income.name,
+        }
+    }
+
+    pub fn total_by_id(id: usize, store: &mut Store) -> Decimal {
+        match Income::by_id(id, &mut store.incomes) {
+            None => Decimal::new(00, 1),
+            Some(income) => {
+                let payments_rec = income.payments_received(&store.payments_received);
+                PaymentReceived::total(payments_rec, &store.amounts)
+            }
+        }
+    }
+
+    pub fn month_total_by_id(income_id: usize, month: &Month) -> Decimal {
+        let mut total = Decimal::new(0, 0);
+        for (_id, day) in month.days.iter() {
+            for (_id, payment) in day.payments_received.iter() {
+                if payment.income_id.unwrap() == income_id {
+                    total += payment.amount_standard;
+                }
+            }
+        }
+        total
+    }
+
+    pub fn mark_all_inactive(store: &mut IncomeStore) {
+        for (_id, income) in store.iter_mut() {
+            income.active = false;
+        }
     }
 
     pub fn payments_received(&'a self, store: &'b PaymentReceivedStore) -> PaymentReceivedStore {

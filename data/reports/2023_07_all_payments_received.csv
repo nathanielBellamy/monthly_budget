@@ -1,0 +1,4 @@
+id,name,amount,account_name,completed_at,prev_balance,ending_balance
+1,Space Man,2500.0,Big Bank,2023-07-01T12:00:00,8500.0,11000.0
+2,Space Man,2500.0,Credit Union,2023-07-15T12:00:00,-6000.0,-3500.0
+3,Cowboy,1000.0,Credit Union,2023-07-15T12:00:00,-3500.0,-2500.0

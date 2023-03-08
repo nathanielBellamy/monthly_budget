@@ -1,9 +1,10 @@
-use crate::calendar::year_month::YearMonth as YM;
+use crate::app::cli::Cli;
 use crate::error::error_handler::ErrorHandler;
 use crate::programs::calendar_slice_model::CalendarSliceModel;
-// temp
-use crate::calendar::month_key::MonthKey as MK;
+use clap::Parser;
+use test::end_to_end::calendar_slice_model::csm_test::CsmTest;
 
+mod app;
 mod calendar;
 mod composite;
 mod error;
@@ -14,15 +15,17 @@ mod test;
 mod traits;
 
 fn main() {
-    if let Err(err) = CalendarSliceModel::new(
-        YM::new(2023, MK::Feb),
-        YM::new(2023, MK::Mar),
-        true,
-        "data/init/",
-        "data/",
-    )
-    .run("example_1")
-    {
-        ErrorHandler::log(err);
+    let cli = Cli::parse();
+    if cli.x_test == "t" {
+        println!("Running test...");
+        if CsmTest::run(cli.start_yyyy_mm, cli.end_yyyy_mm) == 1 {
+            panic!("Oh NO!");
+        };
+        println!("Test Complete")
+    } else {
+        // main
+        if let Err(err) = CalendarSliceModel::run_cli(cli) {
+            ErrorHandler::log(err);
+        }
     }
 }

@@ -19,11 +19,16 @@
   - `reports/` => output
 
 ## to run
-- `cargo run -- -s {"YYYY-MM"} -e {"YYYY-MM"} -p {"/path/to/directory"} -x {"t/f"}`
+- `cargo run -- -s {"YYYY-MM"} -e {"YYYY-MM"} -p {"/path/to/directory/data"} -x {"t/f"}`
   - `-s, -start_yyyy_mm` starting month
   - `-e, -end_yyyy_mm` ending month
-  - `-p, -path` (Optional. Default: `data/`) path to directory containing `data/`
-  - `-x, -x_test` (Optional. Default: `f`) run test from `main()`, name chosen to avoid collision
+  - `-p, -path` 
+    - path to `data` directory
+    - Optional. Default: `data/` 
+  - `-x, -x_test` 
+    - run test from `main()`
+    - name chosen to avoid collision
+    - Optional. Default: `f` 
 
 ## file structure
 - `data/` (see above)

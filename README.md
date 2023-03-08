@@ -1,15 +1,29 @@
 # MonthlyBudget
 
 ## intake budgetary CSV/JSON -> manipulate data in memory -> export report CSV/JSON
-#### serde -> BTreeMap -> serde
+#### CSV --serde--> BTreeMap --serde--> CSV
+
+## data setup
+- `data/`
+  - `events` => user-entered payment events
+    - `one_off.json`
+    - `recurring.json`
+  - `init/` => provide initial values
+    - `account_balances.csv`
+    - `accounts.csv`
+    - `amounts.csv`
+    - `expenses.csv`
+    - `incomes.csv`
+    - `payments.csv`
+    - `payments_received.csv`
+  - `reports/` => output
 
 ## to run
-- `cargo run -- --startym YYYY-MM --endym YYYY-MM`
-- or `cargo run -- -s YYYY-MM -e YYYY-MM`
-- can pass in `--transactions -t {my_payment_events_directory}` folder for different payment events
-  - add `payment_events.json` to folder `/data/json/{my_payment_events_directory}/`
-  - by default uses payment events in `/data/json/example_1/payment_events.json`
-
+- `cargo run -- -s {"YYYY-MM"} -e {"YYYY-MM"} -p {"/path/to/directory/data/"} -x {"t/f"}`
+  - `-s, -start_yyyy_mm` starting month
+  - `-e, -end_yyyy_mm` ending month
+  - `-p, -path` path to `data/` directory, where data expected as above
+  - `-x, -x_test` run test from `main()`, name chosen to avoid collision
 ### /schema
 Core `Structs`
   - `Account`

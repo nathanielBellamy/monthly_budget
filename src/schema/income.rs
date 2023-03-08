@@ -79,7 +79,7 @@ impl<'a, 'b: 'a> Income {
 
     pub fn mark_all_inactive(store: &mut IncomeStore) {
         for (_id, income) in store.iter_mut() {
-            (*income).active = false;
+            income.active = false;
         }
     }
 

@@ -129,11 +129,10 @@ impl PaymentReceivedComposite {
             }
         }
 
-        // update Income state based on recurrence
         let mut update_income_active = {
             |b: bool| {
                 if let Some(income) = store.incomes.get_mut(&self.income_id.unwrap()) {
-                    (*income).active = b;
+                    income.active = b;
                 }
             }
         };

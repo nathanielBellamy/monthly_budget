@@ -59,7 +59,7 @@ impl<'a, 'b: 'a> Income {
         match Income::by_id(id, &mut store.incomes) {
             None => Decimal::new(00, 1),
             Some(income) => {
-                let payments_rec = income.payments_received(&mut store.payments_received);
+                let payments_rec = income.payments_received(&store.payments_received);
                 PaymentReceived::total(payments_rec, &store.amounts)
             }
         }

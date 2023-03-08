@@ -1,7 +1,0 @@
-id,name,amount,account_name,completed_at,prev_balance,ending_balance
-1,Tuition,1500.0,Big Bank,2023-05-02T12:00:00,7500.0,6000.0
-2,Groceries,200.0,Credit Union,2023-05-04T12:00:00,-300.0,-500.0
-3,Mortgage,2000.0,Credit Union,2023-05-05T12:00:00,-500.0,-2500.0
-4,Groceries,200.0,Credit Union,2023-05-11T12:00:00,-2500.0,-2700.0
-5,Groceries,200.0,Credit Union,2023-05-18T12:00:00,-200.0,-400.0
-6,Groceries,200.0,Credit Union,2023-05-25T12:00:00,-400.0,-600.0

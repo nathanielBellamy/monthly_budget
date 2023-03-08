@@ -14,8 +14,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::error::Error;
 
-use super::payment_event::RecurrenceState;
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PaymentReceivedComposite {
     pub id: Option<usize>,
@@ -33,7 +31,6 @@ pub struct PaymentReceivedComposite {
     pub payment_received_completed_at: NaiveDateTime,
     pub income_id: Option<usize>,
     pub income_name: String,
-    pub recurrence_state: RecurrenceState,
 }
 
 impl CsvRecord<PaymentReceivedComposite> for PaymentReceivedComposite {
@@ -129,15 +126,6 @@ impl PaymentReceivedComposite {
             }
         }
 
-        let mut update_income_active = {
-            |b: bool| {
-                if let Some(income) = store.incomes.get_mut(&self.income_id.unwrap()) {
-                    income.active = b;
-                }
-            }
-        };
-        update_income_active(true);
-
         self.payment_received_completed_at = match complete_at {
             None => Utc::now().naive_local(),
             Some(ndt) => ndt,
@@ -202,7 +190,6 @@ mod payment_composite_spec {
                 .unwrap(),
             income_id: None,
             income_name: "cowboy".to_string(),
-            recurrence_state: RecurrenceState::None,
         }
     }
 

@@ -47,14 +47,6 @@ impl<'a, 'b: 'a> PaymentReceived {
         amount
     }
 
-    pub fn total(payment_rec_store: PaymentReceivedStore, amount_store: &AmountStore) -> Decimal {
-        let mut total = Decimal::new(00, 1);
-        for (_id, payment_rec) in payment_rec_store.iter() {
-            total += payment_rec.standard_amount(amount_store).unwrap();
-        }
-        total
-    }
-
     #[allow(unused)]
     pub fn deposit_to_account(&'a self, store: &'b Store) -> Option<&Account> {
         let mut account: Option<&Account> = None;
@@ -67,6 +59,7 @@ impl<'a, 'b: 'a> PaymentReceived {
         account
     }
 
+    #[allow(unused)]
     pub fn standard_amount(&self, store: &AmountStore) -> Option<Decimal> {
         self.amount(store).map(|amt| amt.standard)
     }

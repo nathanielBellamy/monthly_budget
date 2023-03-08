@@ -68,26 +68,6 @@ impl Day {
         PaymentReceivedComposite::save_to_store(payment_rec_comp, &mut self.payments_received);
     }
 
-    pub fn payment_event_ids_chrono(&self) -> Vec<(usize, NaiveDateTime, &str)> {
-        // TODO: refactor to use this method at the start of execute_payments_in_order
-        // temporarily avoided due to mut/immut references to .self
-        let mut payment_times: Vec<(usize, NaiveDateTime, &str)> = vec![];
-        for (id, pymnt) in self.payments.iter() {
-            payment_times.push((*id, pymnt.payment_completed_at, "payment"));
-        }
-
-        for (id, pymnt_rec) in self.payments_received.iter() {
-            payment_times.push((
-                *id,
-                pymnt_rec.payment_received_completed_at,
-                "payment_received",
-            ))
-        }
-
-        payment_times.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-        payment_times
-    }
-
     pub fn execute_payments_in_order(&mut self, store: &mut Store) -> Result<(), Box<dyn Error>> {
         let mut payment_times: Vec<(usize, NaiveDateTime, &str)> = vec![];
         for (id, pymnt) in self.payments.iter() {
@@ -132,7 +112,6 @@ impl Day {
 mod day_spec {
 
     use super::*;
-    use crate::composite::payment_event::RecurrenceState;
     use crate::schema::account::Account;
     use crate::schema::account_balance::AccountBalance;
     use crate::schema::account_balance::AccountBalanceStore;
@@ -156,7 +135,6 @@ mod day_spec {
                 .unwrap()
                 .and_hms_opt(12, 00, 00)
                 .unwrap(),
-            recurrence_state: RecurrenceState::None,
         };
 
         assert_eq!(0, day.payments.len());
@@ -181,7 +159,6 @@ mod day_spec {
                 .unwrap()
                 .and_hms_opt(12, 00, 00)
                 .unwrap(),
-            recurrence_state: RecurrenceState::None,
         };
 
         assert_eq!(0, day.payments_received.len());
@@ -206,7 +183,6 @@ mod day_spec {
                 .unwrap()
                 .and_hms_opt(12, 00, 01)
                 .unwrap(),
-            recurrence_state: RecurrenceState::None,
         });
         day.add_payment_event(&PaymentEvent {
             id: None,
@@ -218,7 +194,6 @@ mod day_spec {
                 .unwrap()
                 .and_hms_opt(12, 00, 02)
                 .unwrap(),
-            recurrence_state: RecurrenceState::None,
         });
         day.add_payment_event(&PaymentEvent {
             id: None,
@@ -230,7 +205,6 @@ mod day_spec {
                 .unwrap()
                 .and_hms_opt(12, 00, 03)
                 .unwrap(),
-            recurrence_state: RecurrenceState::None,
         });
         day.add_payment_event(&PaymentEvent {
             id: None,
@@ -242,7 +216,6 @@ mod day_spec {
                 .unwrap()
                 .and_hms_opt(12, 00, 04)
                 .unwrap(),
-            recurrence_state: RecurrenceState::None,
         });
 
         assert_eq!(2, day.payments.len());

@@ -37,38 +37,37 @@ impl Store {
 
     pub fn init(&mut self, dir: Option<String>) -> StoreInitResult {
         let path: String = match dir {
-            None => "data".to_string(),
+            None => "data/".to_string(),
             Some(root) => root,
         };
-
         let import_res: [CsvReadResult; 7] = [
             Account::init_store(
                 &mut self.accounts,
-                format!("{path}/{}", "accounts.csv").as_str(),
+                format!("{path}{}", "accounts.csv").as_str(),
             ),
             AccountBalance::init_store(
                 &mut self.account_balances,
-                format!("{path}/{}", "account_balances.csv").as_str(),
+                format!("{path}{}", "account_balances.csv").as_str(),
             ),
             Amount::init_store(
                 &mut self.amounts,
-                format!("{path}/{}", "amounts.csv").as_str(),
+                format!("{path}{}", "amounts.csv").as_str(),
             ),
             Expense::init_store(
                 &mut self.expenses,
-                format!("{path}/{}", "expenses.csv").as_str(),
+                format!("{path}{}", "expenses.csv").as_str(),
             ),
             Income::init_store(
                 &mut self.incomes,
-                format!("{path}/{}", "incomes.csv").as_str(),
+                format!("{path}{}", "incomes.csv").as_str(),
             ),
             Payment::init_store(
                 &mut self.payments,
-                format!("{path}/{}", "payments.csv").as_str(),
+                format!("{path}{}", "payments.csv").as_str(),
             ),
             PaymentReceived::init_store(
                 &mut self.payments_received,
-                format!("{path}/{}", "payments_received.csv").as_str(),
+                format!("{path}{}", "payments_received.csv").as_str(),
             ),
         ];
 
@@ -81,29 +80,20 @@ impl Store {
     }
 
     pub fn write_to_csv(&self, dir: Option<String>) -> StoreWriteResult {
-        let path = dir.unwrap_or_else(|| "data/reports".to_string());
+        let path = dir.unwrap_or_else(|| "data/".to_string());
         let write_res: [CsvWriteResult; 7] = [
-            Account::write_to_csv(
-                &self.accounts,
-                format!("{path}/{}", "accounts.csv").as_str(),
-            ),
+            Account::write_to_csv(&self.accounts, format!("{path}{}", "accounts.csv").as_str()),
             AccountBalance::write_to_csv(
                 &self.account_balances,
-                format!("{path}/{}", "account_balances.csv").as_str(),
+                format!("{path}{}", "account_balances.csv").as_str(),
             ),
-            Amount::write_to_csv(&self.amounts, format!("{path}/{}", "amounts.csv").as_str()),
-            Expense::write_to_csv(
-                &self.expenses,
-                format!("{path}/{}", "expenses.csv").as_str(),
-            ),
-            Income::write_to_csv(&self.incomes, format!("{path}/{}", "incomes.csv").as_str()),
-            Payment::write_to_csv(
-                &self.payments,
-                format!("{path}/{}", "payments.csv").as_str(),
-            ),
+            Amount::write_to_csv(&self.amounts, format!("{path}{}", "amounts.csv").as_str()),
+            Expense::write_to_csv(&self.expenses, format!("{path}{}", "expenses.csv").as_str()),
+            Income::write_to_csv(&self.incomes, format!("{path}{}", "incomes.csv").as_str()),
+            Payment::write_to_csv(&self.payments, format!("{path}{}", "payments.csv").as_str()),
             PaymentReceived::write_to_csv(
                 &self.payments_received,
-                format!("{path}/{}", "payments_received.csv").as_str(),
+                format!("{path}{}", "payments_received.csv").as_str(),
             ),
         ];
 

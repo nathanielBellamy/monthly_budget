@@ -4,7 +4,6 @@ use crate::calendar::year_month::YearMonth as YM;
 use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
-use std::collections::BTreeMap;
 
 #[derive(Debug)]
 pub struct Month {
@@ -39,32 +38,6 @@ impl Month {
         }
 
         store
-    }
-
-    pub fn expense_ids(&self) -> Vec<usize> {
-        let mut expense_ids: BTreeMap<usize, bool> = BTreeMap::new();
-        for (_id, day) in self.days.iter() {
-            for (_p_id, payment) in day.payments.iter() {
-                expense_ids
-                    .entry(payment.expense_id.unwrap())
-                    .or_insert(true);
-            }
-        }
-
-        expense_ids.keys().cloned().collect()
-    }
-
-    pub fn income_ids(&self) -> Vec<usize> {
-        let mut income_ids: BTreeMap<usize, bool> = BTreeMap::new();
-        for (_id, day) in self.days.iter() {
-            for (_pr_id, payment_rec) in day.payments_received.iter() {
-                income_ids
-                    .entry(payment_rec.income_id.unwrap())
-                    .or_insert(true);
-            }
-        }
-
-        income_ids.keys().cloned().collect()
     }
 
     pub fn all_payments_received_display(&mut self) -> PaymentDisplayStore {

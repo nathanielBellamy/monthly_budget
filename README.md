@@ -78,42 +78,10 @@
     - `csv_store.rs`
     - `file_io.rs`
   
-  
-### /storage
-Central memory
-  - `Store`
-
-### /composite
-Datastructures comprised of core `Structs`
-  - `AccountSummary`
-  - `PaymentComposite` (`.create_payment()`)
-  - `PaymentDisplay`
-  - `PaymentEvent`
-  - `PaymentReceivedComposite` (`.create_payment_received()`)
-  - `PaymentSummary`
-
-### /calendar
-`Structs` for time-binning data
-  - `CalendarSlice`
-  - `Day`
-  - `Month`
-  
-### /programs
-Scripts to model transactions (`payment_events`) taking place over time
-  - `CalendarSliceModel`
-  - `MonthModel`
-  
-### /test
-Initiate `Store` in unit tests
-  - `Spec`
-  
-### /error
-Basic error logging
-  - `ErrorHandler`
-
 
 ================================
 ================================
 
-##### first Rust repo
 ##### Nathan S
+This code is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+

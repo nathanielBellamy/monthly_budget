@@ -1,7 +1,7 @@
 # MonthlyBudget
+## [Github Project](https://github.com/users/nathanielBellamy/projects/1/views/1)
 
-## intake budgetary CSV/JSON -> manipulate data in memory -> export report CSV/JSON
-#### CSV --serde--> BTreeMap --serde--> CSV
+##### CSV ---serde---> BTreeMap ---serde---> CSV
 
 ## data setup
 - `data/`

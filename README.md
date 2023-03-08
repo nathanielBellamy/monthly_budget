@@ -19,11 +19,11 @@
   - `reports/` => output
 
 ## to run
-- `cargo run -- -s {"YYYY-MM"} -e {"YYYY-MM"} -p {"/path/to/directory/data/"} -x {"t/f"}`
+- `cargo run -- -s {"YYYY-MM"} -e {"YYYY-MM"} -p {"/path/to/directory"} -x {"t/f"}`
   - `-s, -start_yyyy_mm` starting month
   - `-e, -end_yyyy_mm` ending month
-  - `-p, -path` path to `data/` directory, where data expected as above
-  - `-x, -x_test` run test from `main()`, name chosen to avoid collision
+  - `-p, -path` (Optional. Default: `data/`) path to directory containing `data/`
+  - `-x, -x_test` (Optional. Default: `f`) run test from `main()`, name chosen to avoid collision
 ### /schema
 Core `Structs`
   - `Account`

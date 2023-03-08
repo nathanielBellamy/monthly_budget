@@ -1,6 +1,6 @@
 use crate::calendar::month::Month;
-use crate::storage::store::Store;
 use crate::schema::payment::{Payment, PaymentStore};
+use crate::storage::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
 use rust_decimal::Decimal;

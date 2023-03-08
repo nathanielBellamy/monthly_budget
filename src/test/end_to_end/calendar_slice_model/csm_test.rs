@@ -7,23 +7,16 @@ impl CsmTest {
     #[allow(unused)] // used in tests below
     pub fn run(start: String, end: String) -> u8 {
         let cli = Cli::new(
-            CsmTest::format_path("init/"),    // input
-            CsmTest::format_path("reports/"), // output
-            CsmTest::format_path("events"),   // payment_events
-            start,                            // start
-            end,                              // end
-            "f".to_string(),                  // test t/f - used to call this test from main
+            "src/test/end_to_end/calendar_slice_model/data".to_string(),
+            start,           // start
+            end,             // end
+            "f".to_string(), // test t/f - used to call this test from main
         );
         println!("CSMTEST RUN");
         match CalendarSliceModel::run_cli(cli) {
             Ok(_) => 0,
             Err(_) => 1,
         }
-    }
-
-    pub fn format_path(path: &'static str) -> String {
-        let base = "src/test/end_to_end/calendar_slice_model/data";
-        format!("{}/{}", base, path)
     }
 }
 

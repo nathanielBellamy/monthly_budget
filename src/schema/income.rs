@@ -1,12 +1,12 @@
-use crate::error::error_handler::ErrorHandler;
 use crate::calendar::month::Month;
-use crate::storage::store::Store;
+use crate::error::error_handler::ErrorHandler;
 use crate::schema::payment_received::{PaymentReceived, PaymentReceivedStore};
+use crate::storage::store::Store;
 use crate::traits::csv_record::CsvRecord;
 use crate::traits::csv_store::CsvStore;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use rust_decimal::Decimal;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Income {

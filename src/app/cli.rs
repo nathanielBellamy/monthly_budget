@@ -3,13 +3,8 @@ use clap::Parser;
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 pub struct Cli {
-    #[arg(short, long, default_value_t = String::from("data/init/"))]
-    pub input: String,
-    #[arg(short, long, default_value_t = String::from("data/reports/"))]
-    pub output: String,
-    #[arg(short, long, default_value_t = String::from("data/events/"))]
-    pub payment_events: String,
-
+    #[arg(short, long, default_value_t = String::from("data"))]
+    pub path: String,
     #[arg(short, long)]
     pub end_yyyy_mm: String,
     #[arg(short, long)]
@@ -20,18 +15,9 @@ pub struct Cli {
 }
 
 impl Cli {
-    pub fn new(
-        input: String,
-        output: String,
-        payment_events: String,
-        start_yyyy_mm: String,
-        end_yyyy_mm: String,
-        x_test: String,
-    ) -> Cli {
+    pub fn new(path: String, start_yyyy_mm: String, end_yyyy_mm: String, x_test: String) -> Cli {
         Cli {
-            input,
-            output,
-            payment_events,
+            path,
             end_yyyy_mm,
             start_yyyy_mm,
             x_test,

@@ -13,6 +13,7 @@ use crate::schema::expense::{Expense, ExpenseStore};
 use crate::schema::income::{Income, IncomeStore};
 use crate::storage::store::Store;
 use crate::traits::csv_store::CsvStore;
+use crate::traits::file_io::FileIO;
 use chrono::NaiveDate;
 use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
@@ -22,36 +23,24 @@ pub struct MonthModel {
     year: i32,
     key: MK,
     month: Month,
+    path: String,
     output_results: bool,
-    #[allow(unused)]
-    path_in: String,
-    path_out: String,
+}
+
+impl FileIO<MonthModel> for MonthModel {
+    fn path(&self) -> String {
+        self.path.clone()
+    }
 }
 
 impl MonthModel {
-    pub fn new(
-        year_month: YM,
-        output_results: bool,
-        path_in: Option<String>,
-        path_out: Option<String>,
-    ) -> MonthModel {
-        let data_in = match path_in {
-            None => "data/init/".to_string(),
-            Some(path) => path,
-        };
-
-        let data_out = match path_out {
-            None => "data/reports/".to_string(),
-            Some(path) => path,
-        };
-
+    pub fn new(year_month: YM, path: String, output_results: bool) -> MonthModel {
         MonthModel {
             key: year_month.month,
             year: year_month.year,
             month: Month::new(year_month),
+            path,
             output_results,
-            path_in: data_in,
-            path_out: data_out,
         }
     }
 
@@ -65,7 +54,7 @@ impl MonthModel {
         let store = match store_ext {
             Some(passed_in) => passed_in,
             None => {
-                self_store.init(Some(self.path_in.clone()))?;
+                self_store.init(Some(self.path_in()))?;
                 &mut self_store
             }
         };
@@ -109,7 +98,7 @@ impl MonthModel {
 
             let income_summary = self.construct_payment_received_summary(&mut store.incomes);
             PaymentSummary::write_to_csv(
-                &income_summary, 
+                &income_summary,
                 self.format_path("income_summary".to_string()).as_str(),
             )?;
 
@@ -123,17 +112,18 @@ impl MonthModel {
                 self.month.all_payments_received_display();
             PaymentDisplay::write_to_csv(
                 &all_payment_rec_disp_store,
-                self.format_path("all_payments_received".to_string()).as_str(),
+                self.format_path("all_payments_received".to_string())
+                    .as_str(),
             )?;
 
-            store.write_to_csv(Some(self.path_out.clone()))?;
+            store.write_to_csv(Some(self.path_out()))?;
         }
 
         Ok(())
     }
 
     pub fn account_summary_by_id(&mut self, account_id: usize) -> AccountSummaryStore {
-        // TODO  
+        // TODO
         let mut account_summary_store = AccountSummaryStore::new();
         for (_id, day) in self.month.days.iter() {
             for (id, _completed_at, event_type) in day.payment_event_ids_chrono().iter() {
@@ -143,15 +133,15 @@ impl MonthModel {
                         if ec.account_id.unwrap() == account_id {
                             AccountSummary::save_to_store(
                                 AccountSummary {
-                                   id: None,
-                                   name: ec.account_name.clone(),
-                                   balance: ec.ending_balance.unwrap(),
-                                   reported_at: ec.payment_completed_at,
+                                    id: None,
+                                    name: ec.account_name.clone(),
+                                    balance: ec.ending_balance.unwrap(),
+                                    reported_at: ec.payment_completed_at,
                                 },
-                                &mut account_summary_store
+                                &mut account_summary_store,
                             );
                         }
-                    },
+                    }
                     "payment_received" => {
                         let ec = day.payments_received.get(id).unwrap();
                         if ec.account_id.unwrap() == account_id {
@@ -162,10 +152,10 @@ impl MonthModel {
                                     balance: ec.ending_balance.unwrap(),
                                     reported_at: ec.payment_received_completed_at,
                                 },
-                                &mut account_summary_store
+                                &mut account_summary_store,
                             );
                         }
-                    },
+                    }
                     _ => (),
                 };
             }
@@ -175,8 +165,8 @@ impl MonthModel {
 
     pub fn format_path(&self, path: String) -> String {
         format!(
-            "{}{}_{}_{}.csv",
-            self.path_out,
+            "{}/{}_{}_{}.csv",
+            self.path_out(),
             self.month.year,
             self.month.display_number(),
             path
@@ -201,7 +191,10 @@ impl MonthModel {
         payment_summary_store
     }
 
-    pub fn construct_payment_received_summary(&self, store: &mut IncomeStore) -> PaymentSummaryStore {
+    pub fn construct_payment_received_summary(
+        &self,
+        store: &mut IncomeStore,
+    ) -> PaymentSummaryStore {
         let mut payment_rec_summary_store = PaymentSummaryStore::new();
         for income_id in self.month.income_ids().iter() {
             if let Entry::Occupied(income) = store.entry(*income_id) {
@@ -259,9 +252,8 @@ mod month_model_spec {
     pub fn model() -> MonthModel {
         MonthModel::new(
             YM::new(2023, MK::Feb),
+            "src/test/data/init".to_string(),
             false,
-            Some("src/test/data/init".to_string()),
-            None,
         )
     }
 

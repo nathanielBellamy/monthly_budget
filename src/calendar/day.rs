@@ -69,7 +69,7 @@ impl Day {
     }
 
     pub fn payment_event_ids_chrono(&self) -> Vec<(usize, NaiveDateTime, &str)> {
-        // TODO: refactor to use this method at the start of execute_payments_in_order 
+        // TODO: refactor to use this method at the start of execute_payments_in_order
         // temporarily avoided due to mut/immut references to .self
         let mut payment_times: Vec<(usize, NaiveDateTime, &str)> = vec![];
         for (id, pymnt) in self.payments.iter() {
@@ -103,7 +103,7 @@ impl Day {
         }
 
         payment_times.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-       
+
         for pymnt_event in payment_times.iter() {
             match pymnt_event.2 {
                 "payment" => {

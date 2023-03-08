@@ -2,17 +2,20 @@ use crate::calendar::day::{Day, DayStore};
 use crate::calendar::month::Month;
 use crate::calendar::month_key::MonthKey as MK;
 use crate::calendar::year_month::YearMonth as YM;
-use crate::composite::account_summary::AccountSummary;
+use crate::composite::account_summary::{AccountSummary, AccountSummaryStore};
 use crate::composite::payment_composite::PaymentCompositeStore;
 use crate::composite::payment_display::{PaymentDisplay, PaymentDisplayStore};
 use crate::composite::payment_event::PaymentEventStore;
 use crate::composite::payment_received_composite::PaymentReceivedCompositeStore;
 use crate::composite::payment_summary::PaymentSummary;
 use crate::composite::payment_summary::PaymentSummaryStore;
-use crate::schema::expense::Expense;
+use crate::schema::expense::{Expense, ExpenseStore};
+use crate::schema::income::{Income, IncomeStore};
 use crate::storage::store::Store;
 use crate::traits::csv_store::CsvStore;
+use crate::traits::file_io::FileIO;
 use chrono::NaiveDate;
+use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::error::Error;
 
@@ -20,37 +23,24 @@ pub struct MonthModel {
     year: i32,
     key: MK,
     month: Month,
+    path: String,
     output_results: bool,
-    #[allow(unused)]
-    path_in: &'static str,
-    #[allow(unused)]
-    path_out: &'static str,
+}
+
+impl FileIO<MonthModel> for MonthModel {
+    fn path(&self) -> String {
+        self.path.clone()
+    }
 }
 
 impl MonthModel {
-    pub fn new(
-        year_month: YM,
-        output_results: bool,
-        path_in: Option<&'static str>,
-        path_out: Option<&'static str>,
-    ) -> MonthModel {
-        let data_in = match path_in {
-            None => "data/init/",
-            Some(path) => path,
-        };
-
-        let data_out = match path_out {
-            None => "data/",
-            Some(path) => path,
-        };
-
+    pub fn new(year_month: YM, path: String, output_results: bool) -> MonthModel {
         MonthModel {
             key: year_month.month,
             year: year_month.year,
             month: Month::new(year_month),
+            path,
             output_results,
-            path_in: data_in,
-            path_out: data_out,
         }
     }
 
@@ -59,21 +49,20 @@ impl MonthModel {
         &mut self,
         payment_events: &PaymentEventStore,
         store_ext: Option<&mut Store>,
-        dir: Option<String>,
     ) -> Result<(), Box<dyn Error>> {
-        let path: Option<String> = match dir {
-            None => Some("data/init/".to_string()),
-            Some(directory) => Some(directory),
-        };
-
         let mut self_store = Store::new();
         let store = match store_ext {
             Some(passed_in) => passed_in,
             None => {
-                self_store.init(path)?;
+                self_store.init(Some(self.path_in()))?;
                 &mut self_store
             }
         };
+
+        // mark all Expense/Income as inactive to begin month
+        // will be marked as active when payment event recorded
+        Expense::mark_all_inactive(&mut store.expenses);
+        Income::mark_all_inactive(&mut store.incomes);
 
         self.month = Month {
             key: self.key,
@@ -91,42 +80,136 @@ impl MonthModel {
         }
 
         if self.output_results {
-            let account_summary_store = AccountSummary::by_id(1, store);
-            AccountSummary::write_to_csv(&account_summary_store, "data/account_1_summary.csv")?;
+            let account_ids: Vec<usize> = store.accounts.keys().cloned().collect();
+            for id in account_ids.iter() {
+                let account_summary_store = self.account_summary_by_id(*id);
+                let path = format!("account_{}_summary", *id);
+                AccountSummary::write_to_csv(
+                    &account_summary_store,
+                    self.format_path(path).as_str(),
+                )?;
+            }
 
-            let expense_summary = MonthModel::construct_payment_summary(store);
-            PaymentSummary::write_to_csv(&expense_summary, "data/expense_summary.csv")?;
+            let expense_summary = self.construct_payment_summary(&mut store.expenses);
+            PaymentSummary::write_to_csv(
+                &expense_summary,
+                self.format_path("expense_summary".to_string()).as_str(),
+            )?;
+
+            let income_summary = self.construct_payment_received_summary(&mut store.incomes);
+            PaymentSummary::write_to_csv(
+                &income_summary,
+                self.format_path("income_summary".to_string()).as_str(),
+            )?;
 
             let all_payment_disp_store: PaymentDisplayStore = self.month.all_payments_display();
-            PaymentDisplay::write_to_csv(&all_payment_disp_store, "data/all_payments.csv")?;
+            PaymentDisplay::write_to_csv(
+                &all_payment_disp_store,
+                self.format_path("all_payments".to_string()).as_str(),
+            )?;
 
             let all_payment_rec_disp_store: PaymentDisplayStore =
                 self.month.all_payments_received_display();
             PaymentDisplay::write_to_csv(
                 &all_payment_rec_disp_store,
-                "data/all_payments_received.csv",
+                self.format_path("all_payments_received".to_string())
+                    .as_str(),
             )?;
 
-            store.write_to_csv(None)?;
+            store.write_to_csv(Some(self.path_out()))?;
         }
 
         Ok(())
     }
 
-    pub fn construct_payment_summary(store: &mut Store) -> PaymentSummaryStore {
+    pub fn account_summary_by_id(&mut self, account_id: usize) -> AccountSummaryStore {
+        // TODO
+        let mut account_summary_store = AccountSummaryStore::new();
+        for (_id, day) in self.month.days.iter() {
+            for (id, _completed_at, event_type) in day.payment_event_ids_chrono().iter() {
+                match *event_type {
+                    "payment" => {
+                        let ec = day.payments.get(id).unwrap();
+                        if ec.account_id.unwrap() == account_id {
+                            AccountSummary::save_to_store(
+                                AccountSummary {
+                                    id: None,
+                                    name: ec.account_name.clone(),
+                                    balance: ec.ending_balance.unwrap(),
+                                    reported_at: ec.payment_completed_at,
+                                },
+                                &mut account_summary_store,
+                            );
+                        }
+                    }
+                    "payment_received" => {
+                        let ec = day.payments_received.get(id).unwrap();
+                        if ec.account_id.unwrap() == account_id {
+                            AccountSummary::save_to_store(
+                                AccountSummary {
+                                    id: None,
+                                    name: ec.account_name.clone(),
+                                    balance: ec.ending_balance.unwrap(),
+                                    reported_at: ec.payment_received_completed_at,
+                                },
+                                &mut account_summary_store,
+                            );
+                        }
+                    }
+                    _ => (),
+                };
+            }
+        }
+        account_summary_store
+    }
+
+    pub fn format_path(&self, path: String) -> String {
+        format!(
+            "{}/{}_{}_{}.csv",
+            self.path_out(),
+            self.month.year,
+            self.month.display_number(),
+            path
+        )
+    }
+
+    pub fn construct_payment_summary(&self, store: &mut ExpenseStore) -> PaymentSummaryStore {
         let mut payment_summary_store = PaymentSummaryStore::new();
-        let expense_ids: Vec<usize> = store.expenses.keys().cloned().collect();
-        for expense_id in expense_ids {
-            // sorted expense ids
-            payment_summary_store
-                .entry(expense_id)
-                .or_insert(PaymentSummary {
-                    id: Some(expense_id),
-                    name: Expense::name_by_id(expense_id, store).to_string(),
-                    total: Expense::total_by_id(expense_id, store),
-                });
+        for expense_id in self.month.expense_ids().iter() {
+            if let Entry::Occupied(expense) = store.entry(*expense_id) {
+                if expense.get().active {
+                    payment_summary_store
+                        .entry(*expense_id)
+                        .or_insert(PaymentSummary {
+                            id: Some(*expense_id),
+                            name: Expense::name_by_id(*expense_id, store).to_string(),
+                            total: Expense::month_total_by_id(*expense_id, &self.month),
+                        });
+                }
+            }
         }
         payment_summary_store
+    }
+
+    pub fn construct_payment_received_summary(
+        &self,
+        store: &mut IncomeStore,
+    ) -> PaymentSummaryStore {
+        let mut payment_rec_summary_store = PaymentSummaryStore::new();
+        for income_id in self.month.income_ids().iter() {
+            if let Entry::Occupied(income) = store.entry(*income_id) {
+                if income.get().active {
+                    payment_rec_summary_store
+                        .entry(*income_id)
+                        .or_insert(PaymentSummary {
+                            id: Some(*income_id),
+                            name: Income::name_by_id(*income_id, store).to_string(),
+                            total: Income::month_total_by_id(*income_id, &self.month),
+                        });
+                }
+            }
+        }
+        payment_rec_summary_store
     }
 
     // TODO: leap years
@@ -169,9 +252,8 @@ mod month_model_spec {
     pub fn model() -> MonthModel {
         MonthModel::new(
             YM::new(2023, MK::Feb),
+            "src/test/data/init".to_string(),
             false,
-            Some("src/test/data/init"),
-            None,
         )
     }
 

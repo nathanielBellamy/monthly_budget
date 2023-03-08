@@ -1,13 +1,12 @@
 [package]
 name = "monthly_budget"
-author = "Nathan S"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.66"
 
 [dependencies]
 chrono = { version = "0.4.23", features = ["serde"] }
-clap = { versin = "4.1.4", features = ["derive"] }
+clap = { version = "4.1.4", features = ["derive"] }
 csv = "1.1.6"
 rand = "0.8.5"
 rust_decimal = { version = "1.28.0", features = ["serde-with-float", "rand"] }

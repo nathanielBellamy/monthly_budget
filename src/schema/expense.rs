@@ -1,3 +1,4 @@
+use crate::calendar::month::Month;
 use crate::schema::payment::{Payment, PaymentStore};
 use crate::storage::store::Store;
 use crate::traits::csv_record::CsvRecord;
@@ -46,8 +47,14 @@ impl<'a, 'b: 'a> Expense {
         expense
     }
 
-    pub fn name_by_id(id: usize, store: &mut Store) -> String {
-        match Expense::by_id(id, &mut store.expenses) {
+    pub fn mark_all_inactive(store: &mut ExpenseStore) {
+        for (_id, expense) in store.iter_mut() {
+            expense.active = false;
+        }
+    }
+
+    pub fn name_by_id(id: usize, store: &mut ExpenseStore) -> String {
+        match Expense::by_id(id, store) {
             None => format!("No Name Found for Expense Id: {id}"),
             Some(expense) => expense.name,
         }
@@ -61,6 +68,18 @@ impl<'a, 'b: 'a> Expense {
                 Payment::total(payments, &store.amounts)
             }
         }
+    }
+
+    pub fn month_total_by_id(expense_id: usize, month: &Month) -> Decimal {
+        let mut total = Decimal::new(0, 0);
+        for (_id, day) in month.days.iter() {
+            for (_id, payment) in day.payments.iter() {
+                if payment.expense_id.unwrap() == expense_id {
+                    total += payment.amount_standard;
+                }
+            }
+        }
+        total
     }
 
     pub fn payments(&'a self, store: &'b mut PaymentStore) -> PaymentStore {
@@ -95,6 +114,7 @@ impl<'a, 'b: 'a> Expense {
 #[cfg(test)]
 mod expense_spec {
     use super::*;
+    use crate::storage::store::Store;
     use crate::test::spec::Spec;
     use chrono::NaiveDateTime;
 
@@ -114,7 +134,7 @@ mod expense_spec {
         let mut store = Store::new();
         Spec::init(&mut store);
 
-        let name = Expense::name_by_id(1, &mut store);
+        let name = Expense::name_by_id(1, &mut store.expenses);
         assert_eq!("mortgage".to_string(), name);
     }
 

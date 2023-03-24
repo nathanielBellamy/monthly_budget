@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.66"
 
+[lib]
+name = "monthly_budget"
+path = "src/lib.rs"
+
 [dependencies]
 chrono = { version = "0.4.23", features = ["serde"] }
 clap = { version = "4.1.4", features = ["derive"] }

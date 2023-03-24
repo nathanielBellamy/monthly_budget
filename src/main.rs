@@ -1,18 +1,8 @@
-use crate::app::cli::Cli;
-use crate::error::error_handler::ErrorHandler;
-use crate::programs::calendar_slice_model::CalendarSliceModel;
 use clap::Parser;
-use test::end_to_end::calendar_slice_model::csm_test::CsmTest;
-
-mod app;
-mod calendar;
-mod composite;
-mod error;
-mod programs;
-mod schema;
-mod storage;
-mod test;
-mod traits;
+use monthly_budget::app::cli::Cli;
+use monthly_budget::error::error_handler::ErrorHandler;
+use monthly_budget::programs::calendar_slice_model::CalendarSliceModel;
+use monthly_budget::test::end_to_end::calendar_slice_model::csm_test::CsmTest;
 
 fn main() {
     let cli = Cli::parse();
